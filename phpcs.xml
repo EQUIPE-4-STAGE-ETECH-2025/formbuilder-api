@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ruleset name="PSR12">
+    <description>PSR-12 coding standard</description>
+
+    <file>src</file>
+    <file>tests</file>
+
+    <rule ref="PSR12"/>
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <property name="lineLimit" value="120"/>
+            <property name="absoluteLineLimit" value="150"/>
+        </properties>
+    </rule>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/var/*</exclude-pattern>
+    <exclude-pattern>*/migrations/*</exclude-pattern>
+</ruleset> 

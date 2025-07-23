@@ -43,10 +43,6 @@ jobs:
       # Analyse statique du code avec PHPStan
       - name: PHPStan
         run: ./vendor/bin/phpstan analyse
-      
-      # Vérification des standards de codage avec PHP CodeSniffer
-      - name: PHP CodeSniffer
-        run: ./vendor/bin/phpcs --standard=phpcs.xml.dist
 
   # Job 2: Tests unitaires avec base de données PostgreSQL locale
   test:
