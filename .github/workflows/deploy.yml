@@ -1,0 +1,166 @@
+name: CI/CD Symfony API
+
+# Déclenchement du pipeline uniquement sur les push vers la branche main
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # Job 1: Vérifications de qualité de code
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      # Récupération du code source
+      - uses: actions/checkout@v4
+      
+      # Configuration de PHP avec les extensions nécessaires
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2.12'
+          extensions: mbstring, pdo_pgsql, intl, zip
+          coverage: xdebug
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      # Installation des dépendances PHP via Composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      
+      # Vérification de la syntaxe PHP
+      - name: PHP Lint
+        run: find src tests -name "*.php" -exec php -l {} \;
+      
+      # Vérification du style de code avec PHP CS Fixer
+      - name: PHP CS Fixer
+        run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php
+      
+      # Analyse statique du code avec PHPStan
+      - name: PHPStan
+        run: ./vendor/bin/phpstan analyse
+      
+      # Vérification des standards de codage avec PHP CodeSniffer
+      - name: PHP CodeSniffer
+        run: ./vendor/bin/phpcs --standard=phpcs.xml.dist
+
+  # Job 2: Tests unitaires avec base de données PostgreSQL locale
+  test:
+    runs-on: ubuntu-latest
+    needs: quality
+    # Service PostgreSQL temporaire pour les tests (base de données locale)
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: formbuilder_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      # Récupération du code source
+      - uses: actions/checkout@v4
+      
+      # Configuration de PHP avec les extensions nécessaires
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2.12'
+          extensions: mbstring, pdo_pgsql, intl, zip
+          coverage: xdebug
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      # Installation des dépendances PHP via Composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      
+      # Configuration de l'environnement de test avec base de données locale
+      - name: Setup test environment
+        run: |
+          echo "APP_ENV=test" > .env.test.local
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/formbuilder_test?serverVersion=15&charset=utf8" >> .env.test.local
+      
+      # Création du schéma de base de données pour les tests
+      - name: Create database schema
+        run: php bin/console doctrine:schema:create --env=test
+      
+      # Exécution des tests unitaires avec génération de rapport de couverture
+      - name: Run tests with coverage
+        run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+      
+      # Envoi du rapport de couverture vers Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+      
+      # Nettoyage de la base de données de test
+      - name: Cleanup test database
+        run: php bin/console doctrine:schema:drop --env=test --force
+
+  # Job 3: Vérification de sécurité des dépendances
+  security:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      # Récupération du code source
+      - uses: actions/checkout@v4
+      
+      # Configuration de PHP (sans xdebug pour la sécurité)
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2.12'
+          extensions: mbstring, pdo_pgsql, intl, zip
+      
+      # Mise en cache des dépendances pour accélérer les builds
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      
+      # Installation des dépendances PHP via Composer
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress
+      
+      # Vérification des vulnérabilités de sécurité dans les dépendances
+      - name: Security check
+        run: composer audit --format=json --no-interaction
+
+  # Job 4: Déploiement vers Fly.io (production)
+  deploy:
+    needs: [quality, test, security]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      # Récupération du code source
+      - uses: actions/checkout@v4
+      
+      # Installation de l'outil de déploiement Fly.io
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      # Déploiement de l'application vers Fly.io
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          # Token d'authentification Fly.io (secret GitHub)
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

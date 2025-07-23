@@ -8,3 +8,70 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###
+
+###> friendsofphp/php-cs-fixer ###
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+###< friendsofphp/php-cs-fixer ###
+
+###> squizlabs/php_codesniffer ###
+/.phpcs-cache
+/phpcs.xml
+###< squizlabs/php_codesniffer ###
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###
+
+###> IDE files ###
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+###< IDE files ###
+
+###> OS generated files ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+###< OS generated files ###
+
+###> Logs ###
+*.log
+/logs/
+###< Logs ###
+
+###> Cache ###
+/cache/
+###< Cache ###
+
+###> Temporary files ###
+*.tmp
+*.temp
+###< Temporary files ###
+
+###> Composer ###
+composer.phar
+###< Composer ###
+
+###> Node modules (if using frontend assets) ###
+/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+###< Node modules ###
+
+###> Environment files ###
+.env
+.env.test
+###< Environment files ###
