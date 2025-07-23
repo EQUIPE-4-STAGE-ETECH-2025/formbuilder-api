@@ -88,6 +88,10 @@ jobs:
       # Configuration de l'environnement de test avec base de données locale
       - name: Setup test environment
         run: |
+          # Créer le fichier .env principal (requis par Symfony)
+          echo "APP_ENV=test" > .env
+          echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/formbuilder_test?serverVersion=15&charset=utf8" >> .env
+          # Créer le fichier .env.test.local pour les variables spécifiques aux tests
           echo "APP_ENV=test" > .env.test.local
           echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/formbuilder_test?serverVersion=15&charset=utf8" >> .env.test.local
       
