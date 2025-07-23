@@ -4,8 +4,8 @@
 .env.local
 .env.local.php
 .env.*.local
-config\secrets\prod\prod.decrypt.private.php
-public\bundles
+config/secrets/prod/prod.decrypt.private.php
+public/bundles
 var
 vendor
 ###< symfony/framework-bundle ###
@@ -15,12 +15,12 @@ phpunit.xml
 .phpunit.cache
 ###< phpunit/phpunit ###
 
-# flyctl launch added from vendor\psr\container\.gitignore
-vendor\psr\container\**\composer.lock
-vendor\psr\container\**\composer.phar
-vendor\psr\container\vendor
+# flyctl launch added from vendor/psr/container/.gitignore
+vendor/psr/container/**/composer.lock
+vendor/psr/container/**/composer.phar
+vendor/psr/container/vendor
 
-# flyctl launch added from vendor\psr\event-dispatcher\.gitignore
-vendor\psr\event-dispatcher\vendor
-vendor\psr\event-dispatcher\**\composer.lock
+# flyctl launch added from vendor/psr/event-dispatcher/.gitignore
+vendor/psr/event-dispatcher/vendor
+vendor/psr/event-dispatcher/**/composer.lock
 fly.toml
