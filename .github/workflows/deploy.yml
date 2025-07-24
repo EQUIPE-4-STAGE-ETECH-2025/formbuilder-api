@@ -1,9 +1,11 @@
 name: CI/CD Symfony API
 
-# Déclenchement du pipeline uniquement sur les push vers la branche main
+# Déclenchement du pipeline sur les push et pull requests vers main et dev
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
 
 jobs:
   # Job 1: Vérifications de qualité de code
@@ -150,7 +152,7 @@ jobs:
   deploy:
     needs: [quality, test, security]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       # Récupération du code source
       - uses: actions/checkout@v4
