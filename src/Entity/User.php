@@ -64,21 +64,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(['user:read'])]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    /** @var Collection<int, Subscription> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Subscription::class, orphanRemoval: true)]
     #[Groups(['user:read'])]
     private Collection $subscriptions;
 
+    /** @var Collection<int, Form> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Form::class, orphanRemoval: true)]
     #[Groups(['user:read'])]
     private Collection $forms;
 
+    /** @var Collection<int, QuotaStatus> */
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: QuotaStatus::class, orphanRemoval: true)]
     #[Groups(['user:read'])]
     private Collection $quotaStatuses;
 
+    /** @var Collection<int, AuditLog> */
     #[ORM\OneToMany(mappedBy: 'admin', targetEntity: AuditLog::class)]
     private Collection $auditLogsAsAdmin;
 
+    /** @var Collection<int, AuditLog> */
     #[ORM\OneToMany(mappedBy: 'targetUser', targetEntity: AuditLog::class)]
     private Collection $auditLogsAsTarget;
 
@@ -340,9 +345,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     // UserInterface methods
+    /**
+     * @return array<string>
+     */
     public function getRoles(): array
     {
-        return [$this->role];
+        $roles = [];
+        if ($this->role !== null) {
+            $roles[] = $this->role;
+        }
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
     }
 
     public function eraseCredentials(): void
@@ -352,12 +367,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        $email = $this->email;
+        if ($email === null || $email === '') {
+            throw new \LogicException('User email cannot be null or empty');
+        }
+        return $email;
     }
 
     public function getPassword(): string
     {
-        return $this->passwordHash;
+        return $this->passwordHash ?? '';
     }
 
     public function setPassword(string $password): static

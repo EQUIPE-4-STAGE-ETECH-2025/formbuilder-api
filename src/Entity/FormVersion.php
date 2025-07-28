@@ -26,12 +26,16 @@ class FormVersion
     #[Assert\Positive(message: 'Le numéro de version doit être positif')]
     private ?int $versionNumber = null;
 
+    /** @var array<string, mixed> */
     #[ORM\Column(type: 'json')]
     private array $schema = [];
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    /**
+     * @var Collection<int, FormField>
+     */
     #[ORM\OneToMany(mappedBy: 'formVersion', targetEntity: FormField::class, orphanRemoval: true)]
     private Collection $formFields;
 
@@ -70,11 +74,17 @@ class FormVersion
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getSchema(): array
     {
         return $this->schema;
     }
 
+    /**
+     * @param array<string, mixed> $schema
+     */
     public function setSchema(array $schema): static
     {
         $this->schema = $schema;

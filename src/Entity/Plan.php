@@ -50,9 +50,11 @@ class Plan
     #[Assert\Range(min: 1, max: 10000, minMessage: 'Le stockage maximum en MB doit être au moins {{ limit }}', maxMessage: 'Le stockage maximum en MB ne peut pas dépasser {{ limit }}')]
     private ?int $maxStorageMb = null;
 
+    /** @var Collection<int, Subscription> */
     #[ORM\OneToMany(mappedBy: 'plan', targetEntity: Subscription::class, orphanRemoval: true)]
     private Collection $subscriptions;
 
+    /** @var Collection<int, PlanFeature> */
     #[ORM\OneToMany(mappedBy: 'plan', targetEntity: PlanFeature::class, orphanRemoval: true)]
     private Collection $planFeatures;
 

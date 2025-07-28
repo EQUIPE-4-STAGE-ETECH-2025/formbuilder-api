@@ -27,6 +27,9 @@ class Feature
     #[Assert\Length(min: 3, max: 255, minMessage: 'Le libellé doit contenir au moins {{ limit }} caractères', maxMessage: 'Le libellé ne peut pas dépasser {{ limit }} caractères')]
     private ?string $label = null;
 
+    /**
+     * @var Collection<int, PlanFeature>
+     */
     #[ORM\OneToMany(mappedBy: 'feature', targetEntity: PlanFeature::class, orphanRemoval: true)]
     private Collection $planFeatures;
 

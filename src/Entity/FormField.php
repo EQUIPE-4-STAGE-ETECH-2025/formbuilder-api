@@ -32,6 +32,7 @@ class FormField
     #[ORM\Column]
     private ?bool $isRequired = false;
 
+    /** @var array<string, mixed> */
     #[ORM\Column(type: 'json')]
     private array $options = [];
 
@@ -40,6 +41,7 @@ class FormField
     #[Assert\Positive(message: 'La position doit être positive')]
     private ?int $position = null;
 
+    /** @var array<string, mixed> */
     #[ORM\Column(type: 'json')]
     private array $validationRules = [];
 
@@ -96,11 +98,17 @@ class FormField
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getOptions(): array
     {
         return $this->options;
     }
 
+    /**
+     * @param array<string, mixed> $options
+     */
     public function setOptions(array $options): static
     {
         $this->options = $options;
@@ -120,11 +128,17 @@ class FormField
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getValidationRules(): array
     {
         return $this->validationRules;
     }
 
+    /**
+     * @param array<string, mixed> $validationRules
+     */
     public function setValidationRules(array $validationRules): static
     {
         $this->validationRules = $validationRules;

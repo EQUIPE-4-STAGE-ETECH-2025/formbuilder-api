@@ -45,12 +45,15 @@ class Form
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    /** @var Collection<int, FormVersion> */
     #[ORM\OneToMany(mappedBy: 'form', targetEntity: FormVersion::class, orphanRemoval: true)]
     private Collection $formVersions;
 
+    /** @var Collection<int, Submission> */
     #[ORM\OneToMany(mappedBy: 'form', targetEntity: Submission::class, orphanRemoval: true)]
     private Collection $submissions;
 
+    /** @var Collection<int, FormToken> */
     #[ORM\OneToMany(mappedBy: 'form', targetEntity: FormToken::class, orphanRemoval: true)]
     private Collection $formTokens;
 

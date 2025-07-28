@@ -19,6 +19,7 @@ class Submission
     #[Assert\NotNull(message: 'Le formulaire est obligatoire')]
     private ?Form $form = null;
 
+    /** @var array<string, mixed> */
     #[ORM\Column(type: 'json')]
     private array $data = [];
 
@@ -53,11 +54,17 @@ class Submission
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getData(): array
     {
         return $this->data;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function setData(array $data): static
     {
         $this->data = $data;
