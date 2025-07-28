@@ -40,6 +40,11 @@ jobs:
                   echo "APP_ENV=dev" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
                   echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+                  echo "DATABASE_HOST=localhost" >> .env
+                  echo "DATABASE_PORT=5432" >> .env
+                  echo "DATABASE_NAME=formbuilder_dev" >> .env
+                  echo "DATABASE_USER=postgres" >> .env
+                  echo "DATABASE_PASSWORD=postgres" >> .env
 
             # Vérification de la syntaxe PHP
             - name: PHP Lint
@@ -104,6 +109,11 @@ jobs:
                   echo "APP_ENV=dev" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
                   echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+                  echo "DATABASE_HOST=localhost" >> .env
+                  echo "DATABASE_PORT=5432" >> .env
+                  echo "DATABASE_NAME=formbuilder_dev" >> .env
+                  echo "DATABASE_USER=postgres" >> .env
+                  echo "DATABASE_PASSWORD=postgres" >> .env
 
             # Configuration de l'environnement de test avec base de données locale
             - name: Setup test environment
@@ -187,6 +197,11 @@ jobs:
                   echo "APP_ENV=dev" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
                   echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+                  echo "DATABASE_HOST=localhost" >> .env
+                  echo "DATABASE_PORT=5432" >> .env
+                  echo "DATABASE_NAME=formbuilder_dev" >> .env
+                  echo "DATABASE_USER=postgres" >> .env
+                  echo "DATABASE_PASSWORD=postgres" >> .env
 
             # Vérification des vulnérabilités de sécurité dans les dépendances
             - name: Security check
