@@ -54,6 +54,7 @@ class FormVersion
     public function setForm(?Form $form): static
     {
         $this->form = $form;
+
         return $this;
     }
 
@@ -65,6 +66,7 @@ class FormVersion
     public function setVersionNumber(int $versionNumber): static
     {
         $this->versionNumber = $versionNumber;
+
         return $this;
     }
 
@@ -76,6 +78,7 @@ class FormVersion
     public function setSchema(array $schema): static
     {
         $this->schema = $schema;
+
         return $this;
     }
 
@@ -87,6 +90,7 @@ class FormVersion
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -118,4 +122,4 @@ class FormVersion
 
         return $this;
     }
-} 
+}

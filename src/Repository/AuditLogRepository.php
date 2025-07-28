@@ -38,4 +38,4 @@ class AuditLogRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-} 
+}

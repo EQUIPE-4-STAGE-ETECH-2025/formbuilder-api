@@ -49,6 +49,7 @@ class FormToken
     public function setForm(?Form $form): static
     {
         $this->form = $form;
+
         return $this;
     }
 
@@ -60,6 +61,7 @@ class FormToken
     public function setJwt(string $jwt): static
     {
         $this->jwt = $jwt;
+
         return $this;
     }
 
@@ -71,6 +73,7 @@ class FormToken
     public function setExpiresAt(\DateTimeImmutable $expiresAt): static
     {
         $this->expiresAt = $expiresAt;
+
         return $this;
     }
 
@@ -82,6 +85,7 @@ class FormToken
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
-} 
+}

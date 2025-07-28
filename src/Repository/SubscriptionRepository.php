@@ -38,4 +38,4 @@ class SubscriptionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-} 
+}

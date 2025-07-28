@@ -38,4 +38,4 @@ class QuotaStatusRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-} 
+}

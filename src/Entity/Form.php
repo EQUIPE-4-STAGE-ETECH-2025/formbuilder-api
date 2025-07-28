@@ -76,6 +76,7 @@ class Form
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -87,6 +88,7 @@ class Form
     public function setTitle(string $title): static
     {
         $this->title = $title;
+
         return $this;
     }
 
@@ -98,6 +100,7 @@ class Form
     public function setDescription(string $description): static
     {
         $this->description = $description;
+
         return $this;
     }
 
@@ -109,6 +112,7 @@ class Form
     public function setStatus(string $status): static
     {
         $this->status = $status;
+
         return $this;
     }
 
@@ -120,6 +124,7 @@ class Form
     public function setPublishedAt(?\DateTimeImmutable $publishedAt): static
     {
         $this->publishedAt = $publishedAt;
+
         return $this;
     }
 
@@ -131,6 +136,7 @@ class Form
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
 
@@ -142,6 +148,7 @@ class Form
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -231,4 +238,4 @@ class Form
 
         return $this;
     }
-} 
+}

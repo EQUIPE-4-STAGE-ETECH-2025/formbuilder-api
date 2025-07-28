@@ -38,4 +38,4 @@ class FormTokenRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-} 
+}

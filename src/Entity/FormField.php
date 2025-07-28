@@ -56,6 +56,7 @@ class FormField
     public function setFormVersion(?FormVersion $formVersion): static
     {
         $this->formVersion = $formVersion;
+
         return $this;
     }
 
@@ -67,6 +68,7 @@ class FormField
     public function setLabel(string $label): static
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -78,6 +80,7 @@ class FormField
     public function setType(string $type): static
     {
         $this->type = $type;
+
         return $this;
     }
 
@@ -89,6 +92,7 @@ class FormField
     public function setIsRequired(bool $isRequired): static
     {
         $this->isRequired = $isRequired;
+
         return $this;
     }
 
@@ -100,6 +104,7 @@ class FormField
     public function setOptions(array $options): static
     {
         $this->options = $options;
+
         return $this;
     }
 
@@ -111,6 +116,7 @@ class FormField
     public function setPosition(int $position): static
     {
         $this->position = $position;
+
         return $this;
     }
 
@@ -122,6 +128,7 @@ class FormField
     public function setValidationRules(array $validationRules): static
     {
         $this->validationRules = $validationRules;
+
         return $this;
     }
-} 
+}

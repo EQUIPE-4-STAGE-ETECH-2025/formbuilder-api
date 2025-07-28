@@ -37,6 +37,7 @@ class PlanFeature
     public function setPlan(?Plan $plan): static
     {
         $this->plan = $plan;
+
         return $this;
     }
 
@@ -48,6 +49,7 @@ class PlanFeature
     public function setFeature(?Feature $feature): static
     {
         $this->feature = $feature;
+
         return $this;
     }
-} 
+}

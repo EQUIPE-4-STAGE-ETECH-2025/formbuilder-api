@@ -75,6 +75,7 @@ class Plan
     public function setName(string $name): static
     {
         $this->name = $name;
+
         return $this;
     }
 
@@ -86,6 +87,7 @@ class Plan
     public function setPriceCents(int $priceCents): static
     {
         $this->priceCents = $priceCents;
+
         return $this;
     }
 
@@ -97,6 +99,7 @@ class Plan
     public function setStripeProductId(string $stripeProductId): static
     {
         $this->stripeProductId = $stripeProductId;
+
         return $this;
     }
 
@@ -108,6 +111,7 @@ class Plan
     public function setMaxForms(int $maxForms): static
     {
         $this->maxForms = $maxForms;
+
         return $this;
     }
 
@@ -119,6 +123,7 @@ class Plan
     public function setMaxSubmissionsPerMonth(int $maxSubmissionsPerMonth): static
     {
         $this->maxSubmissionsPerMonth = $maxSubmissionsPerMonth;
+
         return $this;
     }
 
@@ -130,6 +135,7 @@ class Plan
     public function setMaxStorageMb(int $maxStorageMb): static
     {
         $this->maxStorageMb = $maxStorageMb;
+
         return $this;
     }
 
@@ -190,4 +196,4 @@ class Plan
 
         return $this;
     }
-} 
+}

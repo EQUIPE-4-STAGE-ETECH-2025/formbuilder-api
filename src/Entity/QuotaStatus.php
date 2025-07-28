@@ -57,6 +57,7 @@ class QuotaStatus
     public function setUser(?User $user): static
     {
         $this->user = $user;
+
         return $this;
     }
 
@@ -68,6 +69,7 @@ class QuotaStatus
     public function setMonth(\DateTimeInterface $month): static
     {
         $this->month = $month;
+
         return $this;
     }
 
@@ -79,6 +81,7 @@ class QuotaStatus
     public function setFormCount(int $formCount): static
     {
         $this->formCount = $formCount;
+
         return $this;
     }
 
@@ -90,6 +93,7 @@ class QuotaStatus
     public function setSubmissionCount(int $submissionCount): static
     {
         $this->submissionCount = $submissionCount;
+
         return $this;
     }
 
@@ -101,6 +105,7 @@ class QuotaStatus
     public function setStorageUsedMb(int $storageUsedMb): static
     {
         $this->storageUsedMb = $storageUsedMb;
+
         return $this;
     }
 
@@ -112,6 +117,7 @@ class QuotaStatus
     public function setNotified80(bool $notified80): static
     {
         $this->notified80 = $notified80;
+
         return $this;
     }
 
@@ -123,6 +129,7 @@ class QuotaStatus
     public function setNotified100(bool $notified100): static
     {
         $this->notified100 = $notified100;
+
         return $this;
     }
-} 
+}

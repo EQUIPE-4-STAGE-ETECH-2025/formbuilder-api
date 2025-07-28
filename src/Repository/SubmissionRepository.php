@@ -38,4 +38,4 @@ class SubmissionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
-} 
+}

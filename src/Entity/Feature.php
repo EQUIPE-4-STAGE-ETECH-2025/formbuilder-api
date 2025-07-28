@@ -48,6 +48,7 @@ class Feature
     public function setCode(string $code): static
     {
         $this->code = $code;
+
         return $this;
     }
 
@@ -59,6 +60,7 @@ class Feature
     public function setLabel(string $label): static
     {
         $this->label = $label;
+
         return $this;
     }
 
@@ -90,4 +92,4 @@ class Feature
 
         return $this;
     }
-} 
+}

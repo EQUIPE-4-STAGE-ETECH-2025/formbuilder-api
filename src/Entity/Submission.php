@@ -49,6 +49,7 @@ class Submission
     public function setForm(?Form $form): static
     {
         $this->form = $form;
+
         return $this;
     }
 
@@ -60,6 +61,7 @@ class Submission
     public function setData(array $data): static
     {
         $this->data = $data;
+
         return $this;
     }
 
@@ -71,6 +73,7 @@ class Submission
     public function setSubmittedAt(\DateTimeImmutable $submittedAt): static
     {
         $this->submittedAt = $submittedAt;
+
         return $this;
     }
 
@@ -82,6 +85,7 @@ class Submission
     public function setIpAddress(string $ipAddress): static
     {
         $this->ipAddress = $ipAddress;
+
         return $this;
     }
-} 
+}

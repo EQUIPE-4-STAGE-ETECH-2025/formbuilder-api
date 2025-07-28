@@ -55,6 +55,7 @@ class AuditLog
     public function setAdmin(?User $admin): static
     {
         $this->admin = $admin;
+
         return $this;
     }
 
@@ -66,6 +67,7 @@ class AuditLog
     public function setTargetUser(?User $targetUser): static
     {
         $this->targetUser = $targetUser;
+
         return $this;
     }
 
@@ -77,6 +79,7 @@ class AuditLog
     public function setAction(string $action): static
     {
         $this->action = $action;
+
         return $this;
     }
 
@@ -88,6 +91,7 @@ class AuditLog
     public function setReason(string $reason): static
     {
         $this->reason = $reason;
+
         return $this;
     }
 
@@ -99,6 +103,7 @@ class AuditLog
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
         return $this;
     }
-} 
+}
