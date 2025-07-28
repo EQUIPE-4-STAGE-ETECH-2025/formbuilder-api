@@ -81,7 +81,7 @@ jobs:
                 image: postgres:15
                 env:
                     POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: formbuilder_test
+                    POSTGRES_DB: formbuilder
                 options: >-
                     --health-cmd pg_isready
                     --health-interval 10s
@@ -131,14 +131,14 @@ jobs:
                   echo "APP_ENV=test" > .env
                   echo "DATABASE_HOST=localhost" >> .env
                   echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder_test" >> .env
+                  echo "DATABASE_NAME=formbuilder" >> .env
                   echo "DATABASE_USER=postgres" >> .env
                   echo "DATABASE_PASSWORD=postgres" >> .env
                   # Créer le fichier .env.test.local pour les variables spécifiques aux tests
                   echo "APP_ENV=test" > .env.test.local
                   echo "DATABASE_HOST=localhost" >> .env.test.local
                   echo "DATABASE_PORT=5432" >> .env.test.local
-                  echo "DATABASE_NAME=formbuilder_test" >> .env.test.local
+                  echo "DATABASE_NAME=formbuilder" >> .env.test.local
                   echo "DATABASE_USER=postgres" >> .env.test.local
                   echo "DATABASE_PASSWORD=postgres" >> .env.test.local
 
