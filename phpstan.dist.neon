@@ -1,3 +1,7 @@
+includes:
+    - vendor/phpstan/phpstan-symfony/extension.neon
+    - vendor/phpstan/phpstan-doctrine/extension.neon
+
 parameters:
     level: 8
     paths:
@@ -5,6 +9,6 @@ parameters:
     excludePaths:
         - src/DataFixtures/
     symfony:
-        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
+        container_xml_path: var/cache/*/App_Kernel*Container.xml
     doctrine:
         objectManagerLoader: tests/object-manager.php
