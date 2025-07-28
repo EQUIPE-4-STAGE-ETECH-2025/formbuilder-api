@@ -13,7 +13,6 @@ return (new PhpCsFixer\Config())
         'ordered_imports' => ['sort_algorithm' => 'alpha'],
         'no_unused_imports' => true,
         'no_extra_blank_lines' => true,
-        'single_blank_line_before_namespace' => true,
         'blank_line_after_opening_tag' => true,
         'blank_line_before_statement' => [
             'statements' => ['break', 'continue', 'declare', 'return', 'throw', 'try'],
