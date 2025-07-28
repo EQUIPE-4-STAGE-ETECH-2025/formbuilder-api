@@ -9,6 +9,6 @@ parameters:
     excludePaths:
         - src/DataFixtures/
     symfony:
-        container_xml_path: var/cache/*/App_Kernel*Container.xml
+        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
     doctrine:
         objectManagerLoader: tests/object-manager.php
