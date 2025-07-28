@@ -351,7 +351,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = [];
-        if ($this->role !== null) {
+        if (null !== $this->role) {
             $roles[] = $this->role;
         }
         // guarantee every user at least has ROLE_USER
@@ -368,9 +368,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getUserIdentifier(): string
     {
         $email = $this->email;
-        if ($email === null || $email === '') {
+        if (null === $email || '' === $email) {
             throw new \LogicException('User email cannot be null or empty');
         }
+
         return $email;
     }
 
