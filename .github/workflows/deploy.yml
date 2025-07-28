@@ -81,7 +81,7 @@ jobs:
                 image: postgres:15
                 env:
                     POSTGRES_PASSWORD: postgres
-                    POSTGRES_DB: formbuilder
+                    POSTGRES_DB: formbuilder_test
                 options: >-
                     --health-cmd pg_isready
                     --health-interval 10s
@@ -112,23 +112,12 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
-            # Création du fichier .env pour l'environnement CI
-            - name: Create .env file
-              run: |
-                  echo "APP_ENV=dev" > .env
-                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
-                  echo "DATABASE_HOST=localhost" >> .env
-                  echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder_dev" >> .env
-                  echo "DATABASE_USER=postgres" >> .env
-                  echo "DATABASE_PASSWORD=postgres" >> .env
-
             # Configuration de l'environnement de test avec base de données locale
             - name: Setup test environment
               run: |
-                  # Créer le fichier .env principal (requis par Symfony)
+                  # Créer le fichier .env principal pour les tests
                   echo "APP_ENV=test" > .env
+                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
                   echo "DATABASE_HOST=localhost" >> .env
                   echo "DATABASE_PORT=5432" >> .env
                   echo "DATABASE_NAME=formbuilder" >> .env
@@ -141,6 +130,16 @@ jobs:
                   echo "DATABASE_NAME=formbuilder" >> .env.test.local
                   echo "DATABASE_USER=postgres" >> .env.test.local
                   echo "DATABASE_PASSWORD=postgres" >> .env.test.local
+
+            # Debug: Afficher la configuration de la base de données
+            - name: Debug database configuration
+              run: |
+                  echo "=== Configuration de la base de données ==="
+                  php bin/console debug:config doctrine dbal --env=test
+                  echo "=== Variables d'environnement ==="
+                  cat .env
+                  echo "=== Contenu de .env.test.local ==="
+                  cat .env.test.local
 
             # Création du schéma de base de données pour les tests
             - name: Create database schema
