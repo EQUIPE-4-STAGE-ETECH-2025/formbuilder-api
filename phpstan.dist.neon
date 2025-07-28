@@ -1,8 +1,10 @@
 parameters:
-    level: 6
+    level: 8
     paths:
-        - bin/
-        - config/
-        - public/
         - src/
-        - tests/
+    excludePaths:
+        - src/DataFixtures/
+    symfony:
+        container_xml_path: var/cache/dev/App_KernelDevDebugContainer.xml
+    doctrine:
+        objectManagerLoader: tests/object-manager.php

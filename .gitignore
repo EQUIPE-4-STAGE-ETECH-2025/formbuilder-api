@@ -25,6 +25,7 @@ phpstan.neon
 /.idea/
 /.vscode/
 .cursorignore
+/.cursor/
 *.swp
 *.swo
 *~
