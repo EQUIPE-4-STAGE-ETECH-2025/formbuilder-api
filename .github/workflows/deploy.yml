@@ -58,6 +58,15 @@ jobs:
             - name: Create Symfony cache
               run: php bin/console cache:warmup --env=dev
 
+            # Configuration de l'environnement pour PHPStan
+            - name: Setup environment for PHPStan
+              run: |
+                  # Créer le répertoire var/cache s'il n'existe pas
+                  mkdir -p var/cache/dev
+                  # S'assurer que le container XML existe
+                  php bin/console cache:clear --env=dev
+                  php bin/console cache:warmup --env=dev
+
             # Analyse statique du code avec PHPStan
             - name: PHPStan
               run: ./vendor/bin/phpstan analyse
