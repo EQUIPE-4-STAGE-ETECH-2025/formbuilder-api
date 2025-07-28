@@ -34,6 +34,13 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
+            # Création du fichier .env pour l'environnement CI
+            - name: Create .env file
+              run: |
+                  echo "APP_ENV=dev" > .env
+                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
+                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+
             # Vérification de la syntaxe PHP
             - name: PHP Lint
               run: find src tests -name "*.php" -exec php -l {} \;
@@ -91,6 +98,13 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
+            # Création du fichier .env pour l'environnement CI
+            - name: Create .env file
+              run: |
+                  echo "APP_ENV=dev" > .env
+                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
+                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+
             # Configuration de l'environnement de test avec base de données locale
             - name: Setup test environment
               run: |
@@ -115,7 +129,18 @@ jobs:
 
             # Exécution des tests unitaires avec génération de rapport de couverture
             - name: Run tests with coverage
-              run: ./vendor/bin/phpunit --coverage-clover=coverage.xml
+              run: ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-text --coverage-filter=src
+
+            # Vérification du seuil de couverture de code (minimum 80%)
+            - name: Check code coverage threshold
+              run: |
+                  COVERAGE=$(./vendor/bin/phpunit --coverage-text --coverage-filter=src | grep -E "Lines:" | awk '{print $2}' | sed 's/%//')
+                  if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+                      echo "❌ Code coverage is $COVERAGE%, minimum required is 80%"
+                      exit 1
+                  else
+                      echo "✅ Code coverage is $COVERAGE%, meets minimum requirement of 80%"
+                  fi
 
             # Envoi du rapport de couverture vers Codecov
             - name: Upload coverage to Codecov
@@ -156,9 +181,25 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
+            # Création du fichier .env pour l'environnement CI
+            - name: Create .env file
+              run: |
+                  echo "APP_ENV=dev" > .env
+                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
+                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
+
             # Vérification des vulnérabilités de sécurité dans les dépendances
             - name: Security check
               run: composer audit --format=json --no-interaction
+
+            # Vérification de sécurité supplémentaire avec Symfony Security Checker
+            - name: Symfony Security Checker
+              run: |
+                  if command -v security-checker &> /dev/null; then
+                      security-checker security:check composer.lock
+                  else
+                      echo "⚠️ Symfony Security Checker not available, skipping..."
+                  fi
 
     # Job 4: Déploiement vers Fly.io (production)
     deploy:
