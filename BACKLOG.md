@@ -68,6 +68,8 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Envoi d'emails de réinitialisation
     -   Templates d'emails personnalisés
     -   Gestion des erreurs d'envoi
+    -   Notifications de quotas
+    -   Notifications de paiement
 
 -   [ ] **AUTH-009** : Créer `JwtService`
     -   Génération des tokens JWT
@@ -233,7 +235,17 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Rétrogradation automatique
     -   Suspension des fonctionnalités
 
-### 4.3 DTOs d'abonnements
+### 4.3 Controllers de webhooks
+
+-   [ ] **WEBHOOKS-001** : Créer `WebhookController`
+    -   Endpoint : `POST /api/webhooks/stripe`
+    -   Validation des signatures Stripe
+    -   Gestion des événements de paiement
+    -   Mise à jour automatique des abonnements
+    -   Logs des webhooks reçus
+    -   Gestion des erreurs de webhook
+
+### 4.4 DTOs d'abonnements
 
 -   [ ] **SUBSCRIPTIONS-003** : Créer les DTOs d'abonnements
     -   `PlanDto` pour les plans
@@ -351,6 +363,17 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Paramètres globaux
     -   Cache de configuration
 
+### 7.3 Controllers de notifications
+
+-   [ ] **NOTIFICATIONS-001** : Créer `NotificationController`
+    -   Endpoint : `POST /api/notifications/email`
+    -   Envoi d'emails de vérification
+    -   Envoi d'emails de réinitialisation
+    -   Notifications de quotas
+    -   Notifications de paiement
+    -   Templates d'emails personnalisés
+    -   Gestion des erreurs d'envoi
+
 ---
 
 ## 🛡️ Priorité 8 - Sécurité et Validation
@@ -372,21 +395,28 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Protection contre les attaques
 
 -   [ ] **SECURITY-003** : Créer `CsrfMiddleware`
+
     -   Protection CSRF
     -   Validation des tokens
     -   Protection des formulaires
     -   Logs de sécurité
 
+-   [ ] **SECURITY-004** : Créer `RateLimitMiddleware`
+    -   Limitation du nombre de requêtes
+    -   Protection contre les attaques par force brute
+    -   Configuration par endpoint
+    -   Headers de rate limiting appropriés
+
 ### 8.2 Services de validation
 
--   [ ] **SECURITY-004** : Créer `FormValidationService`
+-   [ ] **SECURITY-005** : Créer `FormValidationService`
 
     -   Validation des schémas de formulaires
     -   Validation des soumissions
     -   Sanitisation des données
     -   Protection contre les injections
 
--   [ ] **SECURITY-005** : Créer `PermissionService`
+-   [ ] **SECURITY-006** : Créer `PermissionService`
     -   Vérification des permissions
     -   Gestion des rôles
     -   Accès aux ressources
@@ -394,7 +424,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 8.3 Services d'audit
 
--   [ ] **SECURITY-006** : Créer `AuditService`
+-   [ ] **SECURITY-007** : Créer `AuditService`
     -   Logs des actions sensibles
     -   Traçabilité des modifications
     -   Historique des connexions
@@ -431,8 +461,10 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 -   [ ] **MONITORING-002** : Créer `HealthController`
     -   Endpoint : `GET /api/health`
     -   Vérification de la base de données
-    -   Vérification des services externes
-    -   Métriques de santé
+    -   Vérification des services externes (Stripe, Email)
+    -   Métriques de santé et performance
+    -   Statut des services critiques
+    -   Temps de réponse des endpoints
 
 ---
 
@@ -472,7 +504,27 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Authentification documentée
 
 -   [ ] **DOC-002** : Documentation technique
+
     -   Guide d'installation
     -   Guide de configuration
     -   Guide de déploiement
     -   Guide de maintenance
+
+-   [ ] **DOC-003** : Codes de retour HTTP standardisés
+
+    -   200 : Succès (GET, PUT, PATCH)
+    -   201 : Créé (POST)
+    -   204 : Succès sans contenu (DELETE)
+    -   400 : Erreur de validation
+    -   401 : Non authentifié
+    -   403 : Non autorisé
+    -   404 : Ressource non trouvée
+    -   422 : Erreur de validation métier
+    -   429 : Trop de requêtes (Rate limiting)
+    -   500 : Erreur serveur
+
+-   [ ] **DOC-004** : Exemples de requêtes et réponses
+    -   Exemples JSON pour chaque endpoint
+    -   Headers d'authentification
+    -   Codes d'erreur détaillés
+    -   Cas d'usage courants
