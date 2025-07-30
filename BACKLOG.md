@@ -85,6 +85,68 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   `ResetPasswordDto` avec validation
     -   `UserResponseDto` pour les réponses
 
+### 1.4 Gestion des rôles et autorisations
+
+-   [ ] **AUTH-011** : Implémenter la gestion des rôles utilisateurs
+
+    -   Créer `RoleService` pour la gestion des rôles
+    -   Endpoint : `GET /api/users/{id}/roles`
+    -   Endpoint : `PUT /api/users/{id}/roles`
+    -   Validation des permissions d'administration
+    -   Gestion des rôles : USER, ADMIN, PREMIUM
+
+-   [ ] **AUTH-012** : Créer `AuthorizationService`
+
+    -   Vérification des permissions par rôle
+    -   Middleware d'autorisation
+    -   Gestion des accès aux ressources
+    -   Voters Symfony pour les permissions complexes
+
+-   [ ] **AUTH-013** : Implémenter la validation de force du mot de passe
+
+    -   Service de validation des règles de sécurité
+    -   Configuration des règles (longueur, caractères spéciaux, etc.)
+    -   Messages d'erreur personnalisés
+    -   Validation en temps réel côté client
+
+-   [ ] **AUTH-014** : Créer `UserProfileService`
+    -   Gestion du profil utilisateur
+    -   Endpoint : `GET /api/users/{id}/profile`
+    -   Endpoint : `PUT /api/users/{id}/profile`
+    -   Validation des données personnelles
+    -   Gestion de l'avatar utilisateur
+
+### 1.4 Gestion des rôles et autorisations
+
+-   [ ] **AUTH-011** : Implémenter la gestion des rôles utilisateurs
+
+    -   Créer `RoleService` pour la gestion des rôles
+    -   Endpoint : `GET /api/users/{id}/roles`
+    -   Endpoint : `PUT /api/users/{id}/roles`
+    -   Validation des permissions d'administration
+    -   Gestion des rôles : USER, ADMIN, PREMIUM
+
+-   [ ] **AUTH-012** : Créer `AuthorizationService`
+
+    -   Vérification des permissions par rôle
+    -   Middleware d'autorisation
+    -   Gestion des accès aux ressources
+    -   Voters Symfony pour les permissions complexes
+
+-   [ ] **AUTH-013** : Implémenter la validation de force du mot de passe
+
+    -   Service de validation des règles de sécurité
+    -   Configuration des règles (longueur, caractères spéciaux, etc.)
+    -   Messages d'erreur personnalisés
+    -   Validation en temps réel côté client
+
+-   [ ] **AUTH-014** : Créer `UserProfileService`
+    -   Gestion du profil utilisateur
+    -   Endpoint : `GET /api/users/{id}/profile`
+    -   Endpoint : `PUT /api/users/{id}/profile`
+    -   Validation des données personnelles
+    -   Gestion de l'avatar utilisateur
+
 ---
 
 ## 📊 Priorité 2 - Gestion des Formulaires
@@ -155,6 +217,23 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   `FormVersionDto` pour les versions
     -   `FormEmbedDto` pour l'intégration
 
+### 2.5 Validation et templates
+
+-   [ ] **FORMS-008** : Implémenter la validation des schémas de formulaires
+
+    -   Service de validation JSON Schema
+    -   Validation des types de champs
+    -   Gestion des champs conditionnels
+    -   Tests de validation des formulaires
+    -   Validation en temps réel côté serveur
+
+-   [ ] **FORMS-009** : Créer `FormTemplateService`
+    -   Templates de formulaires prédéfinis
+    -   Endpoint : `GET /api/forms/templates`
+    -   Endpoint : `POST /api/forms/from-template`
+    -   Gestion des catégories de templates
+    -   Templates populaires (contact, sondage, inscription)
+
 ---
 
 ## 📝 Priorité 3 - Gestion des Soumissions
@@ -190,6 +269,23 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   `SubmitFormDto` avec validation dynamique
     -   `SubmissionResponseDto` pour les réponses
     -   `SubmissionExportDto` pour les exports
+
+### 3.4 Validation et analytics
+
+-   [ ] **SUBMISSIONS-005** : Implémenter la validation des données de soumission
+
+    -   Validation dynamique selon le schéma du formulaire
+    -   Gestion des types de données (email, date, nombre, etc.)
+    -   Validation des champs obligatoires
+    -   Messages d'erreur personnalisés
+    -   Validation côté serveur et client
+
+-   [ ] **SUBMISSIONS-006** : Créer `SubmissionAnalyticsService`
+    -   Statistiques des soumissions par formulaire
+    -   Endpoint : `GET /api/forms/{id}/submissions/analytics`
+    -   Métriques de conversion
+    -   Graphiques de tendances
+    -   Analyse des performances des formulaires
 
 ---
 
@@ -253,6 +349,40 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   `SubscriptionResponseDto` pour les réponses
     -   `WebhookDto` pour les webhooks Stripe
 
+### 4.5 Gestion des statuts et fonctionnalités
+
+-   [ ] **SUBSCRIPTIONS-004** : Implémenter la gestion des statuts d'abonnement
+
+    -   Service de gestion des statuts (ACTIVE, SUSPENDED, CANCELLED)
+    -   Logique de rétrogradation automatique
+    -   Endpoint : `GET /api/subscriptions/{id}/status`
+    -   Endpoint : `PUT /api/subscriptions/{id}/status`
+    -   Gestion des transitions de statut
+
+-   [ ] **SUBSCRIPTIONS-005** : Créer `PlanFeatureService`
+    -   Gestion des fonctionnalités par plan
+    -   Validation des accès aux fonctionnalités
+    -   Configuration des limites par plan
+    -   Service de vérification des permissions
+    -   Endpoint : `GET /api/plans/{id}/features`
+
+### 4.6 Facturation et retry
+
+-   [ ] **STRIPE-004** : Implémenter la gestion des factures
+
+    -   Service de génération des factures
+    -   Endpoint : `GET /api/subscriptions/{id}/invoices`
+    -   Endpoint : `GET /api/invoices/{id}/download`
+    -   Intégration avec Stripe Billing
+    -   Historique des factures
+
+-   [ ] **STRIPE-005** : Créer `PaymentRetryService`
+    -   Gestion des tentatives de paiement échouées
+    -   Logique de retry automatique
+    -   Notifications d'échec de paiement
+    -   Suspension automatique des comptes
+    -   Configuration des tentatives de retry
+
 ---
 
 ## 📊 Priorité 5 - Gestion des Quotas
@@ -287,6 +417,23 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Blocage des requêtes si quota dépassé
     -   Logs des tentatives d'actions
     -   Messages d'erreur appropriés
+
+### 5.4 Blocage et alertes
+
+-   [ ] **QUOTAS-005** : Implémenter le système de blocage en temps réel
+
+    -   Middleware de vérification des quotas
+    -   Blocage automatique des actions
+    -   Messages d'erreur appropriés
+    -   Logs des tentatives d'actions
+    -   Configuration des seuils de blocage
+
+-   [ ] **QUOTAS-006** : Créer `QuotaAlertService`
+    -   Alertes en temps réel via WebSocket
+    -   Notifications push pour les seuils critiques
+    -   Dashboard de monitoring des quotas
+    -   Historique des alertes
+    -   Configuration des seuils d'alerte
 
 ---
 
