@@ -116,37 +116,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des données personnelles
     -   Gestion de l'avatar utilisateur
 
-### 1.4 Gestion des rôles et autorisations
-
--   [ ] **AUTH-011** : Implémenter la gestion des rôles utilisateurs
-
-    -   Créer `RoleService` pour la gestion des rôles
-    -   Endpoint : `GET /api/users/{id}/roles`
-    -   Endpoint : `PUT /api/users/{id}/roles`
-    -   Validation des permissions d'administration
-    -   Gestion des rôles : USER, ADMIN, PREMIUM
-
--   [ ] **AUTH-012** : Créer `AuthorizationService`
-
-    -   Vérification des permissions par rôle
-    -   Middleware d'autorisation
-    -   Gestion des accès aux ressources
-    -   Voters Symfony pour les permissions complexes
-
--   [ ] **AUTH-013** : Implémenter la validation de force du mot de passe
-
-    -   Service de validation des règles de sécurité
-    -   Configuration des règles (longueur, caractères spéciaux, etc.)
-    -   Messages d'erreur personnalisés
-    -   Validation en temps réel côté client
-
--   [ ] **AUTH-014** : Créer `UserProfileService`
-    -   Gestion du profil utilisateur
-    -   Endpoint : `GET /api/users/{id}/profile`
-    -   Endpoint : `PUT /api/users/{id}/profile`
-    -   Validation des données personnelles
-    -   Gestion de l'avatar utilisateur
-
 ---
 
 ## 📊 Priorité 2 - Gestion des Formulaires
