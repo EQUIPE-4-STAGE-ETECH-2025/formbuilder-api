@@ -208,6 +208,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 ### 3.1 Controllers de soumissions
 
 -   [ ] **SUBMISSIONS-001** `(Dépendances -> FORMS-008, QUOTAS-002, SUBMISSIONS-002, AUTH-012)` : Créer `SubmissionController`
+
     -   Endpoint : `POST /api/forms/{id}/submit` (public)
     -   Endpoint : `GET /api/forms/{id}/submissions` (privé)
     -   Endpoint : `GET /api/forms/{id}/submissions/export`
@@ -225,6 +226,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Notifications email
 
 -   [x] **SUBMISSIONS-003** `(Dépendances -> Aucune)` : Créer `SubmissionExportService`
+
     -   Génération de fichiers CSV
     -   Gestion des caractères spéciaux
     -   Pagination des exports
