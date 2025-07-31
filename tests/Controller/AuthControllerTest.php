@@ -272,6 +272,7 @@ class AuthControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Email vérifié avec succès', $data['message']);
+
         $em->clear();
 
         $verifiedUser = $userRepository->find($user->getId());
@@ -351,11 +352,6 @@ class AuthControllerTest extends WebTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertFalse($data['success']);
         $this->assertEquals('Utilisateur inexistant.', $data['error']);
-            json_encode(['email' => 'nonexistent@example.com']);
-        $this->assertResponseStatusCodeSame(404);
-
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('error', $data);
     }
 
     public function testResetPasswordSuccess(): void
