@@ -31,10 +31,12 @@ class AuthService
             'token' => $token,
             'user' => [
                 'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'role' => $user->getRole(),
                 'firstName' => $user->getFirstName(),
                 'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
+                'isEmailVerified' => $user->isEmailVerified(),
+                'role' => $user->getRole(),
+                'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
             ]
         ];
     }
