@@ -76,7 +76,6 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
-
             return $this->json(['success' => false, 'error' => $errorMessages], 422);
         }
 
