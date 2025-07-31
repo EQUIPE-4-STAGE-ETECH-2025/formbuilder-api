@@ -22,10 +22,10 @@ class LoginDto
     {
         return $this->password;
     }
+
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
