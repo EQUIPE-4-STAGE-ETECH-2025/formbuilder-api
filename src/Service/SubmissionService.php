@@ -14,7 +14,6 @@ use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
-
 class SubmissionService
 {
     public function __construct(
