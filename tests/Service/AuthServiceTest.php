@@ -55,9 +55,18 @@ class AuthServiceTest extends TestCase
 
         $result = $authService->login($dto);
 
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $jwtManager->method('create')->willReturn('fake-jwt-token');
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtManager);
+
+        $result = $service->login($dto);
+
+
         $this->assertEquals('fake-jwt-token', $result['token']);
         $this->assertEquals('test@example.com', $result['user']['email']);
     }
+
 
     /**
      * @throws Exception
@@ -76,6 +85,9 @@ class AuthServiceTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
 
         $authService = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+
+        $authService = new AuthService($userRepo, $hasher, $jwtManager);
 
         $this->expectException(UnauthorizedHttpException::class);
         $authService->login($dto);
@@ -575,5 +587,4 @@ class AuthServiceTest extends TestCase
 
         $service->resetPassword($dto);
     }
-
 }
