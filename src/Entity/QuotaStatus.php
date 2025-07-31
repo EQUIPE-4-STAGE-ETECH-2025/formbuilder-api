@@ -10,7 +10,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 class QuotaStatus
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'uuid')]
     private ?string $id = null;
 
@@ -47,6 +46,12 @@ class QuotaStatus
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function setId(string $id): static
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getUser(): ?User

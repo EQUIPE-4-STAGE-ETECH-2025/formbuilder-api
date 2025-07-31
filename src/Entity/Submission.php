@@ -10,7 +10,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Submission
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'uuid')]
     private ?string $id = null;
 
@@ -40,6 +39,12 @@ class Submission
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function setId(string $id): static
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getForm(): ?Form

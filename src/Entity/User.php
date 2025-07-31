@@ -16,7 +16,6 @@ use Symfony\Component\Validator\Constraints as Assert;
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
     #[ORM\Column(type: 'uuid')]
     #[Groups(['user:read'])]
     private ?string $id = null;
@@ -101,6 +100,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function setId(string $id): static
+    {
+        $this->id = $id;
+        return $this;
     }
 
     public function getFirstName(): ?string
