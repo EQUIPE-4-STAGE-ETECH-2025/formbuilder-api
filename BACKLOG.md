@@ -219,7 +219,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.2 Services de soumissions
 
--   [ ] **SUBMISSIONS-002** `(Dépendances -> AUTH-008, QUOTAS-002)` : Créer `SubmissionService`
+-   [x] **SUBMISSIONS-002** `(Dépendances -> AUTH-008, QUOTAS-002)` : Créer `SubmissionService`
 
     -   Validation des données de soumission
     -   Vérification des quotas
@@ -236,7 +236,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.3 DTOs de soumissions
 
--   [ ] **SUBMISSIONS-004** `(Dépendances -> Aucune)` : Créer les DTOs de soumissions
+-   [x] **SUBMISSIONS-004** `(Dépendances -> Aucune)` : Créer les DTOs de soumissions
     -   `SubmitFormDto` avec validation dynamique
     -   `SubmissionResponseDto` pour les réponses
     -   `SubmissionExportDto` pour les exports
