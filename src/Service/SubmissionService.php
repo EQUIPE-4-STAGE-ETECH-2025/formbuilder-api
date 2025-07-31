@@ -12,6 +12,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+
 
 class SubmissionService
 {
@@ -22,6 +24,7 @@ class SubmissionService
         private FormVersionRepository $formVersionRepository,
         private QuotaStatusRepository $quotaStatusRepository,
         private MailerInterface $mailer,
+        private ParameterBagInterface $params, 
     ) {}
 
     public function submit(string $formId, SubmitFormDto $dto, string $ipAddress): Submission
