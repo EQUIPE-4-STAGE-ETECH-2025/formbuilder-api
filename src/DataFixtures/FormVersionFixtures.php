@@ -2,8 +2,8 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\FormVersion;
 use App\Entity\Form;
+use App\Entity\FormVersion;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -275,7 +275,7 @@ class FormVersionFixtures extends Fixture implements DependentFixtureInterface
             $formVersion->setVersionNumber($versionData['versionNumber']);
             $formVersion->setSchema($versionData['schema']);
             $formVersion->setCreatedAt(new \DateTimeImmutable($versionData['createdAt']));
-            
+
             $manager->persist($formVersion);
             $this->addReference($versionData['id'], $formVersion);
         }
@@ -289,4 +289,4 @@ class FormVersionFixtures extends Fixture implements DependentFixtureInterface
             FormFixtures::class,
         ];
     }
-} 
+}

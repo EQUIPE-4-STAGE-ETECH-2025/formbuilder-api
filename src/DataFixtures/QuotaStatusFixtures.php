@@ -49,13 +49,13 @@ class QuotaStatusFixtures extends Fixture implements DependentFixtureInterface
             $quotaStatus = new QuotaStatus();
             $quotaStatus->setId($quotaData['id']);
             $quotaStatus->setUser($this->getReference($quotaData['user'], User::class));
-            $quotaStatus->setMonth(new \DateTime($quotaData['month'] . '-01'));
+            $quotaStatus->setMonth(new \DateTime($quotaData['month'].'-01'));
             $quotaStatus->setFormCount($quotaData['formCount']);
             $quotaStatus->setSubmissionCount($quotaData['submissionCount']);
             $quotaStatus->setStorageUsedMb($quotaData['storageUsedMb']);
             $quotaStatus->setNotified80($quotaData['notified80']);
             $quotaStatus->setNotified100($quotaData['notified100']);
-            
+
             $manager->persist($quotaStatus);
         }
 
@@ -68,4 +68,4 @@ class QuotaStatusFixtures extends Fixture implements DependentFixtureInterface
             UserFixtures::class,
         ];
     }
-} 
+}

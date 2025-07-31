@@ -2,8 +2,8 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\Submission;
 use App\Entity\Form;
+use App\Entity\Submission;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -88,7 +88,7 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
             $submission->setData($submissionData['data']);
             $submission->setSubmittedAt(new \DateTimeImmutable($submissionData['submittedAt']));
             $submission->setIpAddress($submissionData['ipAddress']);
-            
+
             $manager->persist($submission);
         }
 
@@ -101,4 +101,4 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
             FormFixtures::class,
         ];
     }
-} 
+}

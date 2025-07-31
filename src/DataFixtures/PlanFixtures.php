@@ -4,7 +4,6 @@ namespace App\DataFixtures;
 
 use App\Entity\Plan;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
 class PlanFixtures extends Fixture
@@ -50,11 +49,11 @@ class PlanFixtures extends Fixture
             $plan->setMaxForms($planData['maxForms']);
             $plan->setMaxSubmissionsPerMonth($planData['maxSubmissionsPerMonth']);
             $plan->setMaxStorageMb($planData['maxStorageMb']);
-            
+
             $manager->persist($plan);
             $this->addReference($planData['id'], $plan);
         }
 
         $manager->flush();
     }
-} 
+}

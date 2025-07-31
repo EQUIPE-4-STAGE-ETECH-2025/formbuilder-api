@@ -62,14 +62,14 @@ class FormFixtures extends Fixture implements DependentFixtureInterface
             $form->setTitle($formData['title']);
             $form->setDescription($formData['description']);
             $form->setStatus($formData['status']);
-            
+
             if ($formData['publishedAt']) {
                 $form->setPublishedAt(new \DateTimeImmutable($formData['publishedAt']));
             }
-            
+
             $form->setCreatedAt(new \DateTimeImmutable($formData['createdAt']));
             $form->setUpdatedAt(new \DateTimeImmutable($formData['updatedAt']));
-            
+
             $manager->persist($form);
             $this->addReference($formData['id'], $form);
         }
@@ -83,4 +83,4 @@ class FormFixtures extends Fixture implements DependentFixtureInterface
             UserFixtures::class,
         ];
     }
-} 
+}

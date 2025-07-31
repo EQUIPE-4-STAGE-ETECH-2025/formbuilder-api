@@ -24,11 +24,11 @@ class FeatureFixtures extends Fixture
             $feature->setId($featureData['id']);
             $feature->setCode($featureData['code']);
             $feature->setLabel($featureData['label']);
-            
+
             $manager->persist($feature);
             $this->addReference($featureData['id'], $feature);
         }
 
         $manager->flush();
     }
-} 
+}

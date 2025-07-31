@@ -51,6 +51,7 @@ class QuotaStatus
     public function setId(string $id): static
     {
         $this->id = $id;
+
         return $this;
     }
 

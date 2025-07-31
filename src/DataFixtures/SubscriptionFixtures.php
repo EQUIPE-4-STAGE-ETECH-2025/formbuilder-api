@@ -2,9 +2,9 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Plan;
 use App\Entity\Subscription;
 use App\Entity\User;
-use App\Entity\Plan;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -60,7 +60,7 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             $subscription->setIsActive($subscriptionData['isActive']);
             $subscription->setCreatedAt(new \DateTimeImmutable($subscriptionData['createdAt']));
             $subscription->setUpdatedAt(new \DateTimeImmutable($subscriptionData['updatedAt']));
-            
+
             $manager->persist($subscription);
             $this->addReference($subscriptionData['id'], $subscription);
         }
@@ -75,4 +75,4 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             PlanFixtures::class,
         ];
     }
-} 
+}

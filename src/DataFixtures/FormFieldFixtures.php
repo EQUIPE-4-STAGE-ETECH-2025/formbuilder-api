@@ -34,7 +34,7 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
                 'position' => 2,
                 'validationRules' => ['required' => true, 'pattern' => '^[^@]+@[^@]+\\.[^@]+$'],
             ],
-            
+
             // Version 2 du formulaire 1
             [
                 'id' => '550e8400-e29b-41d4-a716-446655441003',
@@ -66,7 +66,7 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
                 'position' => 3,
                 'validationRules' => ['required' => false, 'max_length' => 1000],
             ],
-            
+
             // Version 1 du formulaire 2
             [
                 'id' => '550e8400-e29b-41d4-a716-446655441006',
@@ -88,7 +88,7 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
                 'position' => 2,
                 'validationRules' => ['required' => true, 'pattern' => '^[^@]+@[^@]+\\.[^@]+$'],
             ],
-            
+
             // Version 1 du formulaire 3
             [
                 'id' => '550e8400-e29b-41d4-a716-446655441008',
@@ -110,7 +110,7 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
                 'position' => 2,
                 'validationRules' => ['required' => false, 'max_length' => 500],
             ],
-            
+
             // Version 1 du formulaire 4
             [
                 'id' => '550e8400-e29b-41d4-a716-446655441010',
@@ -164,7 +164,7 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
             $formField->setOptions($fieldData['options']);
             $formField->setPosition($fieldData['position']);
             $formField->setValidationRules($fieldData['validationRules']);
-            
+
             $manager->persist($formField);
         }
 
@@ -177,4 +177,4 @@ class FormFieldFixtures extends Fixture implements DependentFixtureInterface
             FormVersionFixtures::class,
         ];
     }
-} 
+}

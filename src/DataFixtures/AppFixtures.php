@@ -20,39 +20,39 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
         return [
             // 1. Utilisateurs (base de toutes les relations)
             UserFixtures::class,
-            
+
             // 2. Fonctionnalités (indépendantes)
             FeatureFixtures::class,
-            
+
             // 3. Plans (indépendants)
             PlanFixtures::class,
-            
+
             // 4. Associations Plan-Fonctionnalité (dépend de Plans et Features)
             PlanFeatureFixtures::class,
-            
+
             // 5. Abonnements (dépend de Users et Plans)
             SubscriptionFixtures::class,
-            
+
             // 6. Formulaires (dépend de Users)
             FormFixtures::class,
-            
+
             // 7. Versions de formulaires (dépend de Forms)
             FormVersionFixtures::class,
-            
+
             // 8. Champs de formulaires (dépend de FormVersions)
             FormFieldFixtures::class,
-            
+
             // 9. Soumissions (dépend de Forms)
             SubmissionFixtures::class,
-            
+
             // 10. Statuts de quota (dépend de Users)
             QuotaStatusFixtures::class,
-            
+
             // 11. Logs d'audit (dépend de Users)
             AuditLogFixtures::class,
-            
+
             // 12. Tokens de formulaires (dépend de Forms)
             FormTokenFixtures::class,
         ];
     }
-} 
+}

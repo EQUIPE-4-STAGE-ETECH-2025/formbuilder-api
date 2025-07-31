@@ -2,8 +2,8 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\FormToken;
 use App\Entity\Form;
+use App\Entity\FormToken;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -36,7 +36,7 @@ class FormTokenFixtures extends Fixture implements DependentFixtureInterface
             $formToken->setJwt($tokenData['jwt']);
             $formToken->setExpiresAt(new \DateTimeImmutable($tokenData['expiresAt']));
             $formToken->setCreatedAt(new \DateTimeImmutable($tokenData['createdAt']));
-            
+
             $manager->persist($formToken);
         }
 
@@ -49,4 +49,4 @@ class FormTokenFixtures extends Fixture implements DependentFixtureInterface
             FormFixtures::class,
         ];
     }
-} 
+}

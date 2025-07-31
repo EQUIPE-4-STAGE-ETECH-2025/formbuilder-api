@@ -55,7 +55,7 @@ class AuditLogFixtures extends Fixture implements DependentFixtureInterface
             $auditLog->setAction($logData['action']);
             $auditLog->setReason($logData['reason']);
             $auditLog->setCreatedAt(new \DateTimeImmutable($logData['createdAt']));
-            
+
             $manager->persist($auditLog);
         }
 
@@ -68,4 +68,4 @@ class AuditLogFixtures extends Fixture implements DependentFixtureInterface
             UserFixtures::class,
         ];
     }
-} 
+}

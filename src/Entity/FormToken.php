@@ -43,6 +43,7 @@ class FormToken
     public function setId(string $id): static
     {
         $this->id = $id;
+
         return $this;
     }
 
