@@ -226,7 +226,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Enregistrement sécurisé
     -   Notifications email
 
-
 -   [x] **SUBMISSIONS-003** `(Dépendances -> Aucune)` : Créer `SubmissionExportService`
 
     -   Génération de fichiers CSV
@@ -237,6 +236,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 ### 3.3 DTOs de soumissions
 
 -   [x] **SUBMISSIONS-004** `(Dépendances -> Aucune)` : Créer les DTOs de soumissions
+
     -   `SubmitFormDto` avec validation dynamique
     -   `SubmissionResponseDto` pour les réponses
     -   `SubmissionExportDto` pour les exports
