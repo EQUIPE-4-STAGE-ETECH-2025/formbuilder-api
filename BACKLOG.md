@@ -225,7 +225,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Notifications email
 
 -   [x] **SUBMISSIONS-003** `(Dépendances -> Aucune)` : Créer `SubmissionExportService`
-
     -   Génération de fichiers CSV
     -   Gestion des caractères spéciaux
     -   Pagination des exports
