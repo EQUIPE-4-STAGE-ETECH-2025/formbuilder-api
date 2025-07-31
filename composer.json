@@ -7,17 +7,18 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/dbal": "^3",
+        "doctrine/dbal": "^3.10",
         "doctrine/doctrine-bundle": "^2.15",
-        "doctrine/doctrine-migrations-bundle": "^3.4",
+        "doctrine/doctrine-migrations-bundle": "^3.4.2",
         "doctrine/orm": "^3.5",
-        "nelmio/api-doc-bundle": "^4.0",
+        "nelmio/api-doc-bundle": "^4.38.2",
         "symfony/console": "7.3.*",
         "symfony/dotenv": "7.3.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.8.1",
         "symfony/framework-bundle": "7.3.*",
         "symfony/http-foundation": "7.3.*",
         "symfony/http-kernel": "7.3.*",
+        "symfony/mailer": "7.3.*",
         "symfony/password-hasher": "7.3.*",
         "symfony/routing": "7.3.*",
         "symfony/runtime": "7.3.*",
@@ -26,7 +27,7 @@
         "symfony/uid": "7.3.*",
         "symfony/validator": "7.3.*",
         "symfony/yaml": "7.3.*",
-        "zircote/swagger-php": "^4.0"
+        "zircote/swagger-php": "^4.11.1"
     },
     "config": {
         "allow-plugins": {
@@ -86,11 +87,11 @@
     },
     "require-dev": {
         "doctrine/doctrine-fixtures-bundle": "^4.1",
-        "friendsofphp/php-cs-fixer": "^3.0",
-        "phpstan/phpstan": "^1.0",
-        "phpstan/phpstan-doctrine": "^1.5",
-        "phpstan/phpstan-symfony": "^1.0",
-        "phpunit/phpunit": "^11.5",
+        "friendsofphp/php-cs-fixer": "^3.85.1",
+        "phpstan/phpstan": "^1.12.28",
+        "phpstan/phpstan-doctrine": "^1.5.7",
+        "phpstan/phpstan-symfony": "^1.4.15",
+        "phpunit/phpunit": "^11.5.28",
         "symfony/browser-kit": "7.3.*",
         "symfony/css-selector": "7.3.*",
         "symfony/maker-bundle": "^1.64"
