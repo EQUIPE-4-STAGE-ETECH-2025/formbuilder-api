@@ -21,8 +21,10 @@
         <env name="JWT_PUBLIC_KEY" value="%kernel.project_dir%/config/jwt/public.pem"/>
         <env name="JWT_PASSPHRASE" value="2dfbd67d9b90e89a7dde063e290139405facf64289b6b4cbc3c0ff6892236b8a"/>
         <!-- ###- lexik/jwt-authentication-bundle ### -->
-    </php>
 
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
+    </php>
+    
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory>tests</directory>
