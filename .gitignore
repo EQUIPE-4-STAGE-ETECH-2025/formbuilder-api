@@ -70,7 +70,3 @@ yarn-error.log*
 .env
 .env.test
 ###< Environment files ###
-
-###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
-###< lexik/jwt-authentication-bundle ###
