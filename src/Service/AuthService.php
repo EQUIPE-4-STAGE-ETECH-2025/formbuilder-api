@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Dto\LoginDto;
+use App\Dto\UserResponseDto;
 use App\Repository\UserRepository;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -44,4 +45,17 @@ class AuthService
             ]
         ];
     }
+
+    public function getCurrentUser(string $jwt): UserResponseDto
+    {
+        $payload = $this->jwtService->validateToken($jwt);
+
+        $user = $this->userRepository->find($payload->id ?? null);
+        if (!$user) {
+            throw new UnauthorizedHttpException('', 'Utilisateur introuvable.');
+        }
+
+        return new UserResponseDto($user);
+    }
+
 }
