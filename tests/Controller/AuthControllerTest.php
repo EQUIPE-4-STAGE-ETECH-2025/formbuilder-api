@@ -35,7 +35,7 @@ class AuthControllerTest extends WebTestCase
         $client->request(
             'POST',
             '/api/auth/login',
-            [], 
+            [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
             json_encode([
@@ -43,7 +43,7 @@ class AuthControllerTest extends WebTestCase
                 'password' => 'password123',
             ])
         );
-        
+
 
         $this->assertResponseIsSuccessful();
 
@@ -68,7 +68,7 @@ class AuthControllerTest extends WebTestCase
                 'password' => '',
             ])
         );
-        
+
 
         $this->assertResponseStatusCodeSame(422);
 
@@ -76,6 +76,49 @@ class AuthControllerTest extends WebTestCase
         $this->assertArrayHasKey('errors', $data);
         $this->assertArrayHasKey('email', $data['errors']);
         $this->assertArrayHasKey('password', $data['errors']);
+    }
+
+    public function testMeEndpointReturnsUser(): void
+    {
+        $client = static::createClient();
+        $this->em = static::getContainer()->get('doctrine')->getManager();
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail($this->testEmail);
+        $user->setFirstName('Jean');
+        $user->setLastName('Test');
+        $user->setRole('USER');
+        $user->setIsEmailVerified(true);
+        $user->setPasswordHash($passwordHasher->hashPassword($user, 'password123'));
+
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $client->request(
+            'POST',
+            '/api/auth/login',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['email' => $this->testEmail, 'password' => 'password123'])
+        );
+
+        $responseData = json_decode($client->getResponse()->getContent(), true);
+        $token = $responseData['token'];
+
+        $client->request(
+            'GET',
+            '/api/auth/me',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+        $data = json_decode($client->getResponse()->getContent(), true);
+        $this->assertEquals($this->testEmail, $data['email']);
     }
 
     //Fonction qui nettoie l'environnement après le test
