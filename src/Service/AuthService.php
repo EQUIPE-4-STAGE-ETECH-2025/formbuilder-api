@@ -4,9 +4,7 @@ namespace App\Service;
 
 use App\Dto\LoginDto;
 use App\Repository\UserRepository;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthService
@@ -14,7 +12,7 @@ class AuthService
     public function __construct(
         private readonly UserRepository              $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
-        private readonly JWTTokenManagerInterface $jwtManager
+        private readonly JwtService $jwtService
     ) {}
 
     public function login(LoginDto $dto) : array
@@ -25,7 +23,13 @@ class AuthService
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
         }
 
-        $token = $this->jwtManager->create($user);
+        $payload = [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'role' => $user->getRole(),
+        ];
+
+        $token = $this->jwtService->generateToken($payload);
 
         return [
             'token' => $token,

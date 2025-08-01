@@ -6,11 +6,9 @@ use App\Dto\LoginDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AuthService;
-use Doctrine\ORM\EntityManagerInterface;
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use App\Service\JwtService;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
-use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthServiceTest extends TestCase
@@ -34,12 +32,12 @@ class AuthServiceTest extends TestCase
         $passwordHasher->method('isPasswordValid')
             ->willReturn(true);
 
-        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
-        $jwtManager->method('create')->willReturn('fake-jwt-token');
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('generateToken')->willReturn('fake-jwt-token');
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtManager);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService);
 
-        $result = $service->login($dto);
+        $result = $authService->login($dto);
 
         $this->assertEquals('fake-jwt-token', $result['token']);
         $this->assertEquals('test@example.com', $result['user']['email']);
@@ -55,9 +53,9 @@ class AuthServiceTest extends TestCase
         $userRepo->method('findOneBy')->willReturn(null);
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
-        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
+        $jwtService = $this->createMock(JwtService::class);
 
-        $authService = new AuthService($userRepo, $hasher, $jwtManager);
+        $authService = new AuthService($userRepo, $hasher, $jwtService);
 
         $this->expectException(UnauthorizedHttpException::class);
         $authService->login($dto);
