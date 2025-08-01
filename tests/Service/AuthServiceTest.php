@@ -145,9 +145,14 @@ class AuthServiceTest extends TestCase
 
         $result = $service->getCurrentUser('valid-token');
 
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+
+        $result = $service->getCurrentUser('valid-token');
+
+        $this->assertInstanceOf(\App\Dto\UserResponseDto::class, $result);
+
         $this->assertEquals('me@example.com', $result->getEmail());
     }
-
 
     /**
      * @throws Exception
@@ -163,13 +168,15 @@ class AuthServiceTest extends TestCase
         $userRepo->method('find')->willReturn(null);
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
         $emailService = $this->createMock(EmailService::class);
 
         $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
 
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+
         $service->getCurrentUser('valid-token');
     }
-
     /**
      * @throws Exception
      */
