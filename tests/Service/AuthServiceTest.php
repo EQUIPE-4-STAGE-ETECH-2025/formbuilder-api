@@ -60,9 +60,9 @@ class AuthServiceTest extends TestCase
         $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
         $jwtManager->method('create')->willReturn('fake-jwt-token');
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtManager);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService);
 
-        $result = $service->login($dto);
+        $result = $authService->login($dto);
 
 
         $this->assertEquals('fake-jwt-token', $result['token']);
