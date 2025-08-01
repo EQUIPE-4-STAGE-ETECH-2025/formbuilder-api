@@ -49,5 +49,11 @@ services:
         arguments:
             $jwtService: '@App\Service\JwtService'
 
+    App\Service\JwtService:
+        arguments:
+            $secretKey: '%env(JWT_SECRET)%'
+            $tokenTtl: 3600 # 1 heure
+            $algorithm: 'HS256'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
