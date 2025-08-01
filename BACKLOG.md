@@ -26,7 +26,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Envoi d'email de vérification
     -   Création automatique du profil utilisateur
 
--   [ ] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
+-   [x] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
 
     -   Endpoint : `GET /api/auth/me`
     -   Validation du token JWT

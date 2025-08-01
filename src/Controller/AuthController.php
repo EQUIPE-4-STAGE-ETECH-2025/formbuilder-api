@@ -39,4 +39,22 @@ class AuthController extends AbstractController
         $authData = $authService->login($dto);
         return $this->json($authData);
     }
+
+    #[Route('/api/auth/me', name: 'auth_me', methods: ['GET'])]
+    public function me(Request $request, AuthService $authService): JsonResponse
+    {
+        $authHeader = $request->headers->get('Authorization');
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return $this->json(['error' => 'Token manquant'], 401);
+        }
+
+        $token = substr($authHeader, 7);
+        try {
+            $dto = $authService->getCurrentUser($token);
+            return $this->json($dto->toArray());
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 401);
+        }
+    }
+
 }
