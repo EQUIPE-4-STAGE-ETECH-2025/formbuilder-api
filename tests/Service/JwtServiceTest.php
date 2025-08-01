@@ -78,7 +78,6 @@ class JwtServiceTest extends TestCase
     {
 
         $this->expectException(RuntimeException::class);
-
         $this->expectExceptionMessage('Le token est encore valide, pas besoin de le rafraîchir.');
 
         $now = time();
