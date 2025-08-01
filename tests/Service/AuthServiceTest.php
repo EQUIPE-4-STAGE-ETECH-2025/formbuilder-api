@@ -60,4 +60,45 @@ class AuthServiceTest extends TestCase
         $this->expectException(UnauthorizedHttpException::class);
         $authService->login($dto);
     }
+
+    public function testGetCurrentUserSuccess(): void
+    {
+        $user = new User();
+        $user->setEmail('me@example.com');
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->willReturn((object)['id' => 42]);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('find')->with(42)->willReturn($user);
+
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+
+        $result = $service->getCurrentUser('valid-token');
+
+        $this->assertInstanceOf(\App\Dto\UserResponseDto::class, $result);
+
+        $this->assertEquals('me@example.com', $result->getEmail());
+    }
+
+
+    public function testGetCurrentUserNotFound(): void
+    {
+        $this->expectException(UnauthorizedHttpException::class);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->willReturn((object)['id' => 42]);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('find')->willReturn(null);
+
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+
+        $service->getCurrentUser('valid-token');
+    }
+
 }
