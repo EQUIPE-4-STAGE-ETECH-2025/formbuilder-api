@@ -100,7 +100,6 @@ class AuthService
         if (! $user->isEmailVerified()) {
             throw new UnauthorizedHttpException('', 'Email non vérifié.');
         }
-
         $payload = [
             'id' => $user->getId(),
             'email' => $user->getEmail(),
