@@ -141,7 +141,6 @@ class AuthServiceTest extends TestCase
         $this->assertEquals('me@example.com', $result->getEmail());
     }
 
-
     /**
      * @throws Exception
      */
@@ -598,5 +597,4 @@ class AuthServiceTest extends TestCase
 
         $service->resetPassword($dto);
     }
-
 }
