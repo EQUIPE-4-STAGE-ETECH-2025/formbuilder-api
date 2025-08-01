@@ -162,14 +162,16 @@ class AuthServiceTest extends TestCase
         $userRepo->method('find')->willReturn(null);
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
         $emailService = $this->createMock(EmailService::class);
         $subscriptionService = $this->createMock(SubscriptionService::class);
 
         $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+
         $service->getCurrentUser('valid-token');
     }
-
     /**
      * @throws Exception
      */
