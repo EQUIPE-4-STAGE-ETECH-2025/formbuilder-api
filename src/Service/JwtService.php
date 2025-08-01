@@ -59,7 +59,6 @@ class JwtService
             throw new \RuntimeException('Le token est encore valide, pas besoin de le rafraîchir.');
         }
 
-        // On retire les claims standard pour générer un nouveau token propre
         $payload = (array)$decoded;
         unset($payload['iat'], $payload['exp']);
 
