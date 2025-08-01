@@ -139,7 +139,6 @@ class AuthServiceTest extends TestCase
         $this->assertEquals('me@example.com', $result->getEmail());
     }
 
-
     /**
      * @throws Exception
      */
