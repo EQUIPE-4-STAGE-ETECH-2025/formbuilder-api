@@ -50,8 +50,6 @@ class JwtService
         return JWT::encode($tokenPayload, $this->secretKey, $this->algorithm);
     }
 
-
-
     // Génère un refresh token avec une durée de vie plus longue
     /**
      * @param array<string, mixed> $payload
