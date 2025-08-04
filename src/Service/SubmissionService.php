@@ -45,7 +45,7 @@ class SubmissionService
         $schema = $formVersion->getSchema();
         $data = $dto->getData();
 
-        $this->validateDynamic($schema, $data);
+        $this->validateDynamic($schema, $data, $formVersion);
         $this->checkQuota($form->getUser());
 
         $submission = new Submission();
@@ -57,7 +57,7 @@ class SubmissionService
         $this->incrementSubmissionQuota($form->getUser()->getId());
         $this->em->flush();
 
-        // Envoi d’un email de notification au propriétaire du formulaire
+        // Envoi d’un email de notification
         $frontendUrl = $this->params->get('env(FRONTEND_URL)');
         $submissionUrl = $frontendUrl . 'forms/' . $form->getId() . '/submissions';
 
@@ -67,7 +67,7 @@ class SubmissionService
             ->subject('Nouvelle soumission reçue')
             ->html(sprintf(
                 '<p>Vous avez reçu une nouvelle soumission pour le formulaire <strong>%s</strong>.</p>
-                 <p><a href="%s" target="_blank">Voir les réponses</a></p>',
+                <p><a href="%s" target="_blank">Voir les réponses</a></p>',
                 htmlspecialchars($form->getTitle(), ENT_QUOTES),
                 $submissionUrl
             ));
@@ -77,25 +77,65 @@ class SubmissionService
         return $submission;
     }
 
-    private function validateDynamic(array $schema, array $data): void
+    private function validateDynamic(array $schema, array $data, \App\Entity\FormVersion $formVersion): void
     {
-        foreach ($schema['fields'] ?? [] as $field) {
-            $name = $field['name'] ?? null;
-            $type = $field['type'] ?? null;
-            $required = $field['required'] ?? false;
+        // Indexation des FormFields pour accès rapide
+        $fields = [];
+        foreach ($formVersion->getFormFields() as $field) {
+            $fields[$field->getId()] = $field;
+        }
 
-            if ($required && (!isset($data[$name]) || $data[$name] === '')) {
-                throw new \InvalidArgumentException("Le champ requis '$name' est manquant.");
+        foreach ($schema['fields'] ?? [] as $fieldSchema) {
+            $name = $fieldSchema['name'] ?? null;
+            $type = $fieldSchema['type'] ?? null;
+            $required = $fieldSchema['required'] ?? false;
+
+            $fieldEntity = $fields[$name] ?? null;
+            $validationRules = $fieldEntity?->getValidationRules() ?? [];
+
+            $value = $data[$name] ?? null;
+
+            // Champs requis
+            if ($required && ($value === null || $value === '')) {
+                throw new \InvalidArgumentException("Le champ requis '{$fieldSchema['label']}' est manquant.");
             }
 
-            if (isset($data[$name])) {
-                if ($type === 'email' && !filter_var($data[$name], FILTER_VALIDATE_EMAIL)) {
-                    throw new \InvalidArgumentException("Le champ '$name' doit être une adresse email valide.");
+            if ($value !== null) {
+                // Validation des types de base
+                if ($type === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être une adresse email valide.");
+                }
+
+                if ($type === 'number' && !is_numeric($value)) {
+                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être un nombre.");
+                }
+
+                // Règles personnalisées (validationRules)
+                if (isset($validationRules['regex']) && !preg_match('/'.$validationRules['regex'].'/', $value)) {
+                    $message = $validationRules['regexMessage'] ?? "Le champ '{$fieldSchema['label']}' n'est pas valide.";
+                    throw new \InvalidArgumentException($message);
+                }
+
+                if (isset($validationRules['minLength']) && strlen($value) < $validationRules['minLength']) {
+                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit contenir au moins {$validationRules['minLength']} caractères.");
+                }
+
+                if (isset($validationRules['maxLength']) && strlen($value) > $validationRules['maxLength']) {
+                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' ne peut pas dépasser {$validationRules['maxLength']} caractères.");
+                }
+
+                if ($type === 'number') {
+                    if (isset($validationRules['min']) && $value < $validationRules['min']) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être supérieur ou égal à {$validationRules['min']}.");
+                    }
+                    if (isset($validationRules['max']) && $value > $validationRules['max']) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être inférieur ou égal à {$validationRules['max']}.");
+                    }
                 }
             }
         }
     }
-
+       
     private function checkQuota($user): void
     {
         $now = new \DateTimeImmutable('first day of this month');
