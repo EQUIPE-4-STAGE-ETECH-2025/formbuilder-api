@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Dto\BlackListedTokenDto;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use DateTimeImmutable;
@@ -12,12 +13,14 @@ class JwtService
     private string $secretKey;
     private string $algorithm;
     private int $tokenTtl; // durée de vie du token
+    private ?BlackListedTokenService $blacklistService;
 
-    public function __construct(string $secretKey, int $tokenTtl = 3600, string $algorithm = 'HS256')
+    public function __construct(string $secretKey, int $tokenTtl = 3600, string $algorithm = 'HS256', ?BlackListedTokenService $blacklistService = null)
     {
         $this->secretKey = $secretKey;
         $this->tokenTtl = $tokenTtl;
         $this->algorithm = $algorithm;
+        $this->blacklistService = $blacklistService;
     }
 
     //Génère un token JWT pour les données utilisateur passées en payload.
@@ -34,12 +37,13 @@ class JwtService
         return JWT::encode($tokenPayload, $this->secretKey, $this->algorithm);
     }
 
-    /**
-     * Valide un token JWT et retourne le payload décodé.
-     * Lance une Exception si invalide ou expiré.
-     */
+    //Valide un token JWT et retourne le payload décodé.
     public function validateToken(string $token): object
     {
+        if ($this->blacklistService && $this->blacklistService->isBlacklisted($token)) {
+            throw new \RuntimeException('Token révoqué.');
+        }
+
         try {
             return JWT::decode($token, new Key($this->secretKey, $this->algorithm));
         } catch (Exception $e) {
@@ -47,7 +51,7 @@ class JwtService
         }
     }
 
-    //Refresh un token : génère un nouveau token si l’ancien est valide et proche de l’expiration.
+    //Refresh un token
     public function refreshToken(string $token, int $refreshThresholdSeconds = 300): string
     {
         $decoded = $this->validateToken($token);
@@ -64,4 +68,15 @@ class JwtService
 
         return $this->generateToken($payload);
     }
+
+    //Révoque un token
+    public function blacklistToken(BlackListedTokenDto $token): void
+    {
+        if (!$this->blacklistService) {
+            throw new \RuntimeException('Blacklist service non configuré.');
+        }
+
+        $this->blacklistService->blacklist($token);
+    }
+
 }
