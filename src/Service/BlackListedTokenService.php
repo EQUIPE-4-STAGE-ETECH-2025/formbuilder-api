@@ -9,6 +9,7 @@ use App\Repository\BlackListedTokenRepository;
 class BlackListedTokenService
 {
     public function __construct(
+
         private readonly BlackListedTokenRepository $repository,
     ) {
     }
