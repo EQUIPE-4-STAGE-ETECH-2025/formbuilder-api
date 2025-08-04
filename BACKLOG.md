@@ -242,7 +242,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.4 Validation et analytics
 
--   [ ] **SUBMISSIONS-005** `(Dépendances -> FORMS-008)` : Implémenter la validation des données de soumission
+-   [x] **SUBMISSIONS-005** `(Dépendances -> FORMS-008)` : Implémenter la validation des données de soumission
 
     -   Validation dynamique selon le schéma du formulaire
     -   Gestion des types de données (email, date, nombre, etc.)
