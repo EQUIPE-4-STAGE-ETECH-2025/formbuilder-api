@@ -57,18 +57,9 @@ class AuthServiceTest extends TestCase
 
         $result = $authService->login($dto);
 
-        $jwtManager = $this->createMock(JWTTokenManagerInterface::class);
-        $jwtManager->method('create')->willReturn('fake-jwt-token');
-
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService);
-
-        $result = $authService->login($dto);
-
-
         $this->assertEquals('fake-jwt-token', $result['token']);
         $this->assertEquals('test@example.com', $result['user']['email']);
     }
-
 
     /**
      * @throws Exception
@@ -147,14 +138,9 @@ class AuthServiceTest extends TestCase
 
         $result = $service->getCurrentUser('valid-token');
 
-        $service = new AuthService($userRepo, $hasher, $jwtService);
-
-        $result = $service->getCurrentUser('valid-token');
-
-        $this->assertInstanceOf(\App\Dto\UserResponseDto::class, $result);
-
         $this->assertEquals('me@example.com', $result->getEmail());
     }
+
 
     /**
      * @throws Exception
@@ -170,16 +156,14 @@ class AuthServiceTest extends TestCase
         $userRepo->method('find')->willReturn(null);
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
-
         $emailService = $this->createMock(EmailService::class);
         $subscriptionService = $this->createMock(SubscriptionService::class);
 
         $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService);
-
         $service->getCurrentUser('valid-token');
     }
+
     /**
      * @throws Exception
      */
@@ -614,4 +598,5 @@ class AuthServiceTest extends TestCase
 
         $service->resetPassword($dto);
     }
+
 }
