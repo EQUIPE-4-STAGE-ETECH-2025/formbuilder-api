@@ -49,7 +49,6 @@ class JwtServiceTest extends TestCase
 
     public function testInvalidTokenThrowsException(): void
     {
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Token invalide ou expiré.');
 
@@ -76,7 +75,6 @@ class JwtServiceTest extends TestCase
 
     public function testRefreshTokenThrowsIfNotCloseToExpiration(): void
     {
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Le token est encore valide, pas besoin de le rafraîchir.');
 
