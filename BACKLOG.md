@@ -250,7 +250,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Messages d'erreur personnalisés
     -   Validation côté serveur et client
 
--   [ ] **SUBMISSIONS-006** `(Dépendances -> Aucune)` : Créer `SubmissionAnalyticsService`
+-   [x] **SUBMISSIONS-006** `(Dépendances -> Aucune)` : Créer `SubmissionAnalyticsService`
     -   Statistiques des soumissions par formulaire
     -   Endpoint : `GET /api/forms/{id}/submissions/analytics`
     -   Métriques de conversion
