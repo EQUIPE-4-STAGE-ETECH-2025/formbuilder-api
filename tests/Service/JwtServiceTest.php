@@ -2,9 +2,13 @@
 
 namespace App\Tests\Service;
 
+use App\Service\BlackListedTokenService;
 use App\Service\JwtService;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 
 class JwtServiceTest extends TestCase
 {
@@ -23,7 +27,7 @@ class JwtServiceTest extends TestCase
         $token = $this->jwtService->generateToken($payload);
 
         $this->assertIsString($token);
-        $decoded = JWT::decode($token, new \Firebase\JWT\Key($this->secretKey, 'HS256'));
+        $decoded = JWT::decode($token, new Key($this->secretKey, 'HS256'));
 
         $this->assertEquals(123, $decoded->id);
         $this->assertEquals('test@example.com', $decoded->email);
@@ -44,7 +48,7 @@ class JwtServiceTest extends TestCase
 
     public function testInvalidTokenThrowsException(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Token invalide ou expiré.');
 
         $this->jwtService->validateToken('invalid.token.jwt');
@@ -70,7 +74,7 @@ class JwtServiceTest extends TestCase
 
     public function testRefreshTokenThrowsIfNotCloseToExpiration(): void
     {
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Le token est encore valide, pas besoin de le rafraîchir.');
 
         $now = time();
@@ -81,6 +85,27 @@ class JwtServiceTest extends TestCase
             'exp' => $now + 1000,
         ], $this->secretKey, 'HS256');
 
-        $this->jwtService->refreshToken($token, 300);
+        $this->jwtService->refreshToken($token);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testTokenIsBlacklisted(): void
+    {
+        $mockBlacklistService = $this->createMock(BlackListedTokenService::class);
+        $mockBlacklistService->method('isBlacklisted')->with('blacklisted.token')->willReturn(true);
+
+        $jwtService = new JwtService(
+            $this->secretKey,
+            $this->tokenTtl,
+            'HS256',
+            $mockBlacklistService
+        );
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Token révoqué.');
+
+        $jwtService->validateToken('blacklisted.token');
     }
 }
