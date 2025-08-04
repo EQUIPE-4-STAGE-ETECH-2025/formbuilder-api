@@ -57,4 +57,23 @@ class AuthController extends AbstractController
         }
     }
 
+    #[Route('/api/auth/logout', name: 'auth_logout', methods: ['POST'])]
+    public function logout(Request $request, AuthService $authService): JsonResponse
+    {
+        $authHeader = $request->headers->get('Authorization');
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return $this->json(['error' => 'Token manquant'], 401);
+        }
+
+        $token = substr($authHeader, 7);
+
+        try {
+            $authService->logout($token);
+            return $this->json(['message' => 'Déconnexion réussie']);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 401);
+        }
+    }
+
 }
