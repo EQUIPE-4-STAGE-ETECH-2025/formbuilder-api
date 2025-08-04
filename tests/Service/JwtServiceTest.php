@@ -49,7 +49,6 @@ class JwtServiceTest extends TestCase
 
     public function testInvalidTokenThrowsException(): void
     {
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Token invalide ou expiré.');
 
