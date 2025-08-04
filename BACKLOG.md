@@ -220,7 +220,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 ### 3.2 Services de soumissions
 
 -   [x] **SUBMISSIONS-002** `(Dépendances -> AUTH-008, QUOTAS-002)` : Créer `SubmissionService`
-
     -   Validation des données de soumission
     -   Vérification des quotas
     -   Enregistrement sécurisé
