@@ -48,7 +48,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Génération de tokens sécurisés
     -   Envoi d'emails de réinitialisation
 
--   [ ] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
+-   [x] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
     -   Endpoint : `POST /api/auth/logout`
     -   Invalidation du token côté serveur
     -   Blacklist des tokens révoqués
