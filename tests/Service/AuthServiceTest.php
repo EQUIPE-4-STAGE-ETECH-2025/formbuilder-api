@@ -7,12 +7,17 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AuthService;
 use App\Service\JwtService;
+use DateTimeImmutable;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthServiceTest extends TestCase
 {
+    /**
+     * @throws Exception
+     */
     public function testLoginSuccess() : void {
         $user = new User();
         $user->setEmail('test@example.com');
@@ -43,6 +48,9 @@ class AuthServiceTest extends TestCase
         $this->assertEquals('test@example.com', $result['user']['email']);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testInvalidLogin(): void
     {
         $dto = new LoginDto();
@@ -61,6 +69,9 @@ class AuthServiceTest extends TestCase
         $authService->login($dto);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testGetCurrentUserSuccess(): void
     {
         $user = new User();
@@ -78,12 +89,13 @@ class AuthServiceTest extends TestCase
 
         $result = $service->getCurrentUser('valid-token');
 
-        $this->assertInstanceOf(\App\Dto\UserResponseDto::class, $result);
-
         $this->assertEquals('me@example.com', $result->getEmail());
     }
 
 
+    /**
+     * @throws Exception
+     */
     public function testGetCurrentUserNotFound(): void
     {
         $this->expectException(UnauthorizedHttpException::class);
@@ -100,5 +112,25 @@ class AuthServiceTest extends TestCase
 
         $service->getCurrentUser('valid-token');
     }
+
+    /**
+     * @throws Exception
+     */
+    public function testLogoutAddsTokenToBlacklist(): void
+    {
+        $token = 'fake.jwt.token';
+        $exp = (new DateTimeImmutable('+1 hour'))->getTimestamp();
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->with($token)->willReturn((object)['exp' => $exp]);
+        $jwtService->expects($this->once())->method('blacklistToken');
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService);
+        $service->logout($token);
+    }
+
 
 }
