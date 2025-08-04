@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Dto\BlackListedTokenDto;
 use App\Dto\LoginDto;
 use App\Dto\UserResponseDto;
 use App\Repository\UserRepository;
@@ -56,6 +57,18 @@ class AuthService
         }
 
         return new UserResponseDto($user);
+    }
+
+    public function logout(string $jwt): void
+    {
+        $payload = $this->jwtService->validateToken($jwt);
+
+        $dto = new BlackListedTokenDto(
+            token: $jwt,
+            expiresAt: (new \DateTimeImmutable())->setTimestamp($payload->exp)
+        );
+
+        $this->jwtService->blacklistToken($dto);
     }
 
 }
