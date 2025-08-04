@@ -23,7 +23,7 @@ class SubmissionService
         private FormVersionRepository $formVersionRepository,
         private QuotaStatusRepository $quotaStatusRepository,
         private MailerInterface $mailer,
-        private ParameterBagInterface $params, 
+        private ParameterBagInterface $params,
     ) {}
 
     public function submit(string $formId, SubmitFormDto $dto, string $ipAddress): Submission
@@ -91,50 +91,51 @@ class SubmissionService
 
             $fieldEntity = $fields[$name] ?? null;
             $validationRules = $fieldEntity?->getValidationRules() ?? [];
+            $label = $fieldEntity?->getLabel() ?? $name;
 
             $value = $data[$name] ?? null;
 
             // Champs requis
             if ($required && ($value === null || $value === '')) {
-                throw new \InvalidArgumentException("Le champ requis '{$fieldSchema['label']}' est manquant.");
+                throw new \InvalidArgumentException("Le champ requis '$label' est manquant.");
             }
 
             if ($value !== null) {
                 // Validation des types de base
                 if ($type === 'email' && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être une adresse email valide.");
+                    throw new \InvalidArgumentException("Le champ '$label' doit être une adresse email valide.");
                 }
 
                 if ($type === 'number' && !is_numeric($value)) {
-                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être un nombre.");
+                    throw new \InvalidArgumentException("Le champ '$label' doit être un nombre.");
                 }
 
                 // Règles personnalisées (validationRules)
-                if (isset($validationRules['regex']) && !preg_match('/'.$validationRules['regex'].'/', $value)) {
-                    $message = $validationRules['regexMessage'] ?? "Le champ '{$fieldSchema['label']}' n'est pas valide.";
+                if (isset($validationRules['regex']) && !preg_match('/' . $validationRules['regex'] . '/', $value)) {
+                    $message = $validationRules['regexMessage'] ?? "Le champ '$label' n'est pas valide.";
                     throw new \InvalidArgumentException($message);
                 }
 
                 if (isset($validationRules['minLength']) && strlen($value) < $validationRules['minLength']) {
-                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit contenir au moins {$validationRules['minLength']} caractères.");
+                    throw new \InvalidArgumentException("Le champ '$label' doit contenir au moins {$validationRules['minLength']} caractères.");
                 }
 
                 if (isset($validationRules['maxLength']) && strlen($value) > $validationRules['maxLength']) {
-                    throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' ne peut pas dépasser {$validationRules['maxLength']} caractères.");
+                    throw new \InvalidArgumentException("Le champ '$label' ne peut pas dépasser {$validationRules['maxLength']} caractères.");
                 }
 
                 if ($type === 'number') {
                     if (isset($validationRules['min']) && $value < $validationRules['min']) {
-                        throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être supérieur ou égal à {$validationRules['min']}.");
+                        throw new \InvalidArgumentException("Le champ '$label' doit être supérieur ou égal à {$validationRules['min']}.");
                     }
                     if (isset($validationRules['max']) && $value > $validationRules['max']) {
-                        throw new \InvalidArgumentException("Le champ '{$fieldSchema['label']}' doit être inférieur ou égal à {$validationRules['max']}.");
+                        throw new \InvalidArgumentException("Le champ '$label' doit être inférieur ou égal à {$validationRules['max']}.");
                     }
                 }
             }
         }
     }
-       
+
     private function checkQuota($user): void
     {
         $now = new \DateTimeImmutable('first day of this month');
