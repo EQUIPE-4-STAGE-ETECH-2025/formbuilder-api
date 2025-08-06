@@ -33,6 +33,7 @@ class UserServiceTest extends TestCase
         $this->validator = $this->createMock(ValidatorInterface::class);
         $this->userService = new UserService($this->userRepository, $this->authorizationService, $this->validator);
     }
+
     public function testGetUserRoleSuccess(): void
     {
         $userId = '123';
