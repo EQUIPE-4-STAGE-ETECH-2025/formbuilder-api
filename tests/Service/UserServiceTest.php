@@ -15,6 +15,7 @@ use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+
 class UserServiceTest extends TestCase
 {
     private $userRepository;
@@ -30,10 +31,8 @@ class UserServiceTest extends TestCase
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->authorizationService = $this->createMock(AuthorizationService::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
-
         $this->userService = new UserService($this->userRepository, $this->authorizationService, $this->validator);
     }
-
     public function testGetUserRoleSuccess(): void
     {
         $userId = '123';
