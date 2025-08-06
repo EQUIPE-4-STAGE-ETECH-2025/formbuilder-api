@@ -87,7 +87,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.4 Gestion des rôles et autorisations
 
--   [ ] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
+-   [x] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
 
     -   Créer `UserService` pour la gestion des rôles
     -   Endpoint : `GET /api/users/{id}/roles`
