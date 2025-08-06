@@ -109,5 +109,4 @@ class UserService
 
         $this->userRepository->remove($user, true);
     }
-
 }
