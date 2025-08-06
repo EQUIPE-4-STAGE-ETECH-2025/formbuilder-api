@@ -32,7 +32,6 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         $authHeader = $request->headers->get('Authorization');
-
         if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             throw new AuthenticationException('Token manquant ou invalide');
         }
@@ -51,7 +50,6 @@ class JwtAuthenticator extends AbstractAuthenticator
             if (! $user) {
                 throw new UserNotFoundException("Utilisateur $userId non trouvé.");
             }
-
             return $user;
         }));
     }
