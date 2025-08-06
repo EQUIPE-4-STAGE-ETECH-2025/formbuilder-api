@@ -16,9 +16,7 @@ class UserControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
-
         $this->userService = $this->createMock(UserService::class);
-
         self::getContainer()->set(UserService::class, $this->userService);
     }
 
