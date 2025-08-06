@@ -16,6 +16,7 @@ class UserController extends AbstractController
     {
     }
 
+
     #[Route('/api/users/{id}/roles', name: 'get_user_role', methods: ['GET'])]
     public function getRole(string $id): JsonResponse
     {
