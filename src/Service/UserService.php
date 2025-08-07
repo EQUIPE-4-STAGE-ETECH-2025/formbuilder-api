@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -11,10 +10,11 @@ class UserService
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly AuthorizationService $authorizationService
-    ) {}
+        private readonly AuthorizationService $authorizationService,
+    ) {
+    }
 
-    public function getUserRole(string $targetUserId): string
+    public function getUserRole(string $targetUserId): ?string
     {
         $targetUser = $this->userRepository->find($targetUserId);
         if (!$targetUser) {

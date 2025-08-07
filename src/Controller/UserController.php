@@ -7,11 +7,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class UserController extends AbstractController
 {
-    public function __construct(private readonly UserService $userService) {}
+    public function __construct(private readonly UserService $userService)
+    {
+    }
 
     #[Route('/api/users/{id}/roles', name: 'get_user_role', methods: ['GET'])]
     public function getRole(string $id): JsonResponse
@@ -39,7 +40,7 @@ class UserController extends AbstractController
                 'id' => (string) $user->getId(),
                 'email' => $user->getEmail(),
                 'role' => $user->getRole(),
-            ]
+            ],
         ]);
     }
 }

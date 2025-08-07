@@ -19,12 +19,14 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function __construct(
         private readonly JwtService $jwtService,
         private readonly UserRepository $userRepository,
-    ) {}
+    ) {
+    }
 
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            str_starts_with($request->headers->get('Authorization'), 'Bearer ');
+        $authHeader = $request->headers->get('Authorization');
+
+        return null !== $authHeader && str_starts_with($authHeader, 'Bearer ');
     }
 
     public function authenticate(Request $request): Passport
@@ -49,16 +51,11 @@ class JwtAuthenticator extends AbstractAuthenticator
             if (!$user) {
                 throw new UserNotFoundException("Utilisateur $userId non trouvé.");
             }
+
             return $user;
         }));
     }
 
-    /**
-     * @param Request $request
-     * @param Response|TokenInterface $token
-     * @param string $firewallName
-     * @return Response|null
-     */
     public function onAuthenticationSuccess(Request $request, Response|TokenInterface $token, string $firewallName): ?Response
     {
         return null;
@@ -66,11 +63,17 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        return new Response(json_encode([
+        $content = json_encode([
             'error' => 'Authentification échouée',
             'details' => $exception->getMessage(),
-        ]), Response::HTTP_UNAUTHORIZED, [
-            'Content-Type' => 'application/json'
+        ]);
+
+        if (false === $content) {
+            $content = '{"error": "Erreur de sérialisation JSON"}';
+        }
+
+        return new Response($content, Response::HTTP_UNAUTHORIZED, [
+            'Content-Type' => 'application/json',
         ]);
     }
 }
