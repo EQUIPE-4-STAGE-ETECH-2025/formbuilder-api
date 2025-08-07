@@ -66,7 +66,6 @@ class JwtAuthenticator extends AbstractAuthenticator
             'error' => 'Authentification échouée',
             'details' => $exception->getMessage(),
         ]);
-
         if (false === $content) {
             $content = '{"error": "Erreur de sérialisation JSON"}';
         }
