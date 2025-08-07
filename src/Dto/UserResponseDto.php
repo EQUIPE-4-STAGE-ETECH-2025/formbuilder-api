@@ -6,7 +6,9 @@ use App\Entity\User;
 
 class UserResponseDto
 {
-    public function __construct(private readonly User $user) {}
+    public function __construct(private readonly User $user)
+    {
+    }
 
     public function toArray(): array
     {
@@ -25,5 +27,4 @@ class UserResponseDto
     {
         return $this->user->getEmail();
     }
-
 }

@@ -12,12 +12,13 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AuthService
 {
     public function __construct(
-        private readonly UserRepository              $userRepository,
+        private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
-        private readonly JwtService $jwtService
-    ) {}
+        private readonly JwtService $jwtService,
+    ) {
+    }
 
-    public function login(LoginDto $dto) : array
+    public function login(LoginDto $dto): array
     {
         $user = $this->userRepository->findOneBy(['email' => $dto->getEmail()]);
 
@@ -43,7 +44,7 @@ class AuthService
                 'isEmailVerified' => $user->isEmailVerified(),
                 'role' => $user->getRole(),
                 'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-            ]
+            ],
         ];
     }
 
@@ -70,5 +71,4 @@ class AuthService
 
         $this->jwtService->blacklistToken($dto);
     }
-
 }

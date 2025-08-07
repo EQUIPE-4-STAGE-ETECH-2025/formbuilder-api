@@ -19,12 +19,13 @@ class JwtAuthenticator extends AbstractAuthenticator
     public function __construct(
         private readonly JwtService $jwtService,
         private readonly UserRepository $userRepository,
-    ) {}
+    ) {
+    }
 
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            str_starts_with($request->headers->get('Authorization'), 'Bearer ');
+        return $request->headers->has('Authorization')
+            && str_starts_with($request->headers->get('Authorization'), 'Bearer ');
     }
 
     public function authenticate(Request $request): Passport
@@ -49,16 +50,11 @@ class JwtAuthenticator extends AbstractAuthenticator
             if (!$user) {
                 throw new UserNotFoundException("Utilisateur $userId non trouvé.");
             }
+
             return $user;
         }));
     }
 
-    /**
-     * @param Request $request
-     * @param Response|TokenInterface $token
-     * @param string $firewallName
-     * @return Response|null
-     */
     public function onAuthenticationSuccess(Request $request, Response|TokenInterface $token, string $firewallName): ?Response
     {
         return null;
@@ -70,7 +66,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             'error' => 'Authentification échouée',
             'details' => $exception->getMessage(),
         ]), Response::HTTP_UNAUTHORIZED, [
-            'Content-Type' => 'application/json'
+            'Content-Type' => 'application/json',
         ]);
     }
 }
