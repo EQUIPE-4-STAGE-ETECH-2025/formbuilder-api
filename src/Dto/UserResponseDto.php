@@ -32,5 +32,4 @@ class UserResponseDto
     {
         return $this->user->getEmail();
     }
-
 }
