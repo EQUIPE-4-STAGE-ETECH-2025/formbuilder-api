@@ -16,12 +16,12 @@
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
         <env name="KERNEL_CLASS" value="App\Kernel" />
-
         <!-- ###+ symfony/mailer ### -->
         <env name="MAILER_DSN" value="null://null"/>
         <!-- ###- symfony/mailer ### -->
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
     </php>
-
+    
     <testsuites>
         <testsuite name="Project Test Suite">
             <directory>tests</directory>

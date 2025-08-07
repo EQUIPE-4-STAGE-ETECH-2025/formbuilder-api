@@ -10,7 +10,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.1 Controllers d'authentification
 
--   [ ] **AUTH-001** `(Dépendances -> AUTH-007, AUTH-009, AUTH-010)` : Créer `AuthController` avec endpoint de connexion
+-   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-009, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
@@ -26,7 +26,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Envoi d'email de vérification
     -   Création automatique du profil utilisateur
 
--   [ ] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
+-   [x] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
 
     -   Endpoint : `GET /api/auth/me`
     -   Validation du token JWT
@@ -48,7 +48,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Génération de tokens sécurisés
     -   Envoi d'emails de réinitialisation
 
--   [ ] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
+-   [x] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
     -   Endpoint : `POST /api/auth/logout`
     -   Invalidation du token côté serveur
     -   Blacklist des tokens révoqués
@@ -71,7 +71,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Notifications de quotas
     -   Notifications de paiement
 
--   [ ] **AUTH-009** `(Dépendances -> Aucune)` : Créer `JwtService`
+-   [x] **AUTH-009** `(Dépendances -> Aucune)` : Créer `JwtService`
     -   Génération des tokens JWT
     -   Validation des tokens
     -   Gestion de l'expiration
@@ -87,15 +87,15 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.4 Gestion des rôles et autorisations
 
--   [ ] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
+-   [x] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
 
-    -   Créer `RoleService` pour la gestion des rôles
+    -   Créer `UserService` pour la gestion des rôles
     -   Endpoint : `GET /api/users/{id}/roles`
     -   Endpoint : `PUT /api/users/{id}/roles`
     -   Validation des permissions d'administration
     -   Gestion des rôles : USER, ADMIN
 
--   [ ] **AUTH-012** `(Dépendances -> Aucune)` : Créer `AuthorizationService`
+-   [x] **AUTH-012** `(Dépendances -> Aucune)` : Créer `AuthorizationService`
 
     -   Vérification des permissions par rôle
     -   Middleware d'autorisation
