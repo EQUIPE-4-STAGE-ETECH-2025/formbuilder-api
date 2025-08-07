@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Service\AuthService;
 use App\Dto\LoginDto;
+use App\Service\AuthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,9 +16,8 @@ class AuthController extends AbstractController
     public function login(
         Request $request,
         ValidatorInterface $validator,
-        AuthService $authService
-    ): JsonResponse
-    {
+        AuthService $authService,
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
         $dto = (new LoginDto())
@@ -37,6 +36,7 @@ class AuthController extends AbstractController
         }
 
         $authData = $authService->login($dto);
+
         return $this->json($authData);
     }
 
@@ -49,8 +49,10 @@ class AuthController extends AbstractController
         }
 
         $token = substr($authHeader, 7);
+
         try {
             $dto = $authService->getCurrentUser($token);
+
             return $this->json($dto->toArray());
         } catch (\RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 401);
@@ -70,10 +72,10 @@ class AuthController extends AbstractController
 
         try {
             $authService->logout($token);
+
             return $this->json(['message' => 'Déconnexion réussie']);
         } catch (\RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 401);
         }
     }
-
 }

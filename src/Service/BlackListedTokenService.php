@@ -9,8 +9,9 @@ use App\Repository\BlackListedTokenRepository;
 class BlackListedTokenService
 {
     public function __construct(
-        private readonly BlackListedTokenRepository $repository
-    ) {}
+        private readonly BlackListedTokenRepository $repository,
+    ) {
+    }
 
     public function blacklist(BlackListedTokenDto $dto): void
     {

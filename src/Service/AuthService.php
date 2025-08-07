@@ -12,12 +12,16 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class AuthService
 {
     public function __construct(
-        private readonly UserRepository              $userRepository,
+        private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
-        private readonly JwtService $jwtService
-    ) {}
+        private readonly JwtService $jwtService,
+    ) {
+    }
 
-    public function login(LoginDto $dto) : array
+    /**
+     * @return array<string, mixed>
+     */
+    public function login(LoginDto $dto): array
     {
         $user = $this->userRepository->findOneBy(['email' => $dto->getEmail()]);
 
@@ -33,6 +37,8 @@ class AuthService
 
         $token = $this->jwtService->generateToken($payload);
 
+        $createdAt = $user->getCreatedAt();
+
         return [
             'token' => $token,
             'user' => [
@@ -42,8 +48,8 @@ class AuthService
                 'email' => $user->getEmail(),
                 'isEmailVerified' => $user->isEmailVerified(),
                 'role' => $user->getRole(),
-                'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-            ]
+                'createdAt' => $createdAt?->format('Y-m-d H:i:s'),
+            ],
         ];
     }
 
@@ -63,6 +69,10 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($jwt);
 
+        if (!isset($payload->exp)) {
+            throw new \RuntimeException('Token invalide : propriété exp manquante');
+        }
+
         $dto = new BlackListedTokenDto(
             token: $jwt,
             expiresAt: (new \DateTimeImmutable())->setTimestamp($payload->exp)
@@ -70,5 +80,4 @@ class AuthService
 
         $this->jwtService->blacklistToken($dto);
     }
-
 }

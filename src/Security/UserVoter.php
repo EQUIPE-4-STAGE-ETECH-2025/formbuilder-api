@@ -6,6 +6,9 @@ use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+/**
+ * @extends Voter<string, User>
+ */
 class UserVoter extends Voter
 {
     public const VIEW_ROLE = 'USER_VIEW_ROLE';
@@ -24,7 +27,7 @@ class UserVoter extends Voter
             return false;
         }
 
-        if ($currentUser->getRole() === 'ADMIN') {
+        if ('ADMIN' === $currentUser->getRole()) {
             return true;
         }
 

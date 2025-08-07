@@ -8,6 +8,7 @@ use App\Security\JwtAuthenticator;
 use App\Service\JwtService;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -17,8 +18,8 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 class JwtAuthenticatorTest extends TestCase
 {
-    private JwtService $jwtService;
-    private UserRepository $userRepository;
+    private JwtService&MockObject $jwtService;
+    private UserRepository&MockObject $userRepository;
     private JwtAuthenticator $authenticator;
 
     /**
