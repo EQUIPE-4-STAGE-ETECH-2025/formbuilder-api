@@ -112,6 +112,8 @@ class AuthService
 
         $createdAt = $user->getCreatedAt();
 
+        $createdAt = $user->getCreatedAt();
+
         return [
             'token' => $token,
             'refresh_token' => $refreshToken,
