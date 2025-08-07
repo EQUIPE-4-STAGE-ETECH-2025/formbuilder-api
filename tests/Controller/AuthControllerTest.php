@@ -52,7 +52,6 @@ class AuthControllerTest extends WebTestCase
             ])
         );
 
-
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
@@ -73,7 +72,6 @@ class AuthControllerTest extends WebTestCase
                 'password' => '',
             ])
         );
-
 
         $this->assertResponseStatusCodeSame(422);
 
@@ -102,6 +100,7 @@ class AuthControllerTest extends WebTestCase
         $this->em->persist($user);
         $this->em->flush();
 
+        // Login pour obtenir un token
         $this->client->request(
             'POST',
             '/api/auth/login',
@@ -114,6 +113,7 @@ class AuthControllerTest extends WebTestCase
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $token = $responseData['token'];
 
+        // Test de l'endpoint /me
         $this->client->request(
             'GET',
             '/api/auth/me',
@@ -147,6 +147,7 @@ class AuthControllerTest extends WebTestCase
         $this->em->persist($user);
         $this->em->flush();
 
+        // Login pour obtenir un token
         $this->client->request(
             'POST',
             '/api/auth/login',
@@ -159,6 +160,7 @@ class AuthControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $token = $data['token'];
 
+        // Test de logout
         $this->client->request(
             'POST',
             '/api/auth/logout',
