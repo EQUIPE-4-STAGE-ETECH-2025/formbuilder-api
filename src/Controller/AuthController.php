@@ -120,6 +120,7 @@ class AuthController extends AbstractController
 
         try {
             $authService->logout($token);
+
             return $this->json(['message' => 'Déconnexion réussie']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 401);
