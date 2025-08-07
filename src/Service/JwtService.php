@@ -41,7 +41,6 @@ class JwtService
             $expire = $issuedAt->modify("+{$this->tokenTtl} seconds");
             $payload['exp'] = $expire->getTimestamp();
         }
-
         $tokenPayload = array_merge($payload, [
             'iat' => $issuedAt->getTimestamp(),
             'type' => $payload['type'] ?? 'access', // Utiliser le type fourni ou 'access' par défaut
@@ -140,10 +139,12 @@ class JwtService
         }
 
         $payload = (array) $decoded;
+
         unset($payload['iat'], $payload['exp'], $payload['type']);
 
         return $this->generateToken($payload);
     }
+
     // Révoque un token
     public function blacklistToken(BlackListedTokenDto $token): void
     {

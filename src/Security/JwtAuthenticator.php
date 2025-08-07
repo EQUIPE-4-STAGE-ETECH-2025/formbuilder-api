@@ -50,6 +50,7 @@ class JwtAuthenticator extends AbstractAuthenticator
             if (! $user) {
                 throw new UserNotFoundException("Utilisateur $userId non trouvé.");
             }
+
             return $user;
         }));
     }
