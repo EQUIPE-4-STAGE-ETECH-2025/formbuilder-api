@@ -24,7 +24,7 @@ class UserVoter extends Voter
             return false;
         }
 
-        if ($currentUser->getRole() === 'ADMIN') {
+        if ('ADMIN' === $currentUser->getRole()) {
             return true;
         }
 

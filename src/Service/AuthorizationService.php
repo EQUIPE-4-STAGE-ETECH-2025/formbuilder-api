@@ -9,8 +9,9 @@ use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
 class AuthorizationService
 {
     public function __construct(
-        private readonly AuthorizationCheckerInterface $authorizationChecker
-    ) {}
+        private readonly AuthorizationCheckerInterface $authorizationChecker,
+    ) {
+    }
 
     public function requirePermissionOnObject(string $permission, User $subject): void
     {
@@ -18,5 +19,4 @@ class AuthorizationService
             throw new AccessDeniedHttpException("Accès refusé : permission $permission requise.");
         }
     }
-
 }
