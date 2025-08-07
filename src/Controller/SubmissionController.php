@@ -4,10 +4,11 @@ namespace App\Controller;
 
 use App\Dto\SubmitFormDto;
 use App\Dto\SubmissionResponseDto;
-use App\Service\SubmissionExportService;
-use App\Service\SubmissionService;
 use App\Repository\FormRepository;
 use App\Repository\SubmissionRepository;
+use App\Service\SubmissionExportService;
+use App\Service\SubmissionService;
+use App\Security\FormVoter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,9 +25,6 @@ class SubmissionController extends AbstractController
         private SubmissionRepository $submissionRepository
     ) {}
 
-    /**
-     * Soumettre un formulaire (public).
-     */
     #[Route('/api/forms/{id}/submit', name: 'submit_form', methods: ['POST'])]
     public function submit(string $id, Request $request): JsonResponse
     {
@@ -42,9 +40,6 @@ class SubmissionController extends AbstractController
         ], Response::HTTP_CREATED);
     }
 
-    /**
-     * Récupérer toutes les soumissions d’un formulaire (privé).
-     */
     #[Route('/api/forms/{id}/submissions', name: 'get_form_submissions', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function list(string $id, Request $request): JsonResponse
@@ -54,22 +49,18 @@ class SubmissionController extends AbstractController
             return $this->json(['error' => 'Formulaire introuvable.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Vérifie que l’utilisateur est le propriétaire
-        $this->denyAccessUnlessGranted('OWNER', $form);
+        // Vérifie l'accès via Voter
+        $this->denyAccessUnlessGranted(FormVoter::VIEW_SUBMISSIONS, $form);
 
         $limit = (int) $request->query->get('limit', 20);
         $offset = (int) $request->query->get('offset', 0);
 
         $submissions = $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC'], $limit, $offset);
-
         $dtos = array_map(fn($s) => (new SubmissionResponseDto($s))->toArray(), $submissions);
 
         return $this->json($dtos);
     }
 
-    /**
-     * Exporter les soumissions en CSV (privé).
-     */
     #[Route('/api/forms/{id}/submissions/export', name: 'export_form_submissions', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function export(string $id, Request $request): Response
@@ -79,8 +70,8 @@ class SubmissionController extends AbstractController
             return $this->json(['error' => 'Formulaire introuvable.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Vérifie que l’utilisateur est le propriétaire
-        $this->denyAccessUnlessGranted('OWNER', $form);
+        // Vérifie l’accès via Voter
+        $this->denyAccessUnlessGranted(FormVoter::EXPORT_SUBMISSIONS, $form);
 
         $limit = $request->query->getInt('limit', 1000);
         $offset = $request->query->getInt('offset', 0);
