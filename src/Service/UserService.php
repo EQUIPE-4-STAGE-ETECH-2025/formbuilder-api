@@ -16,6 +16,7 @@ class UserService
         private readonly UserRepository $userRepository,
         private readonly AuthorizationService $authorizationService,
         private readonly ValidatorInterface $validator,
+
     ) {
     }
 
