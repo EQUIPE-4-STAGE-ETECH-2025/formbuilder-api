@@ -14,7 +14,7 @@ class UserService
     ) {
     }
 
-    public function getUserRole(string $targetUserId): string
+    public function getUserRole(string $targetUserId): ?string
     {
         $targetUser = $this->userRepository->find($targetUserId);
         if (!$targetUser) {

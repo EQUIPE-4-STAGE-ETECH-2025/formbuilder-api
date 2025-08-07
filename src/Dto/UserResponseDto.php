@@ -10,8 +10,13 @@ class UserResponseDto
     {
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
+        $createdAt = $this->user->getCreatedAt();
+        
         return [
             'id' => $this->user->getId(),
             'firstName' => $this->user->getFirstName(),
@@ -19,11 +24,11 @@ class UserResponseDto
             'email' => $this->user->getEmail(),
             'role' => $this->user->getRole(),
             'isEmailVerified' => $this->user->isEmailVerified(),
-            'createdAt' => $this->user->getCreatedAt()->format('Y-m-d H:i:s'),
+            'createdAt' => $createdAt?->format('Y-m-d H:i:s'),
         ];
     }
 
-    public function getEmail(): string
+    public function getEmail(): ?string
     {
         return $this->user->getEmail();
     }

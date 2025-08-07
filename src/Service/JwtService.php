@@ -22,6 +22,9 @@ class JwtService
     }
 
     // Génère un token JWT pour les données utilisateur passées en payload.
+    /**
+     * @param array<string, mixed> $payload
+     */
     public function generateToken(array $payload): string
     {
         $issuedAt = new \DateTimeImmutable();
@@ -53,6 +56,10 @@ class JwtService
     public function refreshToken(string $token, int $refreshThresholdSeconds = 300): string
     {
         $decoded = $this->validateToken($token);
+
+        if (!isset($decoded->exp)) {
+            throw new \RuntimeException('Token invalide : propriété exp manquante');
+        }
 
         $now = time();
         $timeLeft = $decoded->exp - $now;

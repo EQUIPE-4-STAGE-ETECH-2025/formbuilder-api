@@ -24,8 +24,8 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization')
-            && str_starts_with($request->headers->get('Authorization'), 'Bearer ');
+        $authHeader = $request->headers->get('Authorization');
+        return $authHeader !== null && str_starts_with($authHeader, 'Bearer ');
     }
 
     public function authenticate(Request $request): Passport
@@ -62,10 +62,16 @@ class JwtAuthenticator extends AbstractAuthenticator
 
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): ?Response
     {
-        return new Response(json_encode([
+        $content = json_encode([
             'error' => 'Authentification échouée',
             'details' => $exception->getMessage(),
-        ]), Response::HTTP_UNAUTHORIZED, [
+        ]);
+        
+        if ($content === false) {
+            $content = '{"error": "Erreur de sérialisation JSON"}';
+        }
+        
+        return new Response($content, Response::HTTP_UNAUTHORIZED, [
             'Content-Type' => 'application/json',
         ]);
     }
