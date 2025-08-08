@@ -4,9 +4,14 @@ namespace App\Service;
 
 use App\Dto\BlackListedTokenDto;
 use App\Dto\LoginDto;
+use App\Dto\RegisterDto;
 use App\Dto\UserResponseDto;
+use App\Entity\User;
 use App\Repository\UserRepository;
+use DateTimeImmutable;
+use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class AuthService
@@ -15,8 +20,10 @@ class AuthService
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly JwtService $jwtService,
+        private readonly EmailService $emailService
     ) {
     }
+
 
     /**
      * @return array<string, mixed>
@@ -70,14 +77,36 @@ class AuthService
         $payload = $this->jwtService->validateToken($jwt);
 
         if (!isset($payload->exp)) {
-            throw new \RuntimeException('Token invalide : propriété exp manquante');
+            throw new RuntimeException('Token invalide : propriété exp manquante');
         }
 
         $dto = new BlackListedTokenDto(
             token: $jwt,
-            expiresAt: (new \DateTimeImmutable())->setTimestamp($payload->exp)
+            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
         );
 
         $this->jwtService->blacklistToken($dto);
     }
+
+    public function verifyEmail(string $token): void
+    {
+        $payload = $this->jwtService->validateToken($token);
+
+        if (($payload->type ?? null) !== 'email_verification') {
+            throw new RuntimeException('Token invalide.');
+        }
+
+        $user = $this->userRepository->find($payload->id ?? null);
+        if (!$user) {
+            throw new RuntimeException('Utilisateur introuvable.');
+        }
+
+        if ($user->isEmailVerified()) {
+            throw new RuntimeException('Email déjà vérifié.');
+        }
+
+        $user->setIsEmailVerified(true);
+        $this->userRepository->save($user, true);
+    }
+
 }
