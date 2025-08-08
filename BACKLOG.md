@@ -102,7 +102,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion des accès aux ressources
     -   Voters Symfony pour les permissions complexes
 
--   [ ] **AUTH-013** `(Dépendances -> Aucune)` : Implémenter la validation de force du mot de passe
+-   [x] **AUTH-013** `(Dépendances -> Aucune)` : Implémenter la validation de force du mot de passe
 
     -   Service de validation des règles de sécurité
     -   Configuration des règles (longueur, caractères spéciaux, etc.)
