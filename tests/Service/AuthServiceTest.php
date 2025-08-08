@@ -143,7 +143,51 @@ class AuthServiceTest extends TestCase
         $service->logout($token);
     }
 
+    /**
+     * @throws Exception
+     * @throws TransportExceptionInterface
+     */
+    public function testRegisterSuccess(): void
+    {
+        $_ENV['APP_URL'] = 'http://localhost';
 
+        $dto = new RegisterDto();
+        $dto->setFirstName('Alice');
+        $dto->setLastName('Wonder');
+        $dto->setEmail('alice@example.com');
+        $dto->setPassword('MotdepasseFort123!');
+
+        $user = new User();
+        $user->setEmail($dto->getEmail());
+        $user->setFirstName($dto->getFirstName());
+        $user->setLastName($dto->getLastName());
+        $user->setRole('USER');
+        $user->setIsEmailVerified(false);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->willReturn(null);
+        $userRepo->method('save')->willReturnCallback(function(User $user, bool $flush) {
+            // Simuler ID auto généré
+            $user->setId(Uuid::v4());
+        });
+
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+        $passwordHasher->method('hashPassword')->willReturn('hashed_password');
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('generateToken')->willReturn('fake-token');
+
+        $emailService = $this->createMock(EmailService::class);
+        $emailService->expects($this->once())->method('sendEmailVerification');
+
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $result = $authService->register($dto);
+
+        $this->assertArrayHasKey('user', $result);
+        $this->assertArrayHasKey('token', $result);
+        $this->assertEquals('fake-token', $result['token']);
+    }
 
     /**
      * @throws Exception
