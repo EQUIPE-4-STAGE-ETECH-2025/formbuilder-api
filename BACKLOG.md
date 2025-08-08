@@ -260,7 +260,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.1 Controllers d'abonnements
 
--   [ ] **SUBSCRIPTIONS-001** `(Dépendances -> Aucune)` : Créer `PlanController`
+-   [x] **SUBSCRIPTIONS-001** `(Dépendances -> Aucune)` : Créer `PlanController`
 
     -   Endpoint : `GET /api/plans`
     -   Récupération depuis la base de données
