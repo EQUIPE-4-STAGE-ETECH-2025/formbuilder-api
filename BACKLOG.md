@@ -62,7 +62,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Génération des tokens JWT
     -   Gestion des sessions
 
--   [ ] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
+-   [x] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
 
     -   Envoi d'emails de vérification
     -   Envoi d'emails de réinitialisation
