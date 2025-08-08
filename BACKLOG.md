@@ -18,7 +18,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion des erreurs (401, 422)
     -   Tests unitaires et d'intégration
 
--   [ ] **AUTH-002** `(Dépendances -> AUTH-008, AUTH-013)` : Implémenter l'endpoint d'inscription
+-   [x] **AUTH-002** `(Dépendances -> AUTH-008, AUTH-013)` : Implémenter l'endpoint d'inscription
 
     -   Endpoint : `POST /api/auth/register`
     -   Validation des données (email unique, force mot de passe)

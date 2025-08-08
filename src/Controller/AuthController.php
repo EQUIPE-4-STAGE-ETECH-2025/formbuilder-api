@@ -15,6 +15,44 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[Route('/api/auth/register', name: 'auth_register', methods: ['POST'])]
+    public function register(
+        Request $request,
+        ValidatorInterface $validator,
+        AuthService $authService
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $dto = (new RegisterDto())
+            ->setFirstName($data['firstName'] ?? '')
+            ->setLastName($data['lastName'] ?? '')
+            ->setEmail($data['email'] ?? '')
+            ->setPassword($data['password'] ?? '');
+
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['errors' => $errorMessages], 422);
+        }
+
+        try {
+            $result = $authService->register($dto);
+            return $this->json([
+                'message' => 'Inscription réussie',
+                'user' => $result['user']->toArray(),
+                'token' => $result['token']
+            ], 201);
+        } catch (RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
     #[Route('/api/auth/login', name: 'auth_login', methods: ['POST'])]
     public function login(
         Request $request,
