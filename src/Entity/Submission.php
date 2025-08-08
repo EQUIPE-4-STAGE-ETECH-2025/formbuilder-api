@@ -11,6 +11,8 @@ class Submission
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid')]
+    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
+    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
     private ?string $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'submissions')]
