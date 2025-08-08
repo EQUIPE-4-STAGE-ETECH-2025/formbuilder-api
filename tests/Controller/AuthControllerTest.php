@@ -183,7 +183,58 @@ class AuthControllerTest extends WebTestCase
         }
     }
 
-    //Fonction qui nettoie l'environnement après le test
+    public function testVerifyEmailSuccess(): void
+    {
+        $email = 'test_' . Uuid::v4() . '@example.com';
+        $password = 'MotdepasseFort123!';
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $jwtService = static::getContainer()->get('App\Service\JwtService');
+        $userRepository = static::getContainer()->get('App\Repository\UserRepository');
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail($email);
+        $user->setFirstName('Test');
+        $user->setLastName('Verify');
+        $user->setIsEmailVerified(false);
+        $user->setRole('USER');
+        $user->setPasswordHash($passwordHasher->hashPassword($user, $password));
+
+        $em = static::getContainer()->get('doctrine')->getManager();
+        $em->persist($user);
+        $em->flush();
+
+        $verificationToken = $jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'email_verification'
+        ], 3600);
+
+        $this->client->request('GET', '/api/auth/verify-email?token=' . $verificationToken);
+
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertEquals('Email vérifié avec succès', $data['message']);
+
+        // Correction ici : vider le cache de l'entity manager, pas clear() sur repository
+        $em->clear();
+
+        $verifiedUser = $userRepository->find($user->getId());
+        $this->assertTrue($verifiedUser->isEmailVerified());
+    }
+
+    public function testVerifyEmailInvalidToken(): void
+    {
+        $this->client->request('GET', '/api/auth/verify-email?token=invalid-token');
+
+        $this->assertResponseStatusCodeSame(400);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $data);
+    }
+
+    // Fonction qui nettoie l'environnement après le test
     protected function tearDown(): void
     {
         $this->em?->close();
