@@ -34,7 +34,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion de l'expiration du token
     -   Middleware d'authentification
 
--   [ ] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
+-   [x] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
 
     -   Endpoint : `GET /api/auth/verify-email`
     -   Validation du token de vérification
