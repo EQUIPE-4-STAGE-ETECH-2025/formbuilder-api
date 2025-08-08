@@ -183,6 +183,62 @@ class AuthControllerTest extends WebTestCase
         }
     }
 
+    public function testRegisterSuccess(): void
+    {
+        $email = 'test_' . Uuid::v4() . '@example.com';
+
+        $payload = [
+            'firstName' => 'Alice',
+            'lastName' => 'Wonder',
+            'email' => $email,
+            'password' => 'MotdepasseFort123!',
+        ];
+
+        $this->client->request(
+            'POST',
+            '/api/auth/register',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatusCodeSame(201);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertArrayHasKey('user', $data);
+        $this->assertArrayHasKey('token', $data);
+        $this->assertEquals($email, $data['user']['email']);
+        $this->assertFalse($data['user']['isEmailVerified']);
+    }
+
+    public function testRegisterValidationErrors(): void
+    {
+        $payload = [
+            'firstName' => '',
+            'lastName' => '',
+            'email' => 'not-an-email',
+            'password' => 'short',
+        ];
+
+        $this->client->request(
+            'POST',
+            '/api/auth/register',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($payload)
+        );
+
+        $this->assertResponseStatusCodeSame(422);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('errors', $data);
+        $this->assertArrayHasKey('email', $data['errors']);
+        $this->assertArrayHasKey('password', $data['errors']);
+    }
+
     public function testVerifyEmailSuccess(): void
     {
         $email = 'test_' . Uuid::v4() . '@example.com';
