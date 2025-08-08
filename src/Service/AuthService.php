@@ -24,6 +24,55 @@ class AuthService
     ) {
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function register(RegisterDto $dto): array {
+        if ($this->userRepository->findOneBy(['email' => $dto->getEmail()])) {
+            throw new RuntimeException('Cet email est déjà utilisé.');
+        }
+
+        $user = new User();
+        $user->setFirstName($dto->getFirstName());
+        $user->setLastName($dto->getLastName());
+        $user->setEmail($dto->getEmail());
+        $user->setIsEmailVerified(false);
+        $user->setRole('USER');
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword());
+        $user->setPasswordHash($hashedPassword);
+
+        $this->userRepository->save($user, true);
+
+        $verificationToken = $this->jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'email_verification'
+        ]);
+
+        $authToken = $this->jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'role' => $user->getRole()
+        ]);
+
+        $verificationUrl = sprintf(
+            '%s/api/auth/verify-email?token=%s',
+            $_ENV['APP_URL'],
+            $verificationToken
+        );
+
+        $this->emailService->sendEmailVerification(
+            $user->getEmail(),
+            $user->getFirstName(),
+            $verificationUrl
+        );
+
+        return [
+            'user' => new UserResponseDto($user),
+            'token' => $authToken
+        ];
+    }
 
     /**
      * @return array<string, mixed>
