@@ -55,7 +55,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.2 Services d'authentification
 
--   [ ] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
+-   [x] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
 
     -   Logique métier d'authentification
     -   Validation des credentials
@@ -79,7 +79,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.3 DTOs d'authentification
 
--   [ ] **AUTH-010** `(Dépendances -> Aucune)` : Créer les DTOs d'authentification
+-   [x] **AUTH-010** `(Dépendances -> Aucune)` : Créer les DTOs d'authentification
     -   `LoginDto` avec validation
     -   `RegisterDto` avec validation
     -   `ResetPasswordDto` avec validation

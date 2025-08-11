@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Dto\BlackListedTokenDto;
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
+use App\Dto\ResetPasswordDto;
 use App\Dto\UserResponseDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
@@ -158,4 +159,55 @@ class AuthService
         $this->userRepository->save($user, true);
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function forgotPassword(string $email): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (!$user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        $resetToken = $this->jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'password_reset',
+        ]);
+
+        $resetUrl = sprintf(
+            '%s/api/auth/reset-password?token=%s',
+            $_ENV['APP_URL'],
+            $resetToken
+        );
+
+        $this->emailService->sendPasswordResetEmail(
+            $user->getEmail(),
+            $user->getFirstName(),
+            $resetUrl
+        );
+    }
+
+    public function resetPassword(ResetPasswordDto $dto): void
+    {
+        $payload = $this->jwtService->validateToken($dto->getToken());
+
+        if (!isset($payload->type) || $payload->type !== 'password_reset') {
+            throw new RuntimeException('Token de réinitialisation invalide.');
+        }
+
+        $user = $this->userRepository->find($payload->id);
+
+        if (!$user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getNewPassword());
+        $user->setPasswordHash($hashedPassword);
+
+        $user->setUpdatedAt(new DateTimeImmutable());
+
+        $this->userRepository->save($user, true);
+    }
 }
