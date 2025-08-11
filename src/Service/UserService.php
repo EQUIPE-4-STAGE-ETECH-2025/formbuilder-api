@@ -100,4 +100,16 @@ class UserService
         return $this->userRepository->findAll();
     }
 
+    public function deleteUser(string $id): void
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            throw new NotFoundHttpException('Utilisateur non trouvé.');
+        }
+
+        $this->authorizationService->requirePermissionOnObject('USER_DELETE', $user);
+
+        $this->userRepository->remove($user, true);
+    }
+
 }
