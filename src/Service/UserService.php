@@ -4,7 +4,9 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use DateTimeImmutable;
+use InvalidArgumentException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserService
@@ -12,6 +14,7 @@ class UserService
     public function __construct(
         private readonly UserRepository $userRepository,
         private readonly AuthorizationService $authorizationService,
+        private readonly ValidatorInterface $validator,
     ) {
     }
 
@@ -37,7 +40,7 @@ class UserService
         $this->authorizationService->requirePermissionOnObject('USER_EDIT_ROLE', $targetUser);
 
         $targetUser->setRole($newRole);
-        $targetUser->setUpdatedAt(new \DateTimeImmutable());
+        $targetUser->setUpdatedAt(new DateTimeImmutable());
         $this->userRepository->save($targetUser, true);
 
         return $targetUser;
@@ -55,4 +58,36 @@ class UserService
 
         return $user;
     }
+
+    public function updateUserProfile(string $id, array $data): User
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            throw new NotFoundHttpException('Utilisateur non trouvé.');
+        }
+
+        $this->authorizationService->requirePermissionOnObject('USER_EDIT_PROFILE', $user);
+
+        if (isset($data['firstName'])) {
+            $user->setFirstName(trim($data['firstName']));
+        }
+        if (isset($data['lastName'])) {
+            $user->setLastName(trim($data['lastName']));
+        }
+
+        $errors = $this->validator->validate($user);
+        if (count($errors) > 0) {
+            $messages = [];
+            foreach ($errors as $error) {
+                $messages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            throw new InvalidArgumentException(json_encode($messages));
+        }
+
+        $user->setUpdatedAt(new DateTimeImmutable());
+        $this->userRepository->save($user, true);
+
+        return $user;
+    }
+
 }
