@@ -108,18 +108,18 @@ class UserController extends AbstractController
     #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(string $id): JsonResponse
     {
-        $user = $this->userService->getUserProfile($id);
-        if (!$user) {
-            return $this->json(['error' => 'Utilisateur non trouvé'], 404);
+        try {
+            $user = $this->userService->getUserProfile($id);
+
+            $userDto = new UserResponseDto($user);
+
+            $this->userService->deleteUser($id);
+            return $this->json([
+                'message' => 'Utilisateur supprimé avec succès',
+                'user' => $userDto->toArray()
+            ]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
         }
-
-        $userDto = new UserResponseDto($user);
-
-        $this->userService->deleteUser($id);
-
-        return $this->json([
-            'message' => 'Utilisateur supprimé avec succès',
-            'user' => $userDto->toArray()
-        ]);
     }
 }
