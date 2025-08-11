@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
+use App\Dto\ResetPasswordDto;
 use App\Service\AuthService;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,6 +16,11 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
+
+    #[Route('/ping', name: 'ping', methods: ['GET'])]
+    public function ping() : JsonResponse{
+        return $this->json('pong');
+    }
     /**
      * @throws TransportExceptionInterface
      */
@@ -132,6 +138,51 @@ class AuthController extends AbstractController
         try {
             $authService->verifyEmail($token);
             return $this->json(['message' => 'Email vérifié avec succès']);
+        } catch (RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    #[Route('/api/auth/forgot-password', name: 'auth_forgot_password', methods: ['POST'])]
+    public function forgotPassword(
+        Request $request,
+        AuthService $authService
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? '';
+
+        try {
+            $authService->forgotPassword($email);
+            return $this->json(['message' => 'Email de réinitialisation envoyé']);
+        } catch (RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
+        }
+    }
+
+    #[Route('/api/auth/reset-password', name: 'auth_reset_password', methods: ['POST'])]
+    public function resetPassword(
+        Request $request,
+        ValidatorInterface $validator,
+        AuthService $authService
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $dto = (new ResetPasswordDto())
+            ->setToken($data['token'] ?? '')
+            ->setNewPassword($data['newPassword'] ?? '');
+
+        $errors = $validator->validate($dto);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[$error->getPropertyPath()] = $error->getMessage();
+            }
+            return $this->json(['errors' => $errorMessages], 422);
+        }
+
+        try {
+            $authService->resetPassword($dto);
+            return $this->json(['message' => 'Mot de passe réinitialisé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
         }

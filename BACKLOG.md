@@ -41,7 +41,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Mise à jour du statut `is_email_verified`
     -   Gestion des tokens expirés
 
--   [ ] **AUTH-005** `(Dépendances -> AUTH-008)` : Créer les endpoints de réinitialisation de mot de passe
+-   [x] **AUTH-005** `(Dépendances -> AUTH-008)` : Créer les endpoints de réinitialisation de mot de passe
 
     -   Endpoint : `POST /api/auth/forgot-password`
     -   Endpoint : `POST /api/auth/reset-password`
