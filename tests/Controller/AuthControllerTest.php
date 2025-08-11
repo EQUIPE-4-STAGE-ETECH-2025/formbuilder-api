@@ -290,6 +290,156 @@ class AuthControllerTest extends WebTestCase
         $this->assertArrayHasKey('error', $data);
     }
 
+    public function testForgotPasswordSuccess(): void
+    {
+        $email = 'test_' . Uuid::v4() . '@example.com';
+        $password = 'MotdepasseFort123!';
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail($email);
+        $user->setFirstName('Jean');
+        $user->setLastName('Forgot');
+        $user->setRole('USER');
+        $user->setIsEmailVerified(true);
+        $user->setPasswordHash($passwordHasher->hashPassword($user, $password));
+
+        $this->removeUserIfExists($email);
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $this->client->request(
+            'POST',
+            '/api/auth/forgot-password',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['email' => $email])
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('message', $data);
+        $this->assertEquals('Email de réinitialisation envoyé', $data['message']);
+    }
+
+    public function testForgotPasswordNotFound(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/auth/forgot-password',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['email' => 'nonexistent@example.com'])
+        );
+
+        $this->assertResponseStatusCodeSame(404);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $data);
+    }
+
+    public function testResetPasswordSuccess(): void
+    {
+        $email = 'test_' . Uuid::v4() . '@example.com';
+        $password = 'MotdepasseFort123!';
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+        $jwtService = static::getContainer()->get('App\Service\JwtService');
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail($email);
+        $user->setFirstName('Jean');
+        $user->setLastName('Reset');
+        $user->setRole('USER');
+        $user->setIsEmailVerified(true);
+        $user->setPasswordHash($passwordHasher->hashPassword($user, $password));
+
+        $this->removeUserIfExists($email);
+        $this->em->persist($user);
+        $this->em->flush();
+
+        $resetToken = $jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'password_reset',
+        ], 3600);
+
+        $newPassword = 'NewStrongPass456!';
+
+        $oldPasswordHash = $user->getPasswordHash();
+
+        $this->client->request(
+            'POST',
+            '/api/auth/reset-password',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'token' => $resetToken,
+                'newPassword' => $newPassword,
+            ])
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('message', $data);
+        $this->assertEquals('Mot de passe réinitialisé avec succès', $data['message']);
+
+        $this->em->clear();
+        $updatedUser = $this->em->getRepository(User::class)->find($user->getId());
+
+        $this->assertNotEquals($oldPasswordHash, $updatedUser->getPasswordHash());
+        $this->assertTrue($passwordHasher->isPasswordValid($updatedUser, $newPassword));
+    }
+
+    public function testResetPasswordValidationError(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/auth/reset-password',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'token' => '',
+                'newPassword' => 'short',
+            ])
+        );
+
+        $this->assertResponseStatusCodeSame(422);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('errors', $data);
+        $this->assertArrayHasKey('token', $data['errors']);
+        $this->assertArrayHasKey('newPassword', $data['errors']);
+    }
+
+    public function testResetPasswordInvalidToken(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/auth/reset-password',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([
+                'token' => 'invalid-token',
+                'newPassword' => 'NewStrongPass456!',
+            ])
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+
+        $data = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $data);
+    }
+
+
     // Fonction qui nettoie l'environnement après le test
     protected function tearDown(): void
     {
