@@ -14,9 +14,21 @@ class UserVoter extends Voter
     public const VIEW_ROLE = 'USER_VIEW_ROLE';
     public const EDIT_ROLE = 'USER_EDIT_ROLE';
 
+    public const VIEW_PROFILE = 'USER_VIEW_PROFILE';
+    public const EDIT_PROFILE = 'USER_EDIT_PROFILE';
+    public const DELETE = 'USER_DELETE';
+    public const VIEW_ALL = 'USER_VIEW_ALL';
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::VIEW_ROLE, self::EDIT_ROLE]) && $subject instanceof User;
+        $permissions = [
+            self::VIEW_ROLE,
+            self::EDIT_ROLE,
+            self::VIEW_PROFILE,
+            self::EDIT_PROFILE,
+            self::DELETE,
+            self::VIEW_ALL,
+        ];
+        return in_array($attribute, $permissions, true) && $subject instanceof User;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
@@ -31,6 +43,10 @@ class UserVoter extends Voter
             return true;
         }
 
-        return false;
+        return match ($attribute) {
+            self::VIEW_PROFILE, self::EDIT_PROFILE, self::DELETE => $currentUser->getId() === $subject->getId(),
+            self::VIEW_ALL => false,
+            default => false,
+        };
     }
 }
