@@ -43,4 +43,19 @@ class UserController extends AbstractController
             ],
         ]);
     }
+
+    #[Route('/api/users/{id}/profile', name: 'get_user_profile', methods: ['GET'])]
+    public function getProfile(string $id): JsonResponse
+    {
+        $user = $this->userService->getUserProfile($id);
+
+        return $this->json([
+            'id' => (string) $user->getId(),
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'role' => $user->getRole(),
+            'isEmailVerified' => $user->isEmailVerified()
+        ]);
+    }
 }
