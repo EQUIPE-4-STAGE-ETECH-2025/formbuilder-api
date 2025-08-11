@@ -109,15 +109,13 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Messages d'erreur personnalisés
     -   Validation en temps réel côté client
 
--   [ ] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer `UserProfileService`
-    -   Gestion du profil utilisateur
+-   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer destion du profil utilisateur
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles
-    -   Gestion de l'avatar utilisateur
 
 ---
-
+ 
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires

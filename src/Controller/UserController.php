@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\UserService;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,4 +59,30 @@ class UserController extends AbstractController
             'isEmailVerified' => $user->isEmailVerified()
         ]);
     }
+
+    #[Route('/api/users/{id}/profile', name: 'update_user_profile', methods: ['PUT'])]
+    public function updateProfile(string $id, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $user = $this->userService->updateUserProfile($id, $data);
+        } catch (InvalidArgumentException $e) {
+            $errors = json_decode($e->getMessage(), true);
+            return $this->json(['errors' => $errors], 422);
+        }
+
+        return $this->json([
+            'message' => 'Profil mis à jour avec succès',
+            'user' => [
+                'id' => (string) $user->getId(),
+                'email' => $user->getEmail(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'role' => $user->getRole(),
+                'isEmailVerified' => $user->isEmailVerified(),
+            ],
+        ]);
+    }
+
 }
