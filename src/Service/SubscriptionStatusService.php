@@ -15,19 +15,20 @@ class SubscriptionStatusService
     /**
      * Récupère le statut d'un abonnement (ACTIVE, SUSPENDED, CANCELLED)
      */
-    public function getStatus(string $subscriptionId): string
+    public function getStatus(string $subscriptionId): bool
     {
         $subscription = $this->findSubscriptionOrFail($subscriptionId);
 
         return $subscription->getStatus();
     }
 
+
     /**
      * Met à jour le statut d'un abonnement
      */
-    public function updateStatus(string $subscriptionId, string $status): Subscription
-    {
-        $subscription = $this->findSubscriptionOrFail($subscriptionId);
+    public function updateStatus(string $subscriptionId, bool $isActive): Subscription
+{
+    $subscription = $this->findSubscriptionOrFail($subscriptionId);
 
         // Valide le statut
         if (!in_array($status, [
