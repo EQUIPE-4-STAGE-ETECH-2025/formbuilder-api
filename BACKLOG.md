@@ -317,7 +317,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.5 Gestion des statuts et fonctionnalités
 
--   [ ] **SUBSCRIPTIONS-004** `(Dépendances -> Aucune)` : Implémenter la gestion des statuts d'abonnement
+-   [x] **SUBSCRIPTIONS-004** `(Dépendances -> Aucune)` : Implémenter la gestion des statuts d'abonnement
 
     -   Service de gestion des statuts (ACTIVE, SUSPENDED, CANCELLED)
     -   Logique de rétrogradation automatique
