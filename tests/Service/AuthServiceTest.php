@@ -4,6 +4,7 @@ namespace App\Tests\Service;
 
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
+use App\Dto\ResetPasswordDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AuthService;
@@ -291,4 +292,169 @@ class AuthServiceTest extends TestCase
 
         $authService->verifyEmail('token');
     }
+
+    /**
+     * @throws Exception
+     * @throws TransportExceptionInterface
+     */
+    public function testForgotPasswordSendsEmail(): void
+    {
+        $email = 'user@example.com';
+        $user = new User();
+        $user->setEmail($email);
+        $user->setFirstName('Jane');
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->with(['email' => $email])->willReturn($user);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->expects($this->once())
+            ->method('generateToken')
+            ->with($this->callback(fn($payload) =>
+                isset($payload['id'], $payload['email'], $payload['type']) &&
+                $payload['type'] === 'password_reset' &&
+                $payload['email'] === $email
+            ))
+            ->willReturn('reset-token');
+
+        $emailService = $this->createMock(EmailService::class);
+        $emailService->expects($this->once())
+            ->method('sendPasswordResetEmail')
+            ->with($email, 'Jane', 'http://localhost/api/auth/reset-password?token=reset-token');
+
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $_ENV['APP_URL'] = 'http://localhost';
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $service->forgotPassword($email);
+    }
+
+    /**
+     * @throws Exception
+     * @throws TransportExceptionInterface
+     */
+    public function testForgotPasswordThrowsIfUserNotFound(): void
+    {
+        $email = 'unknown@example.com';
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->with(['email' => $email])->willReturn(null);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $emailService = $this->createMock(EmailService::class);
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Utilisateur inexistant.');
+
+        $service->forgotPassword($email);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testResetPasswordSuccess(): void
+    {
+        $token = 'valid-token';
+        $newPassword = 'newStrongPass123!';
+
+        $dto = $this->createMock(ResetPasswordDto::class);
+        $dto->method('getToken')->willReturn($token);
+        $dto->method('getNewPassword')->willReturn($newPassword);
+
+        $user = new User();
+        $user->setPasswordHash('oldHash');
+
+        $jwtPayload = (object)[
+            'id' => $user->getId(),
+            'type' => 'password_reset',
+        ];
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('find')->with($user->getId())->willReturn($user);
+        $userRepo->expects($this->once())->method('save')->with($user, true);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->with($token)->willReturn($jwtPayload);
+
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+        $passwordHasher->method('hashPassword')->with($user, $newPassword)->willReturn('hashedNewPassword');
+
+        $emailService = $this->createMock(EmailService::class);
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $service->resetPassword($dto);
+
+        $this->assertEquals('hashedNewPassword', $user->getPasswordHash());
+        $this->assertInstanceOf(DateTimeImmutable::class, $user->getUpdatedAt());
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testResetPasswordThrowsIfInvalidTokenType(): void
+    {
+        $token = 'invalid-token';
+
+        $dto = $this->createMock(ResetPasswordDto::class);
+        $dto->method('getToken')->willReturn($token);
+
+        $jwtPayload = (object)[
+            'id' => 1,
+            'type' => 'wrong_type',
+        ];
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->with($token)->willReturn($jwtPayload);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+        $emailService = $this->createMock(EmailService::class);
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Token de réinitialisation invalide.');
+
+        $service->resetPassword($dto);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testResetPasswordThrowsIfUserNotFound(): void
+    {
+        $token = 'valid-token';
+
+        $dto = $this->createMock(ResetPasswordDto::class);
+        $dto->method('getToken')->willReturn($token);
+        $dto->method('getNewPassword')->willReturn('anyPassword');
+
+        $jwtPayload = (object)[
+            'id' => 123,
+            'type' => 'password_reset',
+        ];
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->with($token)->willReturn($jwtPayload);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('find')->with(123)->willReturn(null);
+
+        $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
+        $emailService = $this->createMock(EmailService::class);
+
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Utilisateur inexistant.');
+
+        $service->resetPassword($dto);
+    }
+
 }
