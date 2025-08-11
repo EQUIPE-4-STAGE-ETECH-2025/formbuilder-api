@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UserService
@@ -40,5 +41,18 @@ class UserService
         $this->userRepository->save($targetUser, true);
 
         return $targetUser;
+    }
+
+
+    public function getUserProfile(string $id): User
+    {
+        $user = $this->userRepository->find($id);
+        if (!$user) {
+            throw new NotFoundHttpException('Utilisateur non trouvé.');
+        }
+
+        $this->authorizationService->requirePermissionOnObject('USER_VIEW_PROFILE', $user);
+
+        return $user;
     }
 }
