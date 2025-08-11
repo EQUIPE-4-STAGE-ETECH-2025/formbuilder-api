@@ -28,7 +28,16 @@ class UserVoter extends Voter
             self::DELETE,
             self::VIEW_ALL,
         ];
-        return in_array($attribute, $permissions, true) && $subject instanceof User;
+
+        if (!in_array($attribute, $permissions, true)) {
+            return false;
+        }
+
+        if ($attribute === self::VIEW_ALL) {
+            return true;
+        }
+
+        return $subject instanceof User;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
