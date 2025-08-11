@@ -16,11 +16,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AuthController extends AbstractController
 {
-
-    #[Route('/ping', name: 'ping', methods: ['GET'])]
-    public function ping() : JsonResponse{
-        return $this->json('pong');
-    }
     /**
      * @throws TransportExceptionInterface
      */
