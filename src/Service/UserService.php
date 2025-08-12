@@ -15,7 +15,6 @@ class UserService
         private readonly UserRepository $userRepository,
         private readonly AuthorizationService $authorizationService,
         private readonly ValidatorInterface $validator,
-
     ) {
     }
 
@@ -58,7 +57,6 @@ class UserService
 
         return $user;
     }
-
     /**
      * @param array<string, mixed> $data
      */
