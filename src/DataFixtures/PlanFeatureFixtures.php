@@ -19,7 +19,7 @@ class PlanFeatureFixtures extends Fixture implements DependentFixtureInterface
                 'id' => '550e8400-e29b-41d4-a716-446655440401',
                 'plan' => '550e8400-e29b-41d4-a716-446655440202',
                 'feature' => '550e8400-e29b-41d4-a716-446655440101',
-                'limitValue' => 100, // Exemple: 100 soumissions max
+                'limitValue' => 100, 
             ],
             [
                 'id' => '550e8400-e29b-41d4-a716-446655440402',
@@ -31,7 +31,7 @@ class PlanFeatureFixtures extends Fixture implements DependentFixtureInterface
                 'id' => '550e8400-e29b-41d4-a716-446655440403',
                 'plan' => '550e8400-e29b-41d4-a716-446655440202',
                 'feature' => '550e8400-e29b-41d4-a716-446655440104',
-                'limitValue' => 10, // Exemple: 10 formulaires actifs max
+                'limitValue' => 10, 
             ],
 
             // Plan Pro - Toutes les fonctionnalités avec limites
