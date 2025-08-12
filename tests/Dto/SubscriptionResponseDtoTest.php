@@ -33,7 +33,7 @@ class SubscriptionResponseDtoTest extends TestCase
         $subscription->setStripeSubscriptionId('stripe-sub-123');
         $subscription->setStartDate(new \DateTime('2025-01-01'));
         $subscription->setEndDate(new \DateTime('2026-01-01'));
-        $subscription->setIsActive(true);
+        $subscription->setStatus(Subscription::STATUS_ACTIVE);
 
         // DTO
         $dto = new SubscriptionResponseDto($subscription);
