@@ -23,6 +23,10 @@ class PlanFeature
     #[Assert\NotNull(message: 'La fonctionnalité est obligatoire')]
     private ?Feature $feature = null;
 
+    
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $limitValue = null;
+
     public function getId(): ?string
     {
         return $this->id;
@@ -31,7 +35,6 @@ class PlanFeature
     public function setId(string $id): static
     {
         $this->id = $id;
-
         return $this;
     }
 
@@ -43,7 +46,6 @@ class PlanFeature
     public function setPlan(?Plan $plan): static
     {
         $this->plan = $plan;
-
         return $this;
     }
 
@@ -55,7 +57,19 @@ class PlanFeature
     public function setFeature(?Feature $feature): static
     {
         $this->feature = $feature;
+        return $this;
+    }
 
+    public function getLimitValue(): ?int
+    {
+        return $this->limitValue;
+    }
+
+    public function setLimitValue(?int $limitValue): static
+    {
+        $this->limitValue = $limitValue;
         return $this;
     }
 }
+
+
