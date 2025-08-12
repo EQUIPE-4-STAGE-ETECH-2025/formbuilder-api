@@ -13,30 +13,38 @@ class SubscriptionStatusService
     ) {}
 
     /**
-     * Récupère le statut d'un abonnement
+     * Récupère le statut d'un abonnement (ACTIVE, SUSPENDED, CANCELLED)
      */
-    public function getStatus(string $subscriptionId): bool
+    public function getStatus(string $subscriptionId): string
     {
         $subscription = $this->findSubscriptionOrFail($subscriptionId);
 
-        return $subscription->isActive();
+        return $subscription->getStatus();
     }
-
 
     /**
      * Met à jour le statut d'un abonnement
      */
-    public function updateStatus(string $subscriptionId, bool $isActive): Subscription
-{
-    $subscription = $this->findSubscriptionOrFail($subscriptionId);
+    public function updateStatus(string $subscriptionId, string $status): Subscription
+    {
+        $subscription = $this->findSubscriptionOrFail($subscriptionId);
 
-    $subscription->setIsActive($isActive);
-    $subscription->setUpdatedAt(new \DateTimeImmutable());
+        // Valide le statut
+        if (!in_array($status, [
+            Subscription::STATUS_ACTIVE,
+            Subscription::STATUS_SUSPENDED,
+            Subscription::STATUS_CANCELLED
+        ])) {
+            throw new \InvalidArgumentException("Statut invalide: $status");
+        }
 
-    $this->subscriptionRepository->save($subscription, true);
+        $subscription->setStatus($status);
+        $subscription->setUpdatedAt(new \DateTimeImmutable());
 
-    return $subscription;
-}
+        $this->subscriptionRepository->save($subscription, true);
+
+        return $subscription;
+    }
 
     /**
      * Recherche un abonnement ou lève une exception

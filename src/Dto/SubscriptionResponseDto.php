@@ -12,6 +12,7 @@ class SubscriptionResponseDto
     public string $stripeSubscriptionId;
     public string $startDate;
     public string $endDate;
+    public string $status;
     public bool $isActive;
 
     public function __construct(Subscription $subscription)
@@ -22,6 +23,7 @@ class SubscriptionResponseDto
         $this->stripeSubscriptionId = $subscription->getStripeSubscriptionId();
         $this->startDate = $subscription->getStartDate()->format('Y-m-d');
         $this->endDate = $subscription->getEndDate()->format('Y-m-d');
+        $this->status = $subscription->getStatus();
         $this->isActive = $subscription->isActive();
     }
 
@@ -34,6 +36,7 @@ class SubscriptionResponseDto
             'stripeSubscriptionId' => $this->stripeSubscriptionId,
             'startDate' => $this->startDate,
             'endDate' => $this->endDate,
+            'status' => $this->status,
             'isActive' => $this->isActive,
         ];
     }
