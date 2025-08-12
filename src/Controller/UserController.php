@@ -70,7 +70,6 @@ class UserController extends AbstractController
             $user = $this->userService->updateUserProfile($id, $data);
         } catch (InvalidArgumentException $e) {
             $errors = json_decode($e->getMessage(), true);
-
             return $this->json(['errors' => $errors], 422);
         }
 
