@@ -57,7 +57,7 @@ class JwtService
     {
         $decoded = $this->validateToken($token);
 
-        if (!isset($decoded->exp)) {
+        if (! isset($decoded->exp)) {
             throw new \RuntimeException('Token invalide : propriété exp manquante');
         }
 
@@ -77,7 +77,7 @@ class JwtService
     // Révoque un token
     public function blacklistToken(BlackListedTokenDto $token): void
     {
-        if (!$this->blacklistService) {
+        if (! $this->blacklistService) {
             throw new \RuntimeException('Blacklist service non configuré.');
         }
 

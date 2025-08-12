@@ -24,7 +24,8 @@ class AuthServiceTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testLoginSuccess() : void {
+    public function testLoginSuccess(): void
+    {
         $user = new User();
         $user->setEmail('test@example.com');
         $user->setFirstName('John');
@@ -167,7 +168,7 @@ class AuthServiceTest extends TestCase
 
         $userRepo = $this->createMock(UserRepository::class);
         $userRepo->method('findOneBy')->willReturn(null);
-        $userRepo->method('save')->willReturnCallback(function(User $user, bool $flush) {
+        $userRepo->method('save')->willReturnCallback(function (User $user, bool $flush) {
             // Simuler ID auto généré
             $user->setId(Uuid::v4());
         });
@@ -310,7 +311,8 @@ class AuthServiceTest extends TestCase
         $jwtService = $this->createMock(JwtService::class);
         $jwtService->expects($this->once())
             ->method('generateToken')
-            ->with($this->callback(fn($payload) =>
+            ->with($this->callback(
+                fn ($payload) =>
                 isset($payload['id'], $payload['email'], $payload['type']) &&
                 $payload['type'] === 'password_reset' &&
                 $payload['email'] === $email

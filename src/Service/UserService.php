@@ -7,8 +7,8 @@ use App\Repository\UserRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class UserService
 {
@@ -22,7 +22,7 @@ class UserService
     public function getUserRole(string $targetUserId): ?string
     {
         $targetUser = $this->userRepository->find($targetUserId);
-        if (!$targetUser) {
+        if (! $targetUser) {
             throw new NotFoundHttpException('Utilisateur non trouvé.');
         }
 
@@ -34,7 +34,7 @@ class UserService
     public function updateUserRole(string $targetUserId, string $newRole): User
     {
         $targetUser = $this->userRepository->find($targetUserId);
-        if (!$targetUser) {
+        if (! $targetUser) {
             throw new NotFoundHttpException('Utilisateur non trouvé.');
         }
 
@@ -51,7 +51,7 @@ class UserService
     public function getUserProfile(string $id): User
     {
         $user = $this->userRepository->find($id);
-        if (!$user) {
+        if (! $user) {
             throw new NotFoundHttpException('Utilisateur non trouvé.');
         }
 
@@ -60,10 +60,13 @@ class UserService
         return $user;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function updateUserProfile(string $id, array $data): User
     {
         $user = $this->userRepository->find($id);
-        if (!$user) {
+        if (! $user) {
             throw new NotFoundHttpException('Utilisateur non trouvé.');
         }
 
@@ -82,7 +85,13 @@ class UserService
             foreach ($errors as $error) {
                 $messages[$error->getPropertyPath()] = $error->getMessage();
             }
-            throw new InvalidArgumentException(json_encode($messages));
+
+            $errorMessage = json_encode($messages);
+            if ($errorMessage === false) {
+                $errorMessage = 'Erreur de validation';
+            }
+
+            throw new InvalidArgumentException($errorMessage);
         }
 
         $user->setUpdatedAt(new DateTimeImmutable());
@@ -91,9 +100,12 @@ class UserService
         return $user;
     }
 
+    /**
+     * @return array<int, User>
+     */
     public function listUsers(): array
     {
-        if (!$this->authorizationService->isGranted('USER_VIEW_ALL')) {
+        if (! $this->authorizationService->isGranted('USER_VIEW_ALL')) {
             throw new AccessDeniedHttpException('Accès refusé.');
         }
 
@@ -103,7 +115,7 @@ class UserService
     public function deleteUser(string $id): void
     {
         $user = $this->userRepository->find($id);
-        if (!$user) {
+        if (! $user) {
             throw new NotFoundHttpException('Utilisateur non trouvé.');
         }
 

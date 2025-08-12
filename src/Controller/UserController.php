@@ -30,7 +30,7 @@ class UserController extends AbstractController
         $data = json_decode($request->getContent(), true);
         $newRole = $data['role'] ?? null;
 
-        if (!$newRole) {
+        if (! $newRole) {
             return $this->json(['error' => 'Rôle invalide'], 422);
         }
 
@@ -57,7 +57,7 @@ class UserController extends AbstractController
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'role' => $user->getRole(),
-            'isEmailVerified' => $user->isEmailVerified()
+            'isEmailVerified' => $user->isEmailVerified(),
         ]);
     }
 
@@ -70,6 +70,7 @@ class UserController extends AbstractController
             $user = $this->userService->updateUserProfile($id, $data);
         } catch (InvalidArgumentException $e) {
             $errors = json_decode($e->getMessage(), true);
+
             return $this->json(['errors' => $errors], 422);
         }
 
@@ -91,7 +92,7 @@ class UserController extends AbstractController
     {
         $users = $this->userService->listUsers();
 
-        $result = array_map(fn($user) => [
+        $result = array_map(fn ($user) => [
             'id' => (string) $user->getId(),
             'email' => $user->getEmail(),
             'firstName' => $user->getFirstName(),
@@ -114,9 +115,10 @@ class UserController extends AbstractController
             $userDto = new UserResponseDto($user);
 
             $this->userService->deleteUser($id);
+
             return $this->json([
                 'message' => 'Utilisateur supprimé avec succès',
-                'user' => $userDto->toArray()
+                'user' => $userDto->toArray(),
             ]);
         } catch (\RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 404);

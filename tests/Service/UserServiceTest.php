@@ -144,7 +144,7 @@ class UserServiceTest extends TestCase
 
         $updated = $this->userService->updateUserProfile($userId, [
             'firstName' => 'John',
-            'lastName' => 'Doe'
+            'lastName' => 'Doe',
         ]);
 
         $this->assertEquals('John', $updated->getFirstName());
@@ -162,7 +162,7 @@ class UserServiceTest extends TestCase
         $this->authorizationService->method('requirePermissionOnObject');
 
         $violations = new ConstraintViolationList([
-            new ConstraintViolation('Invalid name', null, [], null, 'firstName', null)
+            new ConstraintViolation('Invalid name', null, [], null, 'firstName', null),
         ]);
 
         $this->validator->method('validate')->willReturn($violations);
