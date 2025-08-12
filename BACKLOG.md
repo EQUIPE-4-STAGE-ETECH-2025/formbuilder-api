@@ -325,7 +325,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Endpoint : `PUT /api/subscriptions/{id}/status`
     -   Gestion des transitions de statut
 
--   [ ] **SUBSCRIPTIONS-005** `(Dépendances -> Aucune)` : Créer `PlanFeatureService`
+-   [x] **SUBSCRIPTIONS-005** `(Dépendances -> Aucune)` : Créer `PlanFeatureService`
     -   Gestion des fonctionnalités par plan
     -   Validation des accès aux fonctionnalités
     -   Configuration des limites par plan
