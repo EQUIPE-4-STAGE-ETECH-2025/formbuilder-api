@@ -243,15 +243,6 @@ jobs:
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
                   EOF
-                  echo "APP_ENV=dev" > .env
-                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
-                  echo "DATABASE_HOST=localhost" >> .env
-                  echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder_dev" >> .env
-                  echo "DATABASE_USER=postgres" >> .env
-                  echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
 
             # Vérification des vulnérabilités de sécurité dans les dépendances
             - name: Security check
