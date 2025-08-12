@@ -153,14 +153,12 @@ class AuthController extends AbstractController
     public function verifyEmail(Request $request, AuthService $authService): JsonResponse
     {
         $token = $request->query->get('token');
-
         if (! $token || ! is_string($token)) {
             return $this->json(['error' => 'Token manquant'], 400);
         }
 
         try {
             $authService->verifyEmail($token);
-
             return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
             // Codes HTTP plus spécifiques selon le type d'erreur
@@ -237,13 +235,11 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
-
             return $this->json(['errors' => $errorMessages], 422);
         }
 
         try {
             $authService->resetPassword($dto);
-
             return $this->json(['success' => true, 'message' => 'Mot de passe réinitialisé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
