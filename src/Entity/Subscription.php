@@ -71,7 +71,6 @@ class Subscription
     public function setId(string $id): static
     {
         $this->id = $id;
-
         return $this;
     }
 
@@ -83,7 +82,6 @@ class Subscription
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -95,7 +93,6 @@ class Subscription
     public function setPlan(?Plan $plan): static
     {
         $this->plan = $plan;
-
         return $this;
     }
 
@@ -107,7 +104,6 @@ class Subscription
     public function setStripeSubscriptionId(string $stripeSubscriptionId): static
     {
         $this->stripeSubscriptionId = $stripeSubscriptionId;
-
         return $this;
     }
 
@@ -119,7 +115,6 @@ class Subscription
     public function setStartDate(\DateTimeInterface $startDate): static
     {
         $this->startDate = $startDate;
-
         return $this;
     }
 
@@ -131,7 +126,6 @@ class Subscription
     public function setEndDate(\DateTimeInterface $endDate): static
     {
         $this->endDate = $endDate;
-
         return $this;
     }
 
@@ -146,7 +140,6 @@ class Subscription
             throw new \InvalidArgumentException("Statut invalide pour l'abonnement");
         }
         $this->status = $status;
-
         return $this;
     }
 
@@ -173,7 +166,6 @@ class Subscription
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -185,7 +177,6 @@ class Subscription
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
     }
 }

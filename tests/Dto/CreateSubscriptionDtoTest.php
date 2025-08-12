@@ -20,7 +20,7 @@ class CreateSubscriptionDtoTest extends KernelTestCase
     {
         $dto = new CreateSubscriptionDto([
             'planId' => '550e8400-e29b-41d4-a716-446655440201',
-            'userEmail' => 'user@example.com'
+            'userEmail' => 'user@example.com',
         ]);
 
         $errors = $this->validator->validate($dto);
@@ -31,7 +31,7 @@ class CreateSubscriptionDtoTest extends KernelTestCase
     {
         $dto = new CreateSubscriptionDto([
             'planId' => '550e8400-e29b-41d4-a716-446655440201',
-            'userEmail' => 'invalid-email'
+            'userEmail' => 'invalid-email',
         ]);
 
         $errors = $this->validator->validate($dto);
@@ -42,7 +42,7 @@ class CreateSubscriptionDtoTest extends KernelTestCase
     {
         $dto = new CreateSubscriptionDto([
             'planId' => '',
-            'userEmail' => 'user@example.com'
+            'userEmail' => 'user@example.com',
         ]);
 
         $errors = $this->validator->validate($dto);
