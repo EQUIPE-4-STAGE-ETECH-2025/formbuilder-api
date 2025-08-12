@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Dto\UserResponseDto;
 use App\Service\UserService;
+use InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -42,5 +44,82 @@ class UserController extends AbstractController
                 'role' => $user->getRole(),
             ],
         ]);
+    }
+
+    #[Route('/api/users/{id}/profile', name: 'get_user_profile', methods: ['GET'])]
+    public function getProfile(string $id): JsonResponse
+    {
+        $user = $this->userService->getUserProfile($id);
+
+        return $this->json([
+            'id' => (string) $user->getId(),
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'role' => $user->getRole(),
+            'isEmailVerified' => $user->isEmailVerified()
+        ]);
+    }
+
+    #[Route('/api/users/{id}/profile', name: 'update_user_profile', methods: ['PUT'])]
+    public function updateProfile(string $id, Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        try {
+            $user = $this->userService->updateUserProfile($id, $data);
+        } catch (InvalidArgumentException $e) {
+            $errors = json_decode($e->getMessage(), true);
+            return $this->json(['errors' => $errors], 422);
+        }
+
+        return $this->json([
+            'message' => 'Profil mis à jour avec succès',
+            'user' => [
+                'id' => (string) $user->getId(),
+                'email' => $user->getEmail(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'role' => $user->getRole(),
+                'isEmailVerified' => $user->isEmailVerified(),
+            ],
+        ]);
+    }
+
+    #[Route('/api/users', name: 'list_users', methods: ['GET'])]
+    public function listUsers(): JsonResponse
+    {
+        $users = $this->userService->listUsers();
+
+        $result = array_map(fn($user) => [
+            'id' => (string) $user->getId(),
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'role' => $user->getRole(),
+            'isEmailVerified' => $user->isEmailVerified(),
+            'createdAt' => $user->getCreatedAt(),
+            'updatedAt' => $user->getUpdatedAt(),
+        ], $users);
+
+        return $this->json($result);
+    }
+
+    #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]
+    public function deleteUser(string $id): JsonResponse
+    {
+        try {
+            $user = $this->userService->getUserProfile($id);
+
+            $userDto = new UserResponseDto($user);
+
+            $this->userService->deleteUser($id);
+            return $this->json([
+                'message' => 'Utilisateur supprimé avec succès',
+                'user' => $userDto->toArray()
+            ]);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 404);
+        }
     }
 }

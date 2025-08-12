@@ -19,4 +19,9 @@ class AuthorizationService
             throw new AccessDeniedHttpException("Accès refusé : permission $permission requise.");
         }
     }
+
+    public function isGranted(string $permission, mixed $subject = null): bool
+    {
+        return $this->authorizationChecker->isGranted($permission, $subject);
+    }
 }
