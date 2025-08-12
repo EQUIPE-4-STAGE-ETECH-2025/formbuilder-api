@@ -28,7 +28,8 @@ class AuthService
     /**
      * @throws TransportExceptionInterface
      */
-    public function register(RegisterDto $dto): array {
+    public function register(RegisterDto $dto): array
+    {
         if ($this->userRepository->findOneBy(['email' => $dto->getEmail()])) {
             throw new RuntimeException('Cet email est déjà utilisé.');
         }
@@ -48,13 +49,13 @@ class AuthService
         $verificationToken = $this->jwtService->generateToken([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'type' => 'email_verification'
+            'type' => 'email_verification',
         ]);
 
         $authToken = $this->jwtService->generateToken([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'role' => $user->getRole()
+            'role' => $user->getRole(),
         ]);
 
         $verificationUrl = sprintf(
@@ -71,7 +72,7 @@ class AuthService
 
         return [
             'user' => new UserResponseDto($user),
-            'token' => $authToken
+            'token' => $authToken,
         ];
     }
 
@@ -82,7 +83,7 @@ class AuthService
     {
         $user = $this->userRepository->findOneBy(['email' => $dto->getEmail()]);
 
-        if (!$user || !$this->passwordHasher->isPasswordValid($user, $dto->getPassword())) {
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $dto->getPassword())) {
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
         }
 
@@ -115,7 +116,7 @@ class AuthService
         $payload = $this->jwtService->validateToken($jwt);
 
         $user = $this->userRepository->find($payload->id ?? null);
-        if (!$user) {
+        if (! $user) {
             throw new UnauthorizedHttpException('', 'Utilisateur introuvable.');
         }
 
@@ -126,7 +127,7 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($jwt);
 
-        if (!isset($payload->exp)) {
+        if (! isset($payload->exp)) {
             throw new RuntimeException('Token invalide : propriété exp manquante');
         }
 
@@ -147,7 +148,7 @@ class AuthService
         }
 
         $user = $this->userRepository->find($payload->id ?? null);
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur introuvable.');
         }
 
@@ -166,7 +167,7 @@ class AuthService
     {
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 
@@ -193,13 +194,13 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($dto->getToken());
 
-        if (!isset($payload->type) || $payload->type !== 'password_reset') {
+        if (! isset($payload->type) || $payload->type !== 'password_reset') {
             throw new RuntimeException('Token de réinitialisation invalide.');
         }
 
         $user = $this->userRepository->find($payload->id);
 
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 

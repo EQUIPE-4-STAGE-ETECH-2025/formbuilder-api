@@ -2,11 +2,11 @@
 
 namespace App\Tests\Controller;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use App\Entity\User;
-use Symfony\Component\Uid\Uuid;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Uid\Uuid;
 
 class AuthControllerTest extends WebTestCase
 {
@@ -263,7 +263,7 @@ class AuthControllerTest extends WebTestCase
         $verificationToken = $jwtService->generateToken([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'type' => 'email_verification'
+            'type' => 'email_verification',
         ], 3600);
 
         $this->client->request('GET', '/api/auth/verify-email?token=' . $verificationToken);

@@ -39,15 +39,17 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
         try {
             $result = $authService->register($dto);
+
             return $this->json([
                 'message' => 'Inscription réussie',
                 'user' => $result['user']->toArray(),
-                'token' => $result['token']
+                'token' => $result['token'],
             ], 201);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
@@ -86,7 +88,7 @@ class AuthController extends AbstractController
     public function me(Request $request, AuthService $authService): JsonResponse
     {
         $authHeader = $request->headers->get('Authorization');
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             return $this->json(['error' => 'Token manquant'], 401);
         }
 
@@ -106,7 +108,7 @@ class AuthController extends AbstractController
     {
         $authHeader = $request->headers->get('Authorization');
 
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             return $this->json(['error' => 'Token manquant'], 401);
         }
 
@@ -126,12 +128,13 @@ class AuthController extends AbstractController
     {
         $token = $request->query->get('token');
 
-        if (!$token) {
+        if (! $token) {
             return $this->json(['error' => 'Token manquant'], 400);
         }
 
         try {
             $authService->verifyEmail($token);
+
             return $this->json(['message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
@@ -148,6 +151,7 @@ class AuthController extends AbstractController
 
         try {
             $authService->forgotPassword($email);
+
             return $this->json(['message' => 'Email de réinitialisation envoyé']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 404);
@@ -172,11 +176,13 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
         try {
             $authService->resetPassword($dto);
+
             return $this->json(['message' => 'Mot de passe réinitialisé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);

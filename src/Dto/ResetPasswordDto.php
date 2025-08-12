@@ -21,6 +21,7 @@ class ResetPasswordDto
     public function setNewPassword(?string $newPassword): self
     {
         $this->newPassword = $newPassword;
+
         return $this;
     }
     public function getToken(): ?string
@@ -30,6 +31,7 @@ class ResetPasswordDto
     public function setToken(?string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 }

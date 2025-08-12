@@ -9,11 +9,11 @@ class PasswordStrengthValidator extends ConstraintValidator
 {
     public function validate($value, Constraint $constraint): void
     {
-        if (!$constraint instanceof PasswordStrength) {
+        if (! $constraint instanceof PasswordStrength) {
             return;
         }
 
-        if (!is_string($value) || empty($value)) {
+        if (! is_string($value) || empty($value)) {
             return;
         }
 
@@ -23,23 +23,23 @@ class PasswordStrengthValidator extends ConstraintValidator
             $errors[] = "{$constraint->minLength} caractères";
         }
 
-        if ($constraint->requireUppercase && !preg_match('/[A-Z]/', $value)) {
+        if ($constraint->requireUppercase && ! preg_match('/[A-Z]/', $value)) {
             $errors[] = "une majuscule";
         }
 
-        if ($constraint->requireLowercase && !preg_match('/[a-z]/', $value)) {
+        if ($constraint->requireLowercase && ! preg_match('/[a-z]/', $value)) {
             $errors[] = "une minuscule";
         }
 
-        if ($constraint->requireDigit && !preg_match('/\d/', $value)) {
+        if ($constraint->requireDigit && ! preg_match('/\d/', $value)) {
             $errors[] = "un chiffre";
         }
 
-        if ($constraint->requireSpecialChar && !preg_match('/[\W_]/', $value)) {
+        if ($constraint->requireSpecialChar && ! preg_match('/[\W_]/', $value)) {
             $errors[] = "un caractère spécial";
         }
 
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $this->context->buildViolation($constraint->message)
                 ->setParameter('{{ rules }}', implode(', ', $errors))
                 ->addViolation();
