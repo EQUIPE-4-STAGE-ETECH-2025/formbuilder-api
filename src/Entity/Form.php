@@ -171,7 +171,7 @@ class Form
 
     public function addFormVersion(FormVersion $formVersion): static
     {
-        if (!$this->formVersions->contains($formVersion)) {
+        if (! $this->formVersions->contains($formVersion)) {
             $this->formVersions->add($formVersion);
             $formVersion->setForm($this);
         }
@@ -200,7 +200,7 @@ class Form
 
     public function addSubmission(Submission $submission): static
     {
-        if (!$this->submissions->contains($submission)) {
+        if (! $this->submissions->contains($submission)) {
             $this->submissions->add($submission);
             $submission->setForm($this);
         }
@@ -229,7 +229,7 @@ class Form
 
     public function addFormToken(FormToken $formToken): static
     {
-        if (!$this->formTokens->contains($formToken)) {
+        if (! $this->formTokens->contains($formToken)) {
             $this->formTokens->add($formToken);
             $formToken->setForm($this);
         }

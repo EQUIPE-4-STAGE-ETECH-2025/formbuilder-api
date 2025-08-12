@@ -9,5 +9,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 return static function (ContainerInterface $container): ObjectManager {
     /** @var EntityManagerInterface $entityManager */
     $entityManager = $container->get('doctrine.orm.entity_manager');
+
     return $entityManager;
-}; 
+};

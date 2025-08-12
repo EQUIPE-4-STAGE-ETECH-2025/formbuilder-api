@@ -10,7 +10,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.1 Controllers d'authentification
 
--   [ ] **AUTH-001** `(Dépendances -> AUTH-007, AUTH-009, AUTH-010)` : Créer `AuthController` avec endpoint de connexion
+-   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-009, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
@@ -18,7 +18,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion des erreurs (401, 422)
     -   Tests unitaires et d'intégration
 
--   [ ] **AUTH-002** `(Dépendances -> AUTH-008, AUTH-013)` : Implémenter l'endpoint d'inscription
+-   [x] **AUTH-002** `(Dépendances -> AUTH-008, AUTH-013)` : Implémenter l'endpoint d'inscription
 
     -   Endpoint : `POST /api/auth/register`
     -   Validation des données (email unique, force mot de passe)
@@ -26,7 +26,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Envoi d'email de vérification
     -   Création automatique du profil utilisateur
 
--   [ ] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
+-   [x] **AUTH-003** `(Dépendances -> AUTH-009, AUTH-012)` : Créer l'endpoint de vérification du profil
 
     -   Endpoint : `GET /api/auth/me`
     -   Validation du token JWT
@@ -34,35 +34,35 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion de l'expiration du token
     -   Middleware d'authentification
 
--   [ ] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
+-   [x] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
 
     -   Endpoint : `GET /api/auth/verify-email`
     -   Validation du token de vérification
     -   Mise à jour du statut `is_email_verified`
     -   Gestion des tokens expirés
 
--   [ ] **AUTH-005** `(Dépendances -> AUTH-008)` : Créer les endpoints de réinitialisation de mot de passe
+-   [x] **AUTH-005** `(Dépendances -> AUTH-008)` : Créer les endpoints de réinitialisation de mot de passe
 
     -   Endpoint : `POST /api/auth/forgot-password`
     -   Endpoint : `POST /api/auth/reset-password`
     -   Génération de tokens sécurisés
     -   Envoi d'emails de réinitialisation
 
--   [ ] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
+-   [x] **AUTH-006** `(Dépendances -> AUTH-009)` : Implémenter la déconnexion
     -   Endpoint : `POST /api/auth/logout`
     -   Invalidation du token côté serveur
     -   Blacklist des tokens révoqués
 
 ### 1.2 Services d'authentification
 
--   [ ] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
+-   [x] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
 
     -   Logique métier d'authentification
     -   Validation des credentials
     -   Génération des tokens JWT
     -   Gestion des sessions
 
--   [ ] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
+-   [x] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
 
     -   Envoi d'emails de vérification
     -   Envoi d'emails de réinitialisation
@@ -71,7 +71,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Notifications de quotas
     -   Notifications de paiement
 
--   [ ] **AUTH-009** `(Dépendances -> Aucune)` : Créer `JwtService`
+-   [x] **AUTH-009** `(Dépendances -> Aucune)` : Créer `JwtService`
     -   Génération des tokens JWT
     -   Validation des tokens
     -   Gestion de l'expiration
@@ -79,7 +79,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.3 DTOs d'authentification
 
--   [ ] **AUTH-010** `(Dépendances -> Aucune)` : Créer les DTOs d'authentification
+-   [x] **AUTH-010** `(Dépendances -> Aucune)` : Créer les DTOs d'authentification
     -   `LoginDto` avec validation
     -   `RegisterDto` avec validation
     -   `ResetPasswordDto` avec validation
@@ -87,37 +87,35 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.4 Gestion des rôles et autorisations
 
--   [ ] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
+-   [x] **AUTH-011** `(Dépendances -> AUTH-012)` : Implémenter la gestion des rôles utilisateurs
 
-    -   Créer `RoleService` pour la gestion des rôles
+    -   Créer `UserService` pour la gestion des rôles
     -   Endpoint : `GET /api/users/{id}/roles`
     -   Endpoint : `PUT /api/users/{id}/roles`
     -   Validation des permissions d'administration
     -   Gestion des rôles : USER, ADMIN
 
--   [ ] **AUTH-012** `(Dépendances -> Aucune)` : Créer `AuthorizationService`
+-   [x] **AUTH-012** `(Dépendances -> Aucune)` : Créer `AuthorizationService`
 
     -   Vérification des permissions par rôle
     -   Middleware d'autorisation
     -   Gestion des accès aux ressources
     -   Voters Symfony pour les permissions complexes
 
--   [ ] **AUTH-013** `(Dépendances -> Aucune)` : Implémenter la validation de force du mot de passe
+-   [x] **AUTH-013** `(Dépendances -> Aucune)` : Implémenter la validation de force du mot de passe
 
     -   Service de validation des règles de sécurité
     -   Configuration des règles (longueur, caractères spéciaux, etc.)
     -   Messages d'erreur personnalisés
     -   Validation en temps réel côté client
 
--   [ ] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer `UserProfileService`
-    -   Gestion du profil utilisateur
+-   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer destion du profil utilisateur
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles
-    -   Gestion de l'avatar utilisateur
 
 ---
-
+ 
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires
