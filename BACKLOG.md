@@ -113,6 +113,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation côté serveur
 
 -   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer gestion du profil utilisateur
+
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles

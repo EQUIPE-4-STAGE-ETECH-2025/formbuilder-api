@@ -272,7 +272,6 @@ class AuthControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Email vérifié avec succès', $data['message']);
-
         $em->clear();
 
         $verifiedUser = $userRepository->find($user->getId());
