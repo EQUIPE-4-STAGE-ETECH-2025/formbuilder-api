@@ -3,7 +3,6 @@
 namespace App\Tests\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
 
 class SubscriptionStatusControllerTest extends WebTestCase
 {
@@ -19,7 +18,9 @@ class SubscriptionStatusControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $data = json_decode($client->getResponse()->getContent(), true);
 
-        return $data['token'] ?? '';
+        $this->assertArrayHasKey('token', $data, 'Token not found in login response');
+
+        return $data['token'];
     }
 
     public function testGetSubscriptionStatus(): void
@@ -36,8 +37,8 @@ class SubscriptionStatusControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $data = json_decode($client->getResponse()->getContent(), true);
 
-        $this->assertArrayHasKey('isActive', $data);
-        $this->assertTrue($data['isActive']);
+        $this->assertArrayHasKey('status', $data);
+        $this->assertContains($data['status'], ['ACTIVE', 'SUSPENDED', 'CANCELLED']);
     }
 
     public function testUpdateSubscriptionStatus(): void
@@ -51,12 +52,13 @@ class SubscriptionStatusControllerTest extends WebTestCase
             'HTTP_Authorization' => "Bearer $token",
             'CONTENT_TYPE' => 'application/json'
         ], json_encode([
-            'isActive' => false
+            'status' => 'SUSPENDED'
         ]));
 
         $this->assertResponseIsSuccessful();
         $data = json_decode($client->getResponse()->getContent(), true);
 
-        $this->assertSame(false, $data['isActive']);
+        $this->assertArrayHasKey('status', $data);
+        $this->assertSame('SUSPENDED', $data['status']);
     }
 }

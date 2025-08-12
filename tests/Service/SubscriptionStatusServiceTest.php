@@ -15,13 +15,15 @@ class SubscriptionStatusServiceTest extends TestCase
 
     protected function setUp(): void
     {
+        // Création du mock du repository
         $this->subscriptionRepository = $this->createMock(SubscriptionRepository::class);
+        // Injection du mock dans le service testé
         $this->service = new SubscriptionStatusService($this->subscriptionRepository);
     }
 
     public function testGetStatusReturnsActive()
     {
-        $subscription = (new Subscription())->setIsActive(true);
+        $subscription = (new Subscription())->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->subscriptionRepository
             ->method('find')
@@ -35,7 +37,7 @@ class SubscriptionStatusServiceTest extends TestCase
 
     public function testGetStatusReturnsCancelled()
     {
-        $subscription = (new Subscription())->setIsActive(false);
+        $subscription = (new Subscription())->setStatus(Subscription::STATUS_CANCELLED);
 
         $this->subscriptionRepository
             ->method('find')
@@ -59,7 +61,7 @@ class SubscriptionStatusServiceTest extends TestCase
 
     public function testUpdateStatusToActive()
     {
-        $subscription = (new Subscription())->setIsActive(false);
+        $subscription = (new Subscription())->setStatus(Subscription::STATUS_CANCELLED);
 
         $this->subscriptionRepository
             ->method('find')
@@ -77,7 +79,7 @@ class SubscriptionStatusServiceTest extends TestCase
 
     public function testUpdateStatusToCancelled()
     {
-        $subscription = (new Subscription())->setIsActive(true);
+        $subscription = (new Subscription())->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->subscriptionRepository
             ->method('find')
@@ -95,7 +97,7 @@ class SubscriptionStatusServiceTest extends TestCase
 
     public function testUpdateStatusThrowsInvalidArgument()
     {
-        $subscription = (new Subscription())->setIsActive(true);
+        $subscription = (new Subscription())->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->subscriptionRepository
             ->method('find')
