@@ -33,7 +33,7 @@ class JwtAuthenticator extends AbstractAuthenticator
     {
         $authHeader = $request->headers->get('Authorization');
 
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             throw new AuthenticationException('Token manquant ou invalide');
         }
 
@@ -42,13 +42,13 @@ class JwtAuthenticator extends AbstractAuthenticator
 
         $userId = $payload->id ?? null;
 
-        if (!$userId) {
+        if (! $userId) {
             throw new AuthenticationException('Token invalide : ID manquant');
         }
 
         return new SelfValidatingPassport(new UserBadge($userId, function ($userId) {
             $user = $this->userRepository->find($userId);
-            if (!$user) {
+            if (! $user) {
                 throw new UserNotFoundException("Utilisateur $userId non trouvé.");
             }
 

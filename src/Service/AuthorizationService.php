@@ -15,7 +15,7 @@ class AuthorizationService
 
     public function requirePermissionOnObject(string $permission, User $subject): void
     {
-        if (!$this->authorizationChecker->isGranted($permission, $subject)) {
+        if (! $this->authorizationChecker->isGranted($permission, $subject)) {
             throw new AccessDeniedHttpException("Accès refusé : permission $permission requise.");
         }
     }

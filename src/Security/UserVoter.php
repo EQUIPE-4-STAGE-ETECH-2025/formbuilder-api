@@ -29,7 +29,7 @@ class UserVoter extends Voter
             self::VIEW_ALL,
         ];
 
-        if (!in_array($attribute, $permissions, true)) {
+        if (! in_array($attribute, $permissions, true)) {
             return false;
         }
 
@@ -44,7 +44,7 @@ class UserVoter extends Voter
     {
         $currentUser = $token->getUser();
 
-        if (!$currentUser instanceof User) {
+        if (! $currentUser instanceof User) {
             return false;
         }
 

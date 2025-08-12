@@ -217,7 +217,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addSubscription(Subscription $subscription): static
     {
-        if (!$this->subscriptions->contains($subscription)) {
+        if (! $this->subscriptions->contains($subscription)) {
             $this->subscriptions->add($subscription);
             $subscription->setUser($this);
         }
@@ -246,7 +246,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addForm(Form $form): static
     {
-        if (!$this->forms->contains($form)) {
+        if (! $this->forms->contains($form)) {
             $this->forms->add($form);
             $form->setUser($this);
         }
@@ -275,7 +275,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addQuotaStatus(QuotaStatus $quotaStatus): static
     {
-        if (!$this->quotaStatuses->contains($quotaStatus)) {
+        if (! $this->quotaStatuses->contains($quotaStatus)) {
             $this->quotaStatuses->add($quotaStatus);
             $quotaStatus->setUser($this);
         }
@@ -304,7 +304,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addAuditLogAsAdmin(AuditLog $auditLog): static
     {
-        if (!$this->auditLogsAsAdmin->contains($auditLog)) {
+        if (! $this->auditLogsAsAdmin->contains($auditLog)) {
             $this->auditLogsAsAdmin->add($auditLog);
             $auditLog->setAdmin($this);
         }
@@ -333,7 +333,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addAuditLogAsTarget(AuditLog $auditLog): static
     {
-        if (!$this->auditLogsAsTarget->contains($auditLog)) {
+        if (! $this->auditLogsAsTarget->contains($auditLog)) {
             $this->auditLogsAsTarget->add($auditLog);
             $auditLog->setTargetUser($this);
         }

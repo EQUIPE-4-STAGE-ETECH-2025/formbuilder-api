@@ -26,21 +26,23 @@ class AuthService
     }
 
     /**
+     * @return array<string, mixed>
      * @throws TransportExceptionInterface
      */
-    public function register(RegisterDto $dto): array {
+    public function register(RegisterDto $dto): array
+    {
         if ($this->userRepository->findOneBy(['email' => $dto->getEmail()])) {
             throw new RuntimeException('Cet email est déjà utilisé.');
         }
 
         $user = new User();
-        $user->setFirstName($dto->getFirstName());
-        $user->setLastName($dto->getLastName());
-        $user->setEmail($dto->getEmail());
+        $user->setFirstName($dto->getFirstName() ?? '');
+        $user->setLastName($dto->getLastName() ?? '');
+        $user->setEmail($dto->getEmail() ?? '');
         $user->setIsEmailVerified(false);
         $user->setRole('USER');
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword());
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword() ?? '');
         $user->setPasswordHash($hashedPassword);
 
         $this->userRepository->save($user, true);
@@ -48,13 +50,13 @@ class AuthService
         $verificationToken = $this->jwtService->generateToken([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'type' => 'email_verification'
+            'type' => 'email_verification',
         ]);
 
         $authToken = $this->jwtService->generateToken([
             'id' => $user->getId(),
             'email' => $user->getEmail(),
-            'role' => $user->getRole()
+            'role' => $user->getRole(),
         ]);
 
         $verificationUrl = sprintf(
@@ -64,14 +66,14 @@ class AuthService
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail(),
-            $user->getFirstName(),
+            $user->getEmail() ?? '',
+            $user->getFirstName() ?? '',
             $verificationUrl
         );
 
         return [
             'user' => new UserResponseDto($user),
-            'token' => $authToken
+            'token' => $authToken,
         ];
     }
 
@@ -82,7 +84,7 @@ class AuthService
     {
         $user = $this->userRepository->findOneBy(['email' => $dto->getEmail()]);
 
-        if (!$user || !$this->passwordHasher->isPasswordValid($user, $dto->getPassword())) {
+        if (! $user || ! $this->passwordHasher->isPasswordValid($user, $dto->getPassword())) {
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
         }
 
@@ -115,7 +117,7 @@ class AuthService
         $payload = $this->jwtService->validateToken($jwt);
 
         $user = $this->userRepository->find($payload->id ?? null);
-        if (!$user) {
+        if (! $user) {
             throw new UnauthorizedHttpException('', 'Utilisateur introuvable.');
         }
 
@@ -126,7 +128,7 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($jwt);
 
-        if (!isset($payload->exp)) {
+        if (! isset($payload->exp)) {
             throw new RuntimeException('Token invalide : propriété exp manquante');
         }
 
@@ -147,7 +149,7 @@ class AuthService
         }
 
         $user = $this->userRepository->find($payload->id ?? null);
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur introuvable.');
         }
 
@@ -166,7 +168,7 @@ class AuthService
     {
         $user = $this->userRepository->findOneBy(['email' => $email]);
 
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 
@@ -183,27 +185,42 @@ class AuthService
         );
 
         $this->emailService->sendPasswordResetEmail(
-            $user->getEmail(),
-            $user->getFirstName(),
+            $user->getEmail() ?? '',
+            $user->getFirstName() ?? '',
             $resetUrl
         );
     }
 
     public function resetPassword(ResetPasswordDto $dto): void
     {
-        $payload = $this->jwtService->validateToken($dto->getToken());
+        $token = $dto->getToken();
+        if ($token === null) {
+            throw new RuntimeException('Token de réinitialisation manquant.');
+        }
 
-        if (!isset($payload->type) || $payload->type !== 'password_reset') {
+        $payload = $this->jwtService->validateToken($token);
+
+        if (! isset($payload->type) || $payload->type !== 'password_reset') {
             throw new RuntimeException('Token de réinitialisation invalide.');
         }
 
-        $user = $this->userRepository->find($payload->id);
+        $userId = $payload->id ?? null;
+        if ($userId === null) {
+            throw new RuntimeException('Token invalide : ID utilisateur manquant.');
+        }
 
-        if (!$user) {
+        $user = $this->userRepository->find($userId);
+
+        if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getNewPassword());
+        $newPassword = $dto->getNewPassword();
+        if ($newPassword === null) {
+            throw new RuntimeException('Nouveau mot de passe manquant.');
+        }
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $newPassword);
         $user->setPasswordHash($hashedPassword);
 
         $user->setUpdatedAt(new DateTimeImmutable());

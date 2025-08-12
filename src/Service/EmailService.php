@@ -2,12 +2,12 @@
 
 namespace App\Service;
 
+use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
-use Exception;
 use Twig\Environment;
 
 class EmailService
@@ -16,7 +16,8 @@ class EmailService
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
         private readonly Environment $twig
-    ) {}
+    ) {
+    }
 
     /**
      * @throws TransportExceptionInterface
