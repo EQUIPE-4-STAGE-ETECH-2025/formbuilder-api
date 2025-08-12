@@ -41,6 +41,7 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
@@ -234,6 +235,7 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
