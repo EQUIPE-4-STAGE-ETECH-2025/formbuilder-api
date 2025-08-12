@@ -7,7 +7,7 @@ use Symfony\Component\Validator\ConstraintValidator;
 
 class PasswordStrengthValidator extends ConstraintValidator
 {
-    public function validate($value, Constraint $constraint): void
+    public function validate(mixed $value, Constraint $constraint): void
     {
         if (! $constraint instanceof PasswordStrength) {
             return;

@@ -26,6 +26,7 @@ class AuthService
     }
 
     /**
+     * @return array<string, mixed>
      * @throws TransportExceptionInterface
      */
     public function register(RegisterDto $dto): array
@@ -35,13 +36,13 @@ class AuthService
         }
 
         $user = new User();
-        $user->setFirstName($dto->getFirstName());
-        $user->setLastName($dto->getLastName());
-        $user->setEmail($dto->getEmail());
+        $user->setFirstName($dto->getFirstName() ?? '');
+        $user->setLastName($dto->getLastName() ?? '');
+        $user->setEmail($dto->getEmail() ?? '');
         $user->setIsEmailVerified(false);
         $user->setRole('USER');
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword());
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getPassword() ?? '');
         $user->setPasswordHash($hashedPassword);
 
         $this->userRepository->save($user, true);
@@ -65,8 +66,8 @@ class AuthService
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail(),
-            $user->getFirstName(),
+            $user->getEmail() ?? '',
+            $user->getFirstName() ?? '',
             $verificationUrl
         );
 
@@ -184,27 +185,42 @@ class AuthService
         );
 
         $this->emailService->sendPasswordResetEmail(
-            $user->getEmail(),
-            $user->getFirstName(),
+            $user->getEmail() ?? '',
+            $user->getFirstName() ?? '',
             $resetUrl
         );
     }
 
     public function resetPassword(ResetPasswordDto $dto): void
     {
-        $payload = $this->jwtService->validateToken($dto->getToken());
+        $token = $dto->getToken();
+        if ($token === null) {
+            throw new RuntimeException('Token de réinitialisation manquant.');
+        }
+
+        $payload = $this->jwtService->validateToken($token);
 
         if (! isset($payload->type) || $payload->type !== 'password_reset') {
             throw new RuntimeException('Token de réinitialisation invalide.');
         }
 
-        $user = $this->userRepository->find($payload->id);
+        $userId = $payload->id ?? null;
+        if ($userId === null) {
+            throw new RuntimeException('Token invalide : ID utilisateur manquant.');
+        }
+
+        $user = $this->userRepository->find($userId);
 
         if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 
-        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getNewPassword());
+        $newPassword = $dto->getNewPassword();
+        if ($newPassword === null) {
+            throw new RuntimeException('Nouveau mot de passe manquant.');
+        }
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $newPassword);
         $user->setPasswordHash($hashedPassword);
 
         $user->setUpdatedAt(new DateTimeImmutable());

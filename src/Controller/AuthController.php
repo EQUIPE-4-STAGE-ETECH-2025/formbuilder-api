@@ -128,7 +128,7 @@ class AuthController extends AbstractController
     {
         $token = $request->query->get('token');
 
-        if (! $token) {
+        if (! $token || ! is_string($token)) {
             return $this->json(['error' => 'Token manquant'], 400);
         }
 
