@@ -54,6 +54,7 @@ class AuthServiceTest extends TestCase
         $subscriptionService = $this->createMock(SubscriptionService::class);
 
         $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
+
         $result = $authService->login($dto);
 
         $this->assertEquals('fake-jwt-token', $result['token']);
@@ -136,8 +137,10 @@ class AuthServiceTest extends TestCase
         $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $result = $service->getCurrentUser('valid-token');
+
         $this->assertEquals('me@example.com', $result->getEmail());
     }
+
 
     /**
      * @throws Exception

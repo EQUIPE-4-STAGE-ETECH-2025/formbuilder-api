@@ -57,6 +57,7 @@ class UserService
 
         return $user;
     }
+
     /**
      * @param array<string, mixed> $data
      */
@@ -108,4 +109,5 @@ class UserService
 
         $this->userRepository->remove($user, true);
     }
+
 }
