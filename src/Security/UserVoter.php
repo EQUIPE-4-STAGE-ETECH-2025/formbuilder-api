@@ -27,7 +27,6 @@ class UserVoter extends Voter
             self::DELETE,
             self::VIEW_ALL,
         ];
-
         if (! in_array($attribute, $permissions, true)) {
             return false;
         }
