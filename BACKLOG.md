@@ -118,7 +118,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des données personnelles
 
 ---
-
+ 
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires
