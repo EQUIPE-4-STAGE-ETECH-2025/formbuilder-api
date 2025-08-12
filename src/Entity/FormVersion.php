@@ -120,7 +120,7 @@ class FormVersion
 
     public function addFormField(FormField $formField): static
     {
-        if (! $this->formFields->contains($formField)) {
+        if (!$this->formFields->contains($formField)) {
             $this->formFields->add($formField);
             $formField->setFormVersion($this);
         }

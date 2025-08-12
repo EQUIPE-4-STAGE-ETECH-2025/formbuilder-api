@@ -157,7 +157,7 @@ class Plan
 
     public function addSubscription(Subscription $subscription): static
     {
-        if (! $this->subscriptions->contains($subscription)) {
+        if (!$this->subscriptions->contains($subscription)) {
             $this->subscriptions->add($subscription);
             $subscription->setPlan($this);
         }
@@ -186,7 +186,7 @@ class Plan
 
     public function addPlanFeature(PlanFeature $planFeature): static
     {
-        if (! $this->planFeatures->contains($planFeature)) {
+        if (!$this->planFeatures->contains($planFeature)) {
             $this->planFeatures->add($planFeature);
             $planFeature->setPlan($this);
         }

@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -89,7 +88,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __construct()
     {
-        $this->id = Uuid::v4();
         $this->subscriptions = new ArrayCollection();
         $this->forms = new ArrayCollection();
         $this->quotaStatuses = new ArrayCollection();
@@ -217,7 +215,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addSubscription(Subscription $subscription): static
     {
-        if (! $this->subscriptions->contains($subscription)) {
+        if (!$this->subscriptions->contains($subscription)) {
             $this->subscriptions->add($subscription);
             $subscription->setUser($this);
         }
@@ -246,7 +244,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addForm(Form $form): static
     {
-        if (! $this->forms->contains($form)) {
+        if (!$this->forms->contains($form)) {
             $this->forms->add($form);
             $form->setUser($this);
         }
@@ -275,7 +273,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addQuotaStatus(QuotaStatus $quotaStatus): static
     {
-        if (! $this->quotaStatuses->contains($quotaStatus)) {
+        if (!$this->quotaStatuses->contains($quotaStatus)) {
             $this->quotaStatuses->add($quotaStatus);
             $quotaStatus->setUser($this);
         }
@@ -304,7 +302,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addAuditLogAsAdmin(AuditLog $auditLog): static
     {
-        if (! $this->auditLogsAsAdmin->contains($auditLog)) {
+        if (!$this->auditLogsAsAdmin->contains($auditLog)) {
             $this->auditLogsAsAdmin->add($auditLog);
             $auditLog->setAdmin($this);
         }
@@ -333,7 +331,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function addAuditLogAsTarget(AuditLog $auditLog): static
     {
-        if (! $this->auditLogsAsTarget->contains($auditLog)) {
+        if (!$this->auditLogsAsTarget->contains($auditLog)) {
             $this->auditLogsAsTarget->add($auditLog);
             $auditLog->setTargetUser($this);
         }
