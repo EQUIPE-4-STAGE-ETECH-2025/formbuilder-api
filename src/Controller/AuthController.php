@@ -41,7 +41,6 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
-
             return $this->json(['errors' => $errorMessages], 422);
         }
 
@@ -160,7 +159,6 @@ class AuthController extends AbstractController
 
         try {
             $authService->verifyEmail($token);
-
             return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
             // Codes HTTP plus spécifiques selon le type d'erreur
@@ -197,7 +195,6 @@ class AuthController extends AbstractController
             return $this->json(['error' => $e->getMessage()], 400);
         }
     }
-
 
     /**
      * @throws TransportExceptionInterface
@@ -237,7 +234,6 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
-
             return $this->json(['errors' => $errorMessages], 422);
         }
 
