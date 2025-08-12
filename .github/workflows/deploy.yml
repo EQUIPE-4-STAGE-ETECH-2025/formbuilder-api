@@ -39,15 +39,12 @@ jobs:
               run: |
                   echo "APP_ENV=dev" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
                   echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
                   echo "DATABASE_HOST=localhost" >> .env
                   echo "DATABASE_PORT=5432" >> .env
                   echo "DATABASE_NAME=formbuilder_dev" >> .env
                   echo "DATABASE_USER=postgres" >> .env
                   echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
 
             # Vérification de la syntaxe PHP
             - name: PHP Lint
@@ -121,24 +118,18 @@ jobs:
                   # Créer le fichier .env principal pour les tests
                   echo "APP_ENV=test" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
                   echo "DATABASE_HOST=localhost" >> .env
                   echo "DATABASE_PORT=5432" >> .env
                   echo "DATABASE_NAME=formbuilder" >> .env
                   echo "DATABASE_USER=postgres" >> .env
                   echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
                   # Créer le fichier .env.test.local pour les variables spécifiques aux tests
                   echo "APP_ENV=test" > .env.test.local
-                  echo "APP_URL=http://localhost:8000" >> .env.test.local
                   echo "DATABASE_HOST=localhost" >> .env.test.local
                   echo "DATABASE_PORT=5432" >> .env.test.local
                   echo "DATABASE_NAME=formbuilder" >> .env.test.local
                   echo "DATABASE_USER=postgres" >> .env.test.local
                   echo "DATABASE_PASSWORD=postgres" >> .env.test.local
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env.test.local
-                  echo "MAILER_DSN=null://null" >> .env.test.local
 
             # Création du schéma de base de données pour les tests
             - name: Create database schema
@@ -203,15 +194,12 @@ jobs:
               run: |
                   echo "APP_ENV=dev" > .env
                   echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
                   echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
                   echo "DATABASE_HOST=localhost" >> .env
                   echo "DATABASE_PORT=5432" >> .env
                   echo "DATABASE_NAME=formbuilder_dev" >> .env
                   echo "DATABASE_USER=postgres" >> .env
                   echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
 
             # Vérification des vulnérabilités de sécurité dans les dépendances
             - name: Security check

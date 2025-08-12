@@ -83,7 +83,7 @@ class Feature
 
     public function addPlanFeature(PlanFeature $planFeature): static
     {
-        if (! $this->planFeatures->contains($planFeature)) {
+        if (!$this->planFeatures->contains($planFeature)) {
             $this->planFeatures->add($planFeature);
             $planFeature->setFeature($this);
         }
