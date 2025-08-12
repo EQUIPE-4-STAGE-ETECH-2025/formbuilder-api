@@ -23,7 +23,6 @@ class PlanFeature
     #[Assert\NotNull(message: 'La fonctionnalité est obligatoire')]
     private ?Feature $feature = null;
 
-
     public function getId(): ?string
     {
         return $this->id;
@@ -57,5 +56,3 @@ class PlanFeature
         return $this;
     }
 }
-
-
