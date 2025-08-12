@@ -125,7 +125,6 @@ class AuthService
     public function logout(string $jwt): void
     {
         $payload = $this->jwtService->validateToken($jwt);
-
         if (! isset($payload->exp) || ! is_int($payload->exp)) {
             throw new RuntimeException('Token invalide : propriété exp manquante');
         }

@@ -179,7 +179,6 @@ class AuthController extends AbstractController
 
         try {
             $authService->forgotPassword($email);
-
             return $this->json(['success' => true, 'message' => 'Email de réinitialisation envoyé']);
         } catch (RuntimeException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
@@ -204,6 +203,7 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
