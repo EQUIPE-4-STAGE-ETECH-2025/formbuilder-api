@@ -57,6 +57,7 @@ class UserService
 
         return $user;
     }
+
     /**
      * @param array<string, mixed> $data
      */
