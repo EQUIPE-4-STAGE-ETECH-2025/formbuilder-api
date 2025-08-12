@@ -34,6 +34,7 @@ class ResetPasswordDto
     public function setToken(?string $token): self
     {
         $this->token = $token;
+
         return $this;
     }
 }
