@@ -171,7 +171,7 @@ class UserServiceTest extends TestCase
 
         $this->userService->updateUserProfile($userId, ['firstName' => '']);
     }
-    
+
     public function testListUsersSuccess(): void
     {
         $users = [new User(), new User()];
