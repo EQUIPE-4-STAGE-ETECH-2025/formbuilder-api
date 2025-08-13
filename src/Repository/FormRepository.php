@@ -38,4 +38,22 @@ class FormRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function countFormsByStatusForUser(string $userId): array
+    {
+        $qb = $this->createQueryBuilder('f')
+            ->select('f.status, COUNT(f.id) as formsCount')
+            ->where('f.user = :userId')
+            ->groupBy('f.status')
+            ->setParameter('userId', $userId);
+
+        $result = $qb->getQuery()->getResult();
+
+        $counts = [];
+        foreach ($result as $row) {
+            $counts[$row['status']] = (int)$row['formsCount'];
+        }
+
+        return $counts;
+    }
 }
