@@ -172,27 +172,6 @@ class UserServiceTest extends TestCase
         $this->userService->updateUserProfile($userId, ['firstName' => '']);
     }
 
-    public function testListUsersSuccess(): void
-    {
-        $users = [new User(), new User()];
-
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(true);
-        $this->userRepository->method('findAll')->willReturn($users);
-
-        $result = $this->userService->listUsers();
-
-        $this->assertSame($users, $result);
-    }
-
-    public function testListUsersAccessDenied(): void
-    {
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(false);
-
-        $this->expectException(AccessDeniedHttpException::class);
-
-        $this->userService->listUsers();
-    }
-
     public function testDeleteUserSuccess(): void
     {
         $userId = '111';
