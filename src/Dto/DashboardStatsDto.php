@@ -17,13 +17,17 @@ class DashboardStatsDto
     /** @var array<string,int> nombre de formulaires par statut */
     private array $formsStatusCount;
 
+    /** @var array<int, array<string, mixed>> */
+    private array $recentSubmissions;
+
     public function __construct(
         int $totalForms,
         int $publishedForms,
         int $totalSubmissions,
         array $submissionsPerMonth = [],
         array $submissionsPerForm = [],
-        array $formsStatusCount = []
+        array $formsStatusCount = [],
+        array $recentSubmissions = []
     ) {
         $this->totalForms = $totalForms;
         $this->publishedForms = $publishedForms;
@@ -31,6 +35,7 @@ class DashboardStatsDto
         $this->submissionsPerMonth = $submissionsPerMonth;
         $this->submissionsPerForm = $submissionsPerForm;
         $this->formsStatusCount = $formsStatusCount;
+        $this->recentSubmissions = $recentSubmissions;
     }
 
     public function toArray(): array
@@ -42,6 +47,7 @@ class DashboardStatsDto
             'submissionsPerMonth' => $this->submissionsPerMonth,
             'submissionsPerForm' => $this->submissionsPerForm,
             'formsStatusCount' => $this->formsStatusCount,
+            'recentSubmissions' => $this->recentSubmissions,
         ];
     }
 }

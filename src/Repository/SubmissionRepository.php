@@ -86,4 +86,17 @@ class SubmissionRepository extends ServiceEntityRepository
             ->fetchAllKeyValue();
     }
 
+    public function getRecentSubmissionsByUser(string $userId, int $limit = 3): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('s.id, s.submittedAt, f.title AS formTitle')
+            ->join('s.form', 'f')
+            ->where('f.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('s.submittedAt', 'DESC')
+            ->setMaxResults($limit);
+
+        return $qb->getQuery()->getArrayResult();
+    }
+
 }

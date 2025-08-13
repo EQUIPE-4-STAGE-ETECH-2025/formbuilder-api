@@ -38,6 +38,8 @@ class DashboardService
 
         $formsStatusCount = $this->formRepository->countFormsByStatusForUser($userId);
 
+        $recentSubmissions = $this->submissionRepository->getRecentSubmissionsByUser($userId);
+
         return new DashboardStatsDto(
             $totalForms,
             $publishedForms,
@@ -45,6 +47,7 @@ class DashboardService
             $submissionsPerMonth,
             $submissionsPerForm,
             $formsStatusCount,
+            $recentSubmissions,
         );
     }
 
