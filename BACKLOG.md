@@ -408,7 +408,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.1 Controllers de tableau de bord
 
--   [ ] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
+-   [x] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
 
     -   Endpoint : `GET /api/dashboard/stats`
     -   Statistiques utilisateur en temps réel
