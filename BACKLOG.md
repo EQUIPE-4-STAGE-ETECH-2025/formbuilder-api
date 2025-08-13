@@ -423,7 +423,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.2 Services de statistiques
 
--   [ ] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
+-   [x] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
 
     -   Calcul des métriques utilisateur
     -   Agrégation des données
