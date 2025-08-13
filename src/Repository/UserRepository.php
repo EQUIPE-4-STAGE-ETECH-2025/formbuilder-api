@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Subscription;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -54,4 +55,16 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setPassword($newHashedPassword);
         $this->save($user, true);
     }
+
+    public function getPlanNameForUser(User $user): string
+    {
+        $activeSubscription = $user->getSubscriptions()
+            ->filter(fn(Subscription $s) => $s->isActive())
+            ->last();
+
+        return $activeSubscription && $activeSubscription->getPlan()
+            ? $activeSubscription->getPlan()->getName()
+            : 'Free';
+    }
+
 }
