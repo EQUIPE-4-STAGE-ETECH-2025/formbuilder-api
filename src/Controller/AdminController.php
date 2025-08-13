@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\UserListDto;
 use App\Dto\UserResponseDto;
 use App\Service\AdminService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,8 +19,8 @@ class AdminController extends AbstractController
     {
         $users = $this->adminService->listUsers();
 
-        $result = array_map(fn($user) => (new UserResponseDto($user))->toArray(), $users);
+        $data = array_map(fn(UserListDto $dto) => $dto->toArray(), $users);
 
-        return $this->json($result);
+        return $this->json($data);
     }
 }
