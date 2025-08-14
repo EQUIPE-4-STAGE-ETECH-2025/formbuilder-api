@@ -56,4 +56,13 @@ class FormRepository extends ServiceEntityRepository
 
         return $counts;
     }
+
+    public function countAllForms(): int
+    {
+        return (int) $this->createQueryBuilder('f')
+            ->select('COUNT(f.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
 }
