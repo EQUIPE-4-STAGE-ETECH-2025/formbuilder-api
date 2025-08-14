@@ -4,11 +4,14 @@ namespace App\Repository;
 
 use App\Entity\Subscription;
 use App\Entity\User;
+
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+use function get_class;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -49,7 +52,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (! $user instanceof User) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
         }
 
         $user->setPassword($newHashedPassword);
@@ -65,6 +68,50 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $activeSubscription && $activeSubscription->getPlan()
             ? $activeSubscription->getPlan()->getName()
             : 'Free';
+    }
+
+    public function countNonAdminUsers(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.role != :admin')
+            ->setParameter('admin', 'ADMIN')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function getUsersPerMonth(): array
+    {
+        $sql = "
+        SELECT to_char(u.created_at, 'YYYY-MM') AS month, COUNT(u.id) AS count
+        FROM users u
+        WHERE u.role != :admin
+        GROUP BY month
+        ORDER BY month ASC
+    ";
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        return $conn->executeQuery($sql, ['admin' => 'ADMIN'])->fetchAllAssociative();
+    }
+
+    public function getUsersByPlan(): array
+    {
+        $dql = "
+        SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
+        FROM App\Entity\User u
+        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.isActive = true
+        LEFT JOIN App\Entity\Plan p WITH s.plan = p
+        WHERE u.role != 'ADMIN'
+        GROUP BY plan
+    ";
+
+        return $this->getEntityManager()
+            ->createQuery($dql)
+            ->getArrayResult();
     }
 
 }
