@@ -430,7 +430,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Cache des statistiques
     -   Optimisation des requêtes
 
--   [ ] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
+-   [x] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
     -   Statistiques globales
     -   Gestion des utilisateurs
     -   Actions administratives
