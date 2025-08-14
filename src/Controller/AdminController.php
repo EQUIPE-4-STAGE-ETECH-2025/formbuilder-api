@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Dto\UserListDto;
-use App\Dto\UserResponseDto;
 use App\Service\AdminService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -22,5 +21,12 @@ class AdminController extends AbstractController
         $data = array_map(fn(UserListDto $dto) => $dto->toArray(), $users);
 
         return $this->json($data);
+    }
+
+    #[Route('/api/admin/stats', name: 'stats', methods: ['GET'])]
+    public function stats(): JsonResponse
+    {
+        $stats = $this->adminService->getStats();
+        return $this->json($stats);
     }
 }

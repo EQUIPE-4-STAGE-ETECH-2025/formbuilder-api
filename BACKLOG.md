@@ -415,7 +415,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Métriques de performance
     -   Graphiques de données
 
--   [ ] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
+-   [x] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
     -   Endpoint : `GET /api/admin/stats`
     -   Endpoint : `GET /api/admin/users`
     -   Métriques globales de la plateforme
