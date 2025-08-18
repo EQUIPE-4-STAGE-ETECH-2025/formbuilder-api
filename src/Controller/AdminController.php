@@ -11,14 +11,15 @@ use Symfony\Component\Routing\Annotation\Route;
 class AdminController extends AbstractController
 {
     public function __construct(private readonly AdminService $adminService)
-    {}
+    {
+    }
 
     #[Route('/api/admin/users', name: 'list_users', methods: ['GET'])]
     public function listUsers(): JsonResponse
     {
         $users = $this->adminService->listUsers();
 
-        $data = array_map(fn(UserListDto $dto) => $dto->toArray(), $users);
+        $data = array_map(fn (UserListDto $dto) => $dto->toArray(), $users);
 
         return $this->json($data);
     }
@@ -27,6 +28,7 @@ class AdminController extends AbstractController
     public function stats(): JsonResponse
     {
         $stats = $this->adminService->getStats();
+
         return $this->json($stats);
     }
 }

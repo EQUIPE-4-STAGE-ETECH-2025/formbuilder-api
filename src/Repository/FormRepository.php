@@ -39,6 +39,9 @@ class FormRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * @return array<string, int>
+     */
     public function countFormsByStatusForUser(string $userId): array
     {
         $qb = $this->createQueryBuilder('f')

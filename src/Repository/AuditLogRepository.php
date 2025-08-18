@@ -39,6 +39,9 @@ class AuditLogRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getRecentAdminActions(int $limit = 3): array
     {
         return $this->createQueryBuilder('al')

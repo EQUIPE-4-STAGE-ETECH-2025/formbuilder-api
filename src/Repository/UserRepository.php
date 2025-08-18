@@ -4,14 +4,15 @@ namespace App\Repository;
 
 use App\Entity\Subscription;
 use App\Entity\User;
-
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
+
+use function get_class;
+
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
-use function get_class;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -62,11 +63,11 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getPlanNameForUser(User $user): string
     {
         $activeSubscription = $user->getSubscriptions()
-            ->filter(fn(Subscription $s) => $s->isActive())
+            ->filter(fn (Subscription $s): bool => $s->isActive() ?? false)
             ->last();
 
         return $activeSubscription && $activeSubscription->getPlan()
-            ? $activeSubscription->getPlan()->getName()
+            ? $activeSubscription->getPlan()->getName() ?? 'Free'
             : 'Free';
     }
 
@@ -81,6 +82,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * @return array<int, array<string, mixed>>
      * @throws Exception
      */
     public function getUsersPerMonth(): array
@@ -98,6 +100,9 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $conn->executeQuery($sql, ['admin' => 'ADMIN'])->fetchAllAssociative();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getUsersByPlan(): array
     {
         $dql = "

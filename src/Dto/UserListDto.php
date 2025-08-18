@@ -19,14 +19,17 @@ class UserListDto
         int $formsCount = 0,
         int $submissionsCount = 0
     ) {
-        $this->id = $user->getId();
-        $this->fullName = $user->getFirstName() . ' ' . $user->getLastName();
-        $this->email = $user->getEmail();
+        $this->id = $user->getId() ?? '';
+        $this->fullName = ($user->getFirstName() ?? '') . ' ' . ($user->getLastName() ?? '');
+        $this->email = $user->getEmail() ?? '';
         $this->planName = $planName;
         $this->formsCount = $formsCount;
         $this->submissionsCount = $submissionsCount;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

@@ -6,7 +6,6 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 

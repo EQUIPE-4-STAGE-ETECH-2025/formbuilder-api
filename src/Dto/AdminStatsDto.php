@@ -7,11 +7,25 @@ class AdminStatsDto
     public int $totalUsers;
     public int $totalForms;
     public int $totalSubmissions;
+
+    /** @var array<int, array<string, mixed>> */
     public array $usersPerMonth = [];
+
+    /** @var array<int, array<string, mixed>> */
     public array $totalUsersPerMonth = [];
+
+    /** @var array<int, array<string, mixed>> */
     public array $usersByPlan = [];
+
+    /** @var array<int, array<string, mixed>> */
     public array $recentAuditLogs = [];
 
+    /**
+     * @param array<int, array<string, mixed>> $usersPerMonth
+     * @param array<int, array<string, mixed>> $totalUsersPerMonth
+     * @param array<int, array<string, mixed>> $usersByPlan
+     * @param array<int, array<string, mixed>> $recentAuditLogs
+     */
     public function __construct(
         int $totalUsers,
         int $totalForms,

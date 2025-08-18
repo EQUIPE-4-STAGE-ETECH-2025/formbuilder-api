@@ -30,15 +30,15 @@ class DashboardService
             'status' => 'PUBLISHED',
         ]);
 
-        $totalSubmissions = $this->submissionRepository->countByUserForms($userId);
+        $totalSubmissions = $this->submissionRepository->countByUserForms($userId ?? '');
 
-        $submissionsPerMonth = $this->submissionRepository->countSubmissionsPerMonthByUser($userId);
+        $submissionsPerMonth = $this->submissionRepository->countSubmissionsPerMonthByUser($userId ?? '');
 
-        $submissionsPerForm = $this->submissionRepository->countSubmissionsPerFormByUser($userId);
+        $submissionsPerForm = $this->submissionRepository->countSubmissionsPerFormByUser($userId ?? '');
 
-        $formsStatusCount = $this->formRepository->countFormsByStatusForUser($userId);
+        $formsStatusCount = $this->formRepository->countFormsByStatusForUser($userId ?? '');
 
-        $recentSubmissions = $this->submissionRepository->getRecentSubmissionsByUser($userId);
+        $recentSubmissions = $this->submissionRepository->getRecentSubmissionsByUser($userId ?? '');
 
         return new DashboardStatsDto(
             $totalForms,
