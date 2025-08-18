@@ -52,6 +52,7 @@ class SubmissionRepository extends ServiceEntityRepository
     }
 
     /**
+     * @return array<int|string, mixed>
      * @throws Exception
      */
     public function countSubmissionsPerMonthByUser(string $userId): array
@@ -70,6 +71,9 @@ class SubmissionRepository extends ServiceEntityRepository
             ->fetchAllKeyValue();
     }
 
+    /**
+     * @return array<int|string, mixed>
+     */
     public function countSubmissionsPerFormByUser(string $userId): array
     {
         $sql = "
@@ -86,6 +90,9 @@ class SubmissionRepository extends ServiceEntityRepository
             ->fetchAllKeyValue();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function getRecentSubmissionsByUser(string $userId, int $limit = 3): array
     {
         $qb = $this->createQueryBuilder('s')

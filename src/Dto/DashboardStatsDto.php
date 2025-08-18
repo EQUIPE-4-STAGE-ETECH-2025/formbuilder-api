@@ -8,10 +8,10 @@ class DashboardStatsDto
     private int $publishedForms;
     private int $totalSubmissions;
 
-    /** @var array<string,int> nombre de soumissions par mois */
+    /** @var array<int|string, mixed> nombre de soumissions par mois */
     private array $submissionsPerMonth;
 
-    /** @var array<string,int> nombre de soumissions par formulaire */
+    /** @var array<int|string, mixed> nombre de soumissions par formulaire */
     private array $submissionsPerForm;
 
     /** @var array<string,int> nombre de formulaires par statut */
@@ -20,6 +20,12 @@ class DashboardStatsDto
     /** @var array<int, array<string, mixed>> */
     private array $recentSubmissions;
 
+    /**
+     * @param array<int|string, mixed> $submissionsPerMonth
+     * @param array<int|string, mixed> $submissionsPerForm
+     * @param array<string, int> $formsStatusCount
+     * @param array<int, array<string, mixed>> $recentSubmissions
+     */
     public function __construct(
         int $totalForms,
         int $publishedForms,
@@ -38,6 +44,9 @@ class DashboardStatsDto
         $this->recentSubmissions = $recentSubmissions;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

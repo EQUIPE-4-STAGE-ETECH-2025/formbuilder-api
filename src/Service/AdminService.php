@@ -18,13 +18,15 @@ class AdminService
         private readonly SubmissionRepository $submissionRepository,
         private readonly AuditLogRepository $auditLogRepository,
         private readonly AuthorizationService $authorizationService,
-    )
-    {
+    ) {
     }
 
+    /**
+     * @return array<int, UserListDto>
+     */
     public function listUsers(): array
     {
-        if (!$this->authorizationService->isGranted('USER_VIEW_ALL')) {
+        if (! $this->authorizationService->isGranted('USER_VIEW_ALL')) {
             throw new AccessDeniedHttpException('Accès refusé.');
         }
 
@@ -39,7 +41,7 @@ class AdminService
 
             $formsCount = $this->formRepository->count(['user' => $user->getId()]);
 
-            $submissionsCount = $this->submissionRepository->countByUserForms($user->getId());
+            $submissionsCount = $this->submissionRepository->countByUserForms($user->getId() ?? '');
 
             $planName = $this->userRepository->getPlanNameForUser($user);
 
@@ -51,7 +53,7 @@ class AdminService
 
     public function getStats(): AdminStatsDto
     {
-        if (!$this->authorizationService->isGranted('USER_VIEW_ALL')) {
+        if (! $this->authorizationService->isGranted('USER_VIEW_ALL')) {
             throw new AccessDeniedHttpException('Accès refusé.');
         }
 
@@ -67,7 +69,7 @@ class AdminService
             $cumulative += $row['count'];
             $totalUsersPerMonth[] = [
                 'month' => $row['month'],
-                'count' => $cumulative
+                'count' => $cumulative,
             ];
         }
 
