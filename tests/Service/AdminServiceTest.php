@@ -11,6 +11,7 @@ use App\Repository\SubmissionRepository;
 use App\Repository\UserRepository;
 use App\Service\AdminService;
 use App\Service\AuthorizationService;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
@@ -23,6 +24,9 @@ class AdminServiceTest extends TestCase
     private $authorizationService;
     private $adminService;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->userRepository = $this->createMock(UserRepository::class);
@@ -126,7 +130,6 @@ class AdminServiceTest extends TestCase
         $this->assertSame(7, $result->totalForms);
         $this->assertSame(15, $result->totalSubmissions);
 
-        // Vérifie le cumul
         $this->assertSame([
             ['month' => '2025-01', 'count' => 1],
             ['month' => '2025-02', 'count' => 3], // cumul

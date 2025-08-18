@@ -438,7 +438,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.3 DTOs de statistiques
 
--   [ ] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
+-   [x] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
     -   `DashboardStatsDto` pour les stats utilisateur
     -   `AdminStatsDto` pour les stats admin
     -   `UserListDto` pour la liste des utilisateurs
