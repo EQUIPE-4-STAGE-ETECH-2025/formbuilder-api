@@ -47,7 +47,6 @@ class UserService
         return $targetUser;
     }
 
-
     public function getUserProfile(string $id): User
     {
         $user = $this->userRepository->find($id);
@@ -98,18 +97,6 @@ class UserService
         $this->userRepository->save($user, true);
 
         return $user;
-    }
-
-    /**
-     * @return array<int, User>
-     */
-    public function listUsers(): array
-    {
-        if (! $this->authorizationService->isGranted('USER_VIEW_ALL')) {
-            throw new AccessDeniedHttpException('Accès refusé.');
-        }
-
-        return $this->userRepository->findAll();
     }
 
     public function deleteUser(string $id): void

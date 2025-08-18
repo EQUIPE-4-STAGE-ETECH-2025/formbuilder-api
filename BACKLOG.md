@@ -408,14 +408,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.1 Controllers de tableau de bord
 
--   [ ] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
+-   [x] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
 
     -   Endpoint : `GET /api/dashboard/stats`
     -   Statistiques utilisateur en temps réel
     -   Métriques de performance
     -   Graphiques de données
 
--   [ ] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
+-   [x] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
     -   Endpoint : `GET /api/admin/stats`
     -   Endpoint : `GET /api/admin/users`
     -   Métriques globales de la plateforme
@@ -423,14 +423,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.2 Services de statistiques
 
--   [ ] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
+-   [x] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
 
     -   Calcul des métriques utilisateur
     -   Agrégation des données
     -   Cache des statistiques
     -   Optimisation des requêtes
 
--   [ ] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
+-   [x] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
     -   Statistiques globales
     -   Gestion des utilisateurs
     -   Actions administratives
@@ -438,7 +438,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.3 DTOs de statistiques
 
--   [ ] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
+-   [x] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
     -   `DashboardStatsDto` pour les stats utilisateur
     -   `AdminStatsDto` pour les stats admin
     -   `UserListDto` pour la liste des utilisateurs
