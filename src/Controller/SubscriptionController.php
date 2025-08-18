@@ -51,7 +51,6 @@ class SubscriptionController extends AbstractController
         } else {
             $plan = $this->planRepository->find('550e8400-e29b-41d4-a716-446655440201');
         }
-
         if (!$plan) {
             return $this->json(['error' => 'Plan introuvable'], 404);
         }
