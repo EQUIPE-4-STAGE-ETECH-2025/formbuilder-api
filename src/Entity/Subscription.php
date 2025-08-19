@@ -6,6 +6,8 @@ use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Uid\Uuid;
+
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 class Subscription
