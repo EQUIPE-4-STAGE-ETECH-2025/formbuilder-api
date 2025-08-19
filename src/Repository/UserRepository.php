@@ -2,9 +2,14 @@
 
 namespace App\Repository;
 
+use App\Entity\Subscription;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
+
+use function get_class;
+
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -54,4 +59,64 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $user->setPassword($newHashedPassword);
         $this->save($user, true);
     }
+
+    public function getPlanNameForUser(User $user): string
+    {
+        $activeSubscription = $user->getSubscriptions()
+            ->filter(fn (Subscription $s): bool => $s->isActive() ?? false)
+            ->last();
+
+        return $activeSubscription && $activeSubscription->getPlan()
+            ? $activeSubscription->getPlan()->getName() ?? 'Free'
+            : 'Free';
+    }
+
+    public function countNonAdminUsers(): int
+    {
+        return (int) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
+            ->where('u.role != :admin')
+            ->setParameter('admin', 'ADMIN')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     * @throws Exception
+     */
+    public function getUsersPerMonth(): array
+    {
+        $sql = "
+        SELECT to_char(u.created_at, 'YYYY-MM') AS month, COUNT(u.id) AS count
+        FROM users u
+        WHERE u.role != :admin
+        GROUP BY month
+        ORDER BY month ASC
+    ";
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        return $conn->executeQuery($sql, ['admin' => 'ADMIN'])->fetchAllAssociative();
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getUsersByPlan(): array
+    {
+        $dql = "
+        SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
+        FROM App\Entity\User u
+        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.isActive = true
+        LEFT JOIN App\Entity\Plan p WITH s.plan = p
+        WHERE u.role != 'ADMIN'
+        GROUP BY plan
+    ";
+
+        return $this->getEntityManager()
+            ->createQuery($dql)
+            ->getArrayResult();
+    }
+
 }

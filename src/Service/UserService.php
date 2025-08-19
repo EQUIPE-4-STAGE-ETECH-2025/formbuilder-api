@@ -47,7 +47,6 @@ class UserService
         return $targetUser;
     }
 
-
     public function getUserProfile(string $id): User
     {
         $user = $this->userRepository->find($id);
