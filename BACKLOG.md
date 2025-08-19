@@ -10,7 +10,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.1 Controllers d'authentification
 
--   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-009, AUTH-010) : Créer `AuthController` avec endpoint de connexion
+-   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
@@ -32,7 +32,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation du token JWT
     -   Retour des informations utilisateur complètes
     -   Gestion de l'expiration du token
-    -   Middleware d'authentification
+    -   Utilisation du middleware d'authentification
 
 -   [x] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
 
@@ -55,11 +55,11 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.2 Services d'authentification
 
--   [x] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
+-   [x] **AUTH-007** `(Dépendances -> AUTH-009)` : Créer `AuthService`
 
     -   Logique métier d'authentification
     -   Validation des credentials
-    -   Génération des tokens JWT
+    -   Utilisation du JwtService pour les tokens
     -   Gestion des sessions
 
 -   [x] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
@@ -107,15 +107,15 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Service de validation des règles de sécurité
     -   Configuration des règles (longueur, caractères spéciaux, etc.)
     -   Messages d'erreur personnalisés
-    -   Validation en temps réel côté client
+    -   Validation côté serveur
 
--   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer destion du profil utilisateur
+-   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer gestion du profil utilisateur
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles
 
 ---
- 
+
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires
@@ -130,7 +130,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des permissions utilisateur
     -   Gestion des erreurs appropriées
 
--   [ ] **FORMS-002** `(Dépendances -> AUTH-009, FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
+-   [ ] **FORMS-002** `(Dépendances -> FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
 
     -   Endpoint : `POST /api/forms/{id}/publish`
     -   Changement de statut vers "published"
@@ -170,7 +170,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Restauration de versions
 
 -   [ ] **FORMS-006** `(Dépendances -> AUTH-009)` : Créer `FormEmbedService`
-    -   Génération des tokens JWT pour iframe
+    -   Génération des tokens JWT pour iframe (via JwtService)
     -   Personnalisation du code HTML
     -   Validation de sécurité
     -   Gestion des paramètres
@@ -193,13 +193,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion des champs conditionnels
     -   Tests de validation des formulaires
     -   Validation en temps réel côté serveur
-
--   [ ] **FORMS-009** `(Dépendances -> Aucune)` : Créer `FormTemplateService`
-    -   Templates de formulaires prédéfinis
-    -   Endpoint : `GET /api/forms/templates`
-    -   Endpoint : `POST /api/forms/from-template`
-    -   Gestion des catégories de templates
-    -   Templates populaires (contact, sondage, inscription)
 
 ---
 
@@ -332,23 +325,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Configuration des limites par plan
     -   Service de vérification des permissions
     -   Endpoint : `GET /api/plans/{id}/features`
-
-### 4.6 Facturation et retry
-
--   [ ] **STRIPE-004** `(Dépendances -> STRIPE-001)` : Implémenter la gestion des factures
-
-    -   Service de génération des factures
-    -   Endpoint : `GET /api/subscriptions/{id}/invoices`
-    -   Endpoint : `GET /api/invoices/{id}/download`
-    -   Intégration avec Stripe Billing
-    -   Historique des factures
-
--   [ ] **STRIPE-005** `(Dépendances -> AUTH-008)` : Créer `PaymentRetryService`
-    -   Gestion des tentatives de paiement échouées
-    -   Logique de retry automatique
-    -   Notifications d'échec de paiement
-    -   Suspension automatique des comptes
-    -   Configuration des tentatives de retry
 
 ---
 
