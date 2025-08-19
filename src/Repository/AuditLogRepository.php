@@ -38,4 +38,21 @@ class AuditLogRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getRecentAdminActions(int $limit = 3): array
+    {
+        return $this->createQueryBuilder('al')
+            ->select('al.action, al.reason, al.createdAt, tu.email AS targetEmail')
+            ->join('al.targetUser', 'tu')
+            ->join('al.admin', 'au')
+            ->where('au.role = :role')
+            ->setParameter('role', 'ADMIN')
+            ->orderBy('al.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getArrayResult();
+    }
 }

@@ -10,7 +10,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.1 Controllers d'authentification
 
--   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-009, AUTH-010) : Créer `AuthController` avec endpoint de connexion
+-   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
@@ -32,7 +32,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation du token JWT
     -   Retour des informations utilisateur complètes
     -   Gestion de l'expiration du token
-    -   Middleware d'authentification
+    -   Utilisation du middleware d'authentification
 
 -   [x] **AUTH-004** `(Dépendances -> AUTH-008)` : Implémenter la vérification d'email
 
@@ -55,11 +55,11 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 1.2 Services d'authentification
 
--   [x] **AUTH-007** `(Dépendances -> Aucune)` : Créer `AuthService`
+-   [x] **AUTH-007** `(Dépendances -> AUTH-009)` : Créer `AuthService`
 
     -   Logique métier d'authentification
     -   Validation des credentials
-    -   Génération des tokens JWT
+    -   Utilisation du JwtService pour les tokens
     -   Gestion des sessions
 
 -   [x] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
@@ -107,15 +107,15 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Service de validation des règles de sécurité
     -   Configuration des règles (longueur, caractères spéciaux, etc.)
     -   Messages d'erreur personnalisés
-    -   Validation en temps réel côté client
+    -   Validation côté serveur
 
--   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer destion du profil utilisateur
+-   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer gestion du profil utilisateur
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles
 
 ---
- 
+
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires
@@ -130,7 +130,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des permissions utilisateur
     -   Gestion des erreurs appropriées
 
--   [ ] **FORMS-002** `(Dépendances -> AUTH-009, FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
+-   [ ] **FORMS-002** `(Dépendances -> FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
 
     -   Endpoint : `POST /api/forms/{id}/publish`
     -   Changement de statut vers "published"
@@ -170,7 +170,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Restauration de versions
 
 -   [ ] **FORMS-006** `(Dépendances -> AUTH-009)` : Créer `FormEmbedService`
-    -   Génération des tokens JWT pour iframe
+    -   Génération des tokens JWT pour iframe (via JwtService)
     -   Personnalisation du code HTML
     -   Validation de sécurité
     -   Gestion des paramètres
@@ -193,13 +193,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Gestion des champs conditionnels
     -   Tests de validation des formulaires
     -   Validation en temps réel côté serveur
-
--   [ ] **FORMS-009** `(Dépendances -> Aucune)` : Créer `FormTemplateService`
-    -   Templates de formulaires prédéfinis
-    -   Endpoint : `GET /api/forms/templates`
-    -   Endpoint : `POST /api/forms/from-template`
-    -   Gestion des catégories de templates
-    -   Templates populaires (contact, sondage, inscription)
 
 ---
 
@@ -336,23 +329,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Service de vérification des permissions
     -   Endpoint : `GET /api/plans/{id}/features`
 
-### 4.6 Facturation et retry
-
--   [ ] **STRIPE-004** `(Dépendances -> STRIPE-001)` : Implémenter la gestion des factures
-
-    -   Service de génération des factures
-    -   Endpoint : `GET /api/subscriptions/{id}/invoices`
-    -   Endpoint : `GET /api/invoices/{id}/download`
-    -   Intégration avec Stripe Billing
-    -   Historique des factures
-
--   [ ] **STRIPE-005** `(Dépendances -> AUTH-008)` : Créer `PaymentRetryService`
-    -   Gestion des tentatives de paiement échouées
-    -   Logique de retry automatique
-    -   Notifications d'échec de paiement
-    -   Suspension automatique des comptes
-    -   Configuration des tentatives de retry
-
 ---
 
 ## 📊 Priorité 5 - Gestion des Quotas
@@ -411,14 +387,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.1 Controllers de tableau de bord
 
--   [ ] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
+-   [x] **DASHBOARD-001** `(Dépendances -> DASHBOARD-002, AUTH-012)` : Créer `DashboardController`
 
     -   Endpoint : `GET /api/dashboard/stats`
     -   Statistiques utilisateur en temps réel
     -   Métriques de performance
     -   Graphiques de données
 
--   [ ] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
+-   [x] **ADMIN-001** `(Dépendances -> ADMIN-002, AUTH-012)` : Créer `AdminController`
     -   Endpoint : `GET /api/admin/stats`
     -   Endpoint : `GET /api/admin/users`
     -   Métriques globales de la plateforme
@@ -426,14 +402,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.2 Services de statistiques
 
--   [ ] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
+-   [x] **DASHBOARD-002** `(Dépendances -> Aucune)` : Créer `DashboardService`
 
     -   Calcul des métriques utilisateur
     -   Agrégation des données
     -   Cache des statistiques
     -   Optimisation des requêtes
 
--   [ ] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
+-   [x] **ADMIN-002** `(Dépendances -> Aucune)` : Créer `AdminService`
     -   Statistiques globales
     -   Gestion des utilisateurs
     -   Actions administratives
@@ -441,7 +417,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 6.3 DTOs de statistiques
 
--   [ ] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
+-   [x] **DASHBOARD-003** `(Dépendances -> Aucune)` : Créer les DTOs de statistiques
     -   `DashboardStatsDto` pour les stats utilisateur
     -   `AdminStatsDto` pour les stats admin
     -   `UserListDto` pour la liste des utilisateurs
