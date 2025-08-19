@@ -1,0 +1,359 @@
+<?php
+
+namespace App\Controller;
+
+use App\Dto\CreateFormDto;
+use App\Dto\UpdateFormDto;
+use App\Entity\User;
+use App\Repository\FormRepository;
+use App\Service\FormEmbedService;
+use App\Service\FormService;
+use Psr\Log\LoggerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+
+#[Route('/api/forms', name: 'api_forms_')]
+#[IsGranted('ROLE_USER')]
+class FormController extends AbstractController
+{
+    public function __construct(
+        private FormService $formService,
+        private FormEmbedService $formEmbedService,
+        private FormRepository $formRepository,
+        private SerializerInterface $serializer,
+        private ValidatorInterface $validator,
+        private LoggerInterface $logger
+    ) {}
+
+    #[Route('', methods: ['GET'])]
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            
+            // Paramètres de pagination
+            $page = max(1, (int) $request->query->get('page', 1));
+            $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+            
+            // Filtres
+            $filters = [];
+            if ($request->query->has('status')) {
+                $filters['status'] = $request->query->get('status');
+            }
+            if ($request->query->has('search')) {
+                $filters['search'] = $request->query->get('search');
+            }
+
+            $forms = $this->formService->getAllForms($user, $filters, $page, $limit);
+
+            $this->logger->info('Liste des formulaires récupérée', [
+                'user_id' => $user->getId(),
+                'count' => count($forms),
+                'page' => $page,
+                'filters' => $filters
+            ]);
+
+            return $this->json([
+                'success' => true,
+                'data' => $forms,
+                'meta' => [
+                    'page' => $page,
+                    'limit' => $limit,
+                    'total' => count($forms)
+                ]
+            ], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la récupération des formulaires', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des formulaires'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}', methods: ['GET'], requirements: ['id' => '[0-9a-f-]{36}'])]
+    public function show(string $id): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $form = $this->formService->getFormById($id, $user);
+
+            $this->logger->info('Formulaire récupéré', [
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => true,
+                'data' => $form
+            ], Response::HTTP_OK);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la récupération du formulaire', [
+                'error' => $e->getMessage(),
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération du formulaire'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('', methods: ['POST'])]
+    public function create(Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $data = json_decode($request->getContent(), true);
+
+            if (!is_array($data)) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Données JSON invalides'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $dto = new CreateFormDto(
+                title: $data['title'] ?? '',
+                description: $data['description'] ?? '',
+                status: $data['status'] ?? 'DRAFT',
+                schema: $data['schema'] ?? []
+            );
+
+            $errors = $this->validator->validate($dto);
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
+
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $errorMessages
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $form = $this->formService->createForm($dto, $user);
+
+            return $this->json([
+                'success' => true,
+                'data' => $form,
+                'message' => 'Formulaire créé avec succès'
+            ], Response::HTTP_CREATED);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la création du formulaire', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la création du formulaire'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}', methods: ['PUT'], requirements: ['id' => '[0-9a-f-]{36}'])]
+    public function update(string $id, Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $data = json_decode($request->getContent(), true);
+
+            if (!is_array($data)) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Données JSON invalides'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $dto = new UpdateFormDto(
+                title: $data['title'] ?? null,
+                description: $data['description'] ?? null,
+                status: $data['status'] ?? null,
+                schema: $data['schema'] ?? null
+            );
+
+            $errors = $this->validator->validate($dto);
+            if (count($errors) > 0) {
+                $errorMessages = [];
+                foreach ($errors as $error) {
+                    $errorMessages[] = $error->getMessage();
+                }
+
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Données de validation invalides',
+                    'errors' => $errorMessages
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $form = $this->formService->updateForm($id, $dto, $user);
+
+            return $this->json([
+                'success' => true,
+                'data' => $form,
+                'message' => 'Formulaire mis à jour avec succès'
+            ], Response::HTTP_OK);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la mise à jour du formulaire', [
+                'error' => $e->getMessage(),
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la mise à jour du formulaire'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '[0-9a-f-]{36}'])]
+    public function delete(string $id): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $this->formService->deleteForm($id, $user);
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Formulaire supprimé avec succès'
+            ], Response::HTTP_NO_CONTENT);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la suppression du formulaire', [
+                'error' => $e->getMessage(),
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression du formulaire'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}/publish', methods: ['POST'], requirements: ['id' => '[0-9a-f-]{36}'])]
+    public function publish(string $id): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $form = $this->formService->publishForm($id, $user);
+
+            return $this->json([
+                'success' => true,
+                'data' => $form,
+                'message' => 'Formulaire publié avec succès'
+            ], Response::HTTP_OK);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_NOT_FOUND);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la publication du formulaire', [
+                'error' => $e->getMessage(),
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la publication du formulaire'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/{id}/embed', methods: ['GET'], requirements: ['id' => '[0-9a-f-]{36}'])]
+    public function embed(string $id, Request $request): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $form = $this->formRepository->find($id);
+
+            if (!$form) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Formulaire non trouvé'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Récupérer les paramètres de personnalisation
+            $customization = [];
+            if ($request->query->has('width')) {
+                $customization['width'] = $request->query->get('width');
+            }
+            if ($request->query->has('height')) {
+                $customization['height'] = $request->query->get('height');
+            }
+            if ($request->query->has('border')) {
+                $customization['border'] = $request->query->get('border');
+            }
+            if ($request->query->has('borderRadius')) {
+                $customization['borderRadius'] = $request->query->get('borderRadius');
+            }
+            if ($request->query->has('boxShadow')) {
+                $customization['boxShadow'] = $request->query->get('boxShadow');
+            }
+
+            $embedData = $this->formEmbedService->generateEmbedCode($form, $user, $customization);
+
+            return $this->json([
+                'success' => true,
+                'data' => $embedData
+            ], Response::HTTP_OK);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la génération du code d\'intégration', [
+                'error' => $e->getMessage(),
+                'form_id' => $id,
+                'user_id' => $user->getId()
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération du code d\'intégration'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+}
