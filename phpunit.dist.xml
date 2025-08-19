@@ -19,7 +19,7 @@
         <!-- ###+ symfony/mailer ### -->
         <env name="MAILER_DSN" value="null://null"/>
         <!-- ###- symfony/mailer ### -->
-    
+        <server name="APP_URL" value="http://localhost:8000" force="true" />
     </php>
     
     <testsuites>
