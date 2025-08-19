@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Uid\Uuid;
+
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 class Subscription
@@ -14,7 +16,7 @@ class Subscription
     public const STATUS_CANCELLED = 'CANCELLED';
 
     #[ORM\Id]
-    #[ORM\Column(type: 'uuid')]
+    #[ORM\Column(type: 'uuid', unique: true)]
     private ?string $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'subscriptions')]
@@ -56,6 +58,7 @@ class Subscription
 
     public function __construct()
     {
+        $this->id = Uuid::v4();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
         $this->status = self::STATUS_ACTIVE;
