@@ -79,9 +79,9 @@ class FormServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'text',
                     'label' => 'Name',
-                    'required' => true
-                ]
-            ]
+                    'required' => true,
+                ],
+            ],
         ];
 
         $dto = new CreateFormDto(
@@ -143,7 +143,7 @@ class FormServiceTest extends TestCase
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canAccessForm')->willReturn(true);
 
@@ -213,7 +213,7 @@ class FormServiceTest extends TestCase
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canAccessForm')->willReturn(false);
 
@@ -264,7 +264,7 @@ class FormServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $formVersionService = $this->createMock(FormVersionService::class);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
@@ -307,9 +307,9 @@ class FormServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'email',
                     'label' => 'Email',
-                    'required' => true
-                ]
-            ]
+                    'required' => true,
+                ],
+            ],
         ];
 
         $dto = new UpdateFormDto(
@@ -330,7 +330,7 @@ class FormServiceTest extends TestCase
         $formVersionService->expects($this->once())
             ->method('createVersion')
             ->with($form, $newSchema);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
@@ -368,7 +368,7 @@ class FormServiceTest extends TestCase
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
@@ -410,7 +410,7 @@ class FormServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $formVersionService = $this->createMock(FormVersionService::class);
-        
+
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 

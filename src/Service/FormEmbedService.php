@@ -22,14 +22,15 @@ class FormEmbedService
         private AuthorizationService $authorizationService,
         private ParameterBagInterface $parameterBag,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, mixed> $customization
      */
     public function generateEmbedCode(Form $form, User $user, array $customization = []): FormEmbedDto
     {
-        if (!$this->authorizationService->canAccessForm($user, $form)) {
+        if (! $this->authorizationService->canAccessForm($user, $form)) {
             throw new AccessDeniedException('Accès refusé à ce formulaire');
         }
 
@@ -37,30 +38,38 @@ class FormEmbedService
             throw new \InvalidArgumentException('Le formulaire doit être publié pour générer un code d\'intégration');
         }
 
+        $formId = $form->getId();
+        if ($formId === null) {
+            throw new \InvalidArgumentException('Le formulaire doit avoir un ID valide');
+        }
+
         try {
             $this->logger->info('Génération du code d\'intégration', [
-                'form_id' => $form->getId(),
-                'user_id' => $user->getId()
+                'form_id' => $formId,
+                'user_id' => $user->getId(),
             ]);
 
             // Générer ou récupérer un token pour ce formulaire
             $token = $this->getOrCreateFormToken($form);
 
             // URL de base pour l'iframe
-            $baseUrl = $this->parameterBag->get('app.base_url') ?? 'http://localhost:8000';
-            $embedUrl = $baseUrl . '/embed/form/' . $form->getId() . '?token=' . $token;
+            $baseUrl = $this->parameterBag->get('app.base_url');
+            if (! is_string($baseUrl)) {
+                $baseUrl = 'http://localhost:8000';
+            }
+            $embedUrl = $baseUrl . '/embed/form/' . $formId . '?token=' . $token;
 
             // Générer le code HTML d'intégration
             $embedCode = $this->generateHtmlEmbedCode($embedUrl, $customization);
 
             $this->logger->info('Code d\'intégration généré avec succès', [
-                'form_id' => $form->getId(),
-                'user_id' => $user->getId()
+                'form_id' => $formId,
+                'user_id' => $user->getId(),
             ]);
 
             return new FormEmbedDto(
                 embedCode: $embedCode,
-                formId: $form->getId(),
+                formId: $formId,
                 token: $token,
                 embedUrl: $embedUrl,
                 customization: $customization
@@ -68,9 +77,10 @@ class FormEmbedService
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la génération du code d\'intégration', [
                 'error' => $e->getMessage(),
-                'form_id' => $form->getId(),
-                'user_id' => $user->getId()
+                'form_id' => $formId,
+                'user_id' => $user->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -80,18 +90,26 @@ class FormEmbedService
         // Chercher un token existant et valide
         $existingToken = $this->formTokenRepository->findOneBy([
             'form' => $form,
-            'isActive' => true
+            'isActive' => true,
         ]);
 
         if ($existingToken && $existingToken->getExpiresAt() > new \DateTimeImmutable()) {
-            return $existingToken->getToken();
+            $token = $existingToken->getToken();
+            if ($token !== null) {
+                return $token;
+            }
+        }
+
+        $formId = $form->getId();
+        if ($formId === null) {
+            throw new \InvalidArgumentException('Le formulaire doit avoir un ID valide');
         }
 
         // Créer un nouveau token
         $tokenData = [
-            'form_id' => $form->getId(),
+            'form_id' => $formId,
             'type' => 'embed',
-            'exp' => (new \DateTimeImmutable('+1 year'))->getTimestamp()
+            'exp' => (new \DateTimeImmutable('+1 year'))->getTimestamp(),
         ];
 
         $jwtToken = $this->jwtService->generateToken($tokenData);
@@ -141,26 +159,27 @@ class FormEmbedService
     {
         try {
             $payload = $this->jwtService->validateToken($token);
-            
-            if (!isset($payload['form_id']) || $payload['type'] !== 'embed') {
+
+            if (! isset($payload->form_id) || ! isset($payload->type) || $payload->type !== 'embed') {
                 return null;
             }
 
             // Vérifier que le token existe en base et est actif
             $formToken = $this->formTokenRepository->findOneBy([
                 'token' => $token,
-                'isActive' => true
+                'isActive' => true,
             ]);
 
-            if (!$formToken || $formToken->getExpiresAt() <= new \DateTimeImmutable()) {
+            if (! $formToken || $formToken->getExpiresAt() <= new \DateTimeImmutable()) {
                 return null;
             }
 
-            return $payload['form_id'];
+            return $payload->form_id;
         } catch (\Exception $e) {
             $this->logger->warning('Token d\'intégration invalide', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -169,13 +188,13 @@ class FormEmbedService
     {
         try {
             $this->logger->info('Révocation des tokens d\'intégration', [
-                'form_id' => $form->getId()
+                'form_id' => $form->getId(),
             ]);
 
             $tokens = $this->formTokenRepository->findBy([
                 'form' => $form,
                 'type' => 'embed',
-                'isActive' => true
+                'isActive' => true,
             ]);
 
             foreach ($tokens as $token) {
@@ -186,13 +205,14 @@ class FormEmbedService
 
             $this->logger->info('Tokens d\'intégration révoqués avec succès', [
                 'form_id' => $form->getId(),
-                'tokens_count' => count($tokens)
+                'tokens_count' => count($tokens),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la révocation des tokens', [
                 'error' => $e->getMessage(),
-                'form_id' => $form->getId()
+                'form_id' => $form->getId(),
             ]);
+
             throw $e;
         }
     }

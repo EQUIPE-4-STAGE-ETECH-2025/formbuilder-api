@@ -11,5 +11,6 @@ readonly class FormEmbedDto
         public string $embedUrl,
         /** @var array<string, mixed> */
         public array $customization = []
-    ) {}
+    ) {
+    }
 }

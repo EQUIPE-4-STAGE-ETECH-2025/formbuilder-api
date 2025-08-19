@@ -18,5 +18,6 @@ readonly class FormResponseDto
         public ?FormVersionDto $currentVersion = null,
         /** @var FormVersionDto[] */
         public array $versions = []
-    ) {}
+    ) {
+    }
 }

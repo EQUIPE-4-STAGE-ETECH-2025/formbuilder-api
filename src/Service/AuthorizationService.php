@@ -28,8 +28,13 @@ class AuthorizationService
 
     public function canAccessForm(User $user, Form $form): bool
     {
+        $formUser = $form->getUser();
+        if ($formUser === null) {
+            return false;
+        }
+
         // L'utilisateur peut accéder à ses propres formulaires
-        if ($form->getUser()->getId() === $user->getId()) {
+        if ($formUser->getId() === $user->getId()) {
             return true;
         }
 
@@ -43,8 +48,13 @@ class AuthorizationService
 
     public function canModifyForm(User $user, Form $form): bool
     {
+        $formUser = $form->getUser();
+        if ($formUser === null) {
+            return false;
+        }
+
         // L'utilisateur peut modifier ses propres formulaires
-        if ($form->getUser()->getId() === $user->getId()) {
+        if ($formUser->getId() === $user->getId()) {
             return true;
         }
 

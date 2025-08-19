@@ -12,5 +12,6 @@ readonly class FormVersionDto
         public \DateTimeImmutable $createdAt,
         /** @var FormFieldDto[] */
         public array $fields = []
-    ) {}
+    ) {
+    }
 }

@@ -84,7 +84,7 @@ class FormEmbedServiceTest extends TestCase
             'width' => '800px',
             'height' => '400px',
             'border' => '1px solid #ccc',
-            'borderRadius' => '12px'
+            'borderRadius' => '12px',
         ];
 
         $jwtService = $this->createMock(JwtService::class);
@@ -254,7 +254,7 @@ class FormEmbedServiceTest extends TestCase
         $payload = [
             'form_id' => $formId,
             'type' => 'embed',
-            'exp' => (new \DateTimeImmutable('+1 hour'))->getTimestamp()
+            'exp' => (new \DateTimeImmutable('+1 hour'))->getTimestamp(),
         ];
 
         $formToken = new FormToken();
@@ -402,7 +402,7 @@ class FormEmbedServiceTest extends TestCase
 
         $payload = [
             'form_id' => $formId,
-            'type' => 'embed'
+            'type' => 'embed',
         ];
 
         $expiredFormToken = new FormToken();

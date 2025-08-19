@@ -7,15 +7,16 @@ use Psr\Log\LoggerInterface;
 class FormSchemaValidatorService
 {
     private const ALLOWED_FIELD_TYPES = [
-        'text', 'email', 'number', 'textarea', 'select', 
-        'checkbox', 'radio', 'date', 'file', 'url', 'tel'
+        'text', 'email', 'number', 'textarea', 'select',
+        'checkbox', 'radio', 'date', 'file', 'url', 'tel',
     ];
 
     private const REQUIRED_FIELD_PROPERTIES = ['type', 'label'];
 
     public function __construct(
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, mixed> $schema
@@ -42,8 +43,9 @@ class FormSchemaValidatorService
             $this->logger->debug('Schéma de formulaire valide');
         } catch (\Exception $e) {
             $this->logger->error('Erreur de validation du schéma', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }
@@ -59,15 +61,15 @@ class FormSchemaValidatorService
         }
 
         // Vérifier que les propriétés de base sont du bon type
-        if (isset($schema['title']) && !is_string($schema['title'])) {
+        if (isset($schema['title']) && ! is_string($schema['title'])) {
             throw new \InvalidArgumentException('Le titre du schéma doit être une chaîne de caractères');
         }
 
-        if (isset($schema['description']) && !is_string($schema['description'])) {
+        if (isset($schema['description']) && ! is_string($schema['description'])) {
             throw new \InvalidArgumentException('La description du schéma doit être une chaîne de caractères');
         }
 
-        if (isset($schema['fields']) && !is_array($schema['fields'])) {
+        if (isset($schema['fields']) && ! is_array($schema['fields'])) {
             throw new \InvalidArgumentException('Les champs du schéma doivent être un tableau');
         }
     }
@@ -85,7 +87,7 @@ class FormSchemaValidatorService
         $positions = [];
 
         foreach ($fields as $index => $field) {
-            if (!is_array($field)) {
+            if (! is_array($field)) {
                 throw new \InvalidArgumentException("Le champ à l'index {$index} doit être un tableau");
             }
 
@@ -116,13 +118,13 @@ class FormSchemaValidatorService
     {
         // Vérifier les propriétés obligatoires
         foreach (self::REQUIRED_FIELD_PROPERTIES as $property) {
-            if (!isset($field[$property]) || empty($field[$property])) {
+            if (! isset($field[$property]) || empty($field[$property])) {
                 throw new \InvalidArgumentException("Propriété obligatoire manquante '{$property}' pour le champ à l'index {$index}");
             }
         }
 
         // Valider le type de champ
-        if (!in_array($field['type'], self::ALLOWED_FIELD_TYPES)) {
+        if (! in_array($field['type'], self::ALLOWED_FIELD_TYPES)) {
             throw new \InvalidArgumentException(
                 "Type de champ invalide '{$field['type']}' pour le champ à l'index {$index}. " .
                 "Types autorisés: " . implode(', ', self::ALLOWED_FIELD_TYPES)
@@ -149,27 +151,27 @@ class FormSchemaValidatorService
     private function validateFieldProperties(array $field, int $index): void
     {
         // Label
-        if (!is_string($field['label']) || strlen(trim($field['label'])) < 1) {
+        if (! is_string($field['label']) || strlen(trim($field['label'])) < 1) {
             throw new \InvalidArgumentException("Le libellé du champ à l'index {$index} doit être une chaîne non vide");
         }
 
         // Required
-        if (isset($field['required']) && !is_bool($field['required'])) {
+        if (isset($field['required']) && ! is_bool($field['required'])) {
             throw new \InvalidArgumentException("La propriété 'required' du champ à l'index {$index} doit être un booléen");
         }
 
         // Position
-        if (isset($field['position']) && (!is_int($field['position']) || $field['position'] < 1)) {
+        if (isset($field['position']) && (! is_int($field['position']) || $field['position'] < 1)) {
             throw new \InvalidArgumentException("La position du champ à l'index {$index} doit être un entier positif");
         }
 
         // Placeholder
-        if (isset($field['placeholder']) && !is_string($field['placeholder'])) {
+        if (isset($field['placeholder']) && ! is_string($field['placeholder'])) {
             throw new \InvalidArgumentException("Le placeholder du champ à l'index {$index} doit être une chaîne de caractères");
         }
 
         // Help text
-        if (isset($field['helpText']) && !is_string($field['helpText'])) {
+        if (isset($field['helpText']) && ! is_string($field['helpText'])) {
             throw new \InvalidArgumentException("Le texte d'aide du champ à l'index {$index} doit être une chaîne de caractères");
         }
     }
@@ -179,20 +181,20 @@ class FormSchemaValidatorService
      */
     private function validateFieldOptions($options, int $index): void
     {
-        if (!is_array($options) || empty($options)) {
+        if (! is_array($options) || empty($options)) {
             throw new \InvalidArgumentException("Les options du champ à l'index {$index} doivent être un tableau non vide");
         }
 
         foreach ($options as $optionIndex => $option) {
-            if (!is_array($option)) {
+            if (! is_array($option)) {
                 throw new \InvalidArgumentException("L'option à l'index {$optionIndex} du champ {$index} doit être un tableau");
             }
 
-            if (!isset($option['value']) || !isset($option['label'])) {
+            if (! isset($option['value']) || ! isset($option['label'])) {
                 throw new \InvalidArgumentException("L'option à l'index {$optionIndex} du champ {$index} doit avoir 'value' et 'label'");
             }
 
-            if (!is_string($option['label']) || empty(trim($option['label']))) {
+            if (! is_string($option['label']) || empty(trim($option['label']))) {
                 throw new \InvalidArgumentException("Le label de l'option à l'index {$optionIndex} du champ {$index} doit être une chaîne non vide");
             }
         }
@@ -206,7 +208,7 @@ class FormSchemaValidatorService
         $allowedRules = $this->getAllowedValidationRules($fieldType);
 
         foreach ($validationRules as $rule => $value) {
-            if (!in_array($rule, $allowedRules)) {
+            if (! in_array($rule, $allowedRules)) {
                 throw new \InvalidArgumentException(
                     "Règle de validation '{$rule}' non autorisée pour le type '{$fieldType}' du champ à l'index {$index}"
                 );
@@ -222,7 +224,7 @@ class FormSchemaValidatorService
     private function getAllowedValidationRules(string $fieldType): array
     {
         $commonRules = ['required', 'custom'];
-        
+
         return match ($fieldType) {
             'text', 'textarea' => array_merge($commonRules, ['minLength', 'maxLength', 'pattern']),
             'email' => array_merge($commonRules, ['minLength', 'maxLength']),
@@ -241,9 +243,10 @@ class FormSchemaValidatorService
     {
         switch ($rule) {
             case 'required':
-                if (!is_bool($value)) {
+                if (! is_bool($value)) {
                     throw new \InvalidArgumentException("La règle 'required' du champ à l'index {$index} doit être un booléen");
                 }
+
                 break;
 
             case 'minLength':
@@ -252,30 +255,33 @@ class FormSchemaValidatorService
             case 'max':
             case 'step':
             case 'maxSize':
-                if (!is_numeric($value) || $value < 0) {
+                if (! is_numeric($value) || $value < 0) {
                     throw new \InvalidArgumentException("La règle '{$rule}' du champ à l'index {$index} doit être un nombre positif");
                 }
+
                 break;
 
             case 'pattern':
-                if (!is_string($value)) {
+                if (! is_string($value)) {
                     throw new \InvalidArgumentException("La règle 'pattern' du champ à l'index {$index} doit être une chaîne de caractères");
                 }
                 // Tester la validité de l'expression régulière
                 if (@preg_match($value, '') === false) {
                     throw new \InvalidArgumentException("La règle 'pattern' du champ à l'index {$index} contient une expression régulière invalide");
                 }
+
                 break;
 
             case 'allowedTypes':
-                if (!is_array($value) || empty($value)) {
+                if (! is_array($value) || empty($value)) {
                     throw new \InvalidArgumentException("La règle 'allowedTypes' du champ à l'index {$index} doit être un tableau non vide");
                 }
                 foreach ($value as $type) {
-                    if (!is_string($type)) {
+                    if (! is_string($type)) {
                         throw new \InvalidArgumentException("Chaque type autorisé du champ à l'index {$index} doit être une chaîne de caractères");
                     }
                 }
+
                 break;
         }
     }
@@ -286,12 +292,12 @@ class FormSchemaValidatorService
     private function validateSettings(array $settings): void
     {
         $allowedSettings = [
-            'submitButton', 'successMessage', 'errorMessage', 
-            'redirectUrl', 'emailNotification', 'theme'
+            'submitButton', 'successMessage', 'errorMessage',
+            'redirectUrl', 'emailNotification', 'theme',
         ];
 
         foreach ($settings as $key => $value) {
-            if (!in_array($key, $allowedSettings)) {
+            if (! in_array($key, $allowedSettings)) {
                 throw new \InvalidArgumentException("Paramètre de formulaire non autorisé: '{$key}'");
             }
 
@@ -306,38 +312,42 @@ class FormSchemaValidatorService
     {
         switch ($key) {
             case 'submitButton':
-                if (!is_array($value)) {
+                if (! is_array($value)) {
                     throw new \InvalidArgumentException("Le paramètre 'submitButton' doit être un tableau");
                 }
-                if (isset($value['text']) && !is_string($value['text'])) {
+                if (isset($value['text']) && ! is_string($value['text'])) {
                     throw new \InvalidArgumentException("Le texte du bouton de soumission doit être une chaîne de caractères");
                 }
+
                 break;
 
             case 'successMessage':
             case 'errorMessage':
             case 'redirectUrl':
-                if (!is_string($value)) {
+                if (! is_string($value)) {
                     throw new \InvalidArgumentException("Le paramètre '{$key}' doit être une chaîne de caractères");
                 }
+
                 break;
 
             case 'emailNotification':
-                if (!is_array($value)) {
+                if (! is_array($value)) {
                     throw new \InvalidArgumentException("Le paramètre 'emailNotification' doit être un tableau");
                 }
-                if (isset($value['enabled']) && !is_bool($value['enabled'])) {
+                if (isset($value['enabled']) && ! is_bool($value['enabled'])) {
                     throw new \InvalidArgumentException("La propriété 'enabled' de emailNotification doit être un booléen");
                 }
-                if (isset($value['recipients']) && (!is_array($value['recipients']) || empty($value['recipients']))) {
+                if (isset($value['recipients']) && (! is_array($value['recipients']) || empty($value['recipients']))) {
                     throw new \InvalidArgumentException("La propriété 'recipients' de emailNotification doit être un tableau non vide");
                 }
+
                 break;
 
             case 'theme':
-                if (!is_array($value)) {
+                if (! is_array($value)) {
                     throw new \InvalidArgumentException("Le paramètre 'theme' doit être un tableau");
                 }
+
                 break;
         }
     }

@@ -31,9 +31,9 @@ class FormVersionServiceTest extends TestCase
                     'type' => 'text',
                     'label' => 'Name',
                     'required' => true,
-                    'position' => 1
-                ]
-            ]
+                    'position' => 1,
+                ],
+            ],
         ];
 
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
@@ -81,9 +81,9 @@ class FormVersionServiceTest extends TestCase
                     'type' => 'email',
                     'label' => 'Email',
                     'required' => true,
-                    'position' => 1
-                ]
-            ]
+                    'position' => 1,
+                ],
+            ],
         ];
 
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
@@ -174,14 +174,14 @@ class FormVersionServiceTest extends TestCase
             'fields' => [
                 [
                     'type' => 'invalid_type', // Type invalide
-                    'label' => 'Test'
-                ]
-            ]
+                    'label' => 'Test',
+                ],
+            ],
         ];
 
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        
+
         $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
         $schemaValidator->method('validateSchema')
             ->willThrowException(new \InvalidArgumentException('Schéma invalide'));
@@ -259,9 +259,9 @@ class FormVersionServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'text',
                     'label' => 'Old Field',
-                    'required' => false
-                ]
-            ]
+                    'required' => false,
+                ],
+            ],
         ]);
 
         $latestVersion = new FormVersion();
@@ -271,7 +271,7 @@ class FormVersionServiceTest extends TestCase
         $formVersionRepository->method('findOneBy')
             ->willReturnMap([
                 [['form' => $form, 'versionNumber' => 1], null, $versionToRestore],
-                [['form' => $form], ['versionNumber' => 'DESC'], $latestVersion]
+                [['form' => $form], ['versionNumber' => 'DESC'], $latestVersion],
             ]);
         $formVersionRepository->method('findBy')
             ->willReturn([$latestVersion]);
@@ -347,7 +347,7 @@ class FormVersionServiceTest extends TestCase
         $formVersionRepository->method('findOneBy')
             ->willReturnMap([
                 [['form' => $form, 'versionNumber' => 1], null, $versionToDelete],
-                [['form' => $form], ['versionNumber' => 'DESC'], $latestVersion]
+                [['form' => $form], ['versionNumber' => 'DESC'], $latestVersion],
             ]);
         $formVersionRepository->method('count')
             ->with(['form' => $form])
@@ -421,7 +421,7 @@ class FormVersionServiceTest extends TestCase
         $formVersionRepository->method('findOneBy')
             ->willReturnMap([
                 [['form' => $form, 'versionNumber' => 2], null, $versionToDelete],
-                [['form' => $form], ['versionNumber' => 'DESC'], $versionToDelete] // C'est la plus récente
+                [['form' => $form], ['versionNumber' => 'DESC'], $versionToDelete], // C'est la plus récente
             ]);
         $formVersionRepository->method('count')
             ->with(['form' => $form])

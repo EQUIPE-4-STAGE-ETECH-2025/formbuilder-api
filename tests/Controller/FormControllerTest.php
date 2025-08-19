@@ -24,7 +24,7 @@ class FormControllerTest extends WebTestCase
     public function testGetFormsRequiresAuthentication(): void
     {
         $this->client->request('GET', '/api/forms');
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
@@ -32,7 +32,7 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms',
@@ -40,10 +40,10 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
         $this->assertResponseHeaderSame('content-type', 'application/json');
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('success', $responseData);
         $this->assertArrayHasKey('data', $responseData);
@@ -55,7 +55,7 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms?page=1&limit=5',
@@ -63,9 +63,9 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals(1, $responseData['meta']['page']);
         $this->assertEquals(5, $responseData['meta']['limit']);
@@ -75,7 +75,7 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms?status=DRAFT',
@@ -83,7 +83,7 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
     }
 
@@ -92,7 +92,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId(),
@@ -100,9 +100,9 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertEquals($form->getId(), $responseData['data']['id']);
@@ -113,7 +113,7 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . Uuid::v4(),
@@ -121,7 +121,7 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
@@ -129,7 +129,7 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $formData = [
             'title' => 'Formulaire de test',
             'description' => 'Description du formulaire de test pour validation',
@@ -141,12 +141,12 @@ class FormControllerTest extends WebTestCase
                         'type' => 'text',
                         'label' => 'Nom',
                         'required' => true,
-                        'position' => 1
-                    ]
-                ]
-            ]
+                        'position' => 1,
+                    ],
+                ],
+            ],
         ];
-        
+
         $this->client->request(
             'POST',
             '/api/forms',
@@ -154,13 +154,13 @@ class FormControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($formData)
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('success', $responseData);
         $this->assertArrayHasKey('data', $responseData);
@@ -173,12 +173,12 @@ class FormControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $invalidFormData = [
             'title' => 'AB', // Trop court
             'description' => 'Court', // Trop court
         ];
-        
+
         $this->client->request(
             'POST',
             '/api/forms',
@@ -186,13 +186,13 @@ class FormControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($invalidFormData)
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_UNPROCESSABLE_ENTITY);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('success', $responseData);
         $this->assertFalse($responseData['success']);
@@ -204,12 +204,12 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $updateData = [
             'title' => 'Titre modifié',
-            'description' => 'Description modifiée pour le test'
+            'description' => 'Description modifiée pour le test',
         ];
-        
+
         $this->client->request(
             'PUT',
             '/api/forms/' . $form->getId(),
@@ -217,13 +217,13 @@ class FormControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($updateData)
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertEquals($updateData['title'], $responseData['data']['title']);
@@ -236,11 +236,11 @@ class FormControllerTest extends WebTestCase
         $otherUser = $this->createTestUser('other@example.com');
         $form = $this->createTestForm($user);
         $token = $this->loginUser($otherUser);
-        
+
         $updateData = [
-            'title' => 'Titre modifié'
+            'title' => 'Titre modifié',
         ];
-        
+
         $this->client->request(
             'PUT',
             '/api/forms/' . $form->getId(),
@@ -248,11 +248,11 @@ class FormControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($updateData)
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 
@@ -261,7 +261,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'DELETE',
             '/api/forms/' . $form->getId(),
@@ -269,7 +269,7 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
@@ -278,7 +278,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/publish',
@@ -286,9 +286,9 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertEquals('PUBLISHED', $responseData['data']['status']);
@@ -300,7 +300,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user, 'PUBLISHED');
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId() . '/embed',
@@ -308,9 +308,9 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertArrayHasKey('embedCode', $responseData['data']);
@@ -324,7 +324,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user, 'PUBLISHED');
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId() . '/embed?width=800px&height=400px',
@@ -332,9 +332,9 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertStringContainsString('width: 800px', $responseData['data']['embedCode']);
@@ -346,7 +346,7 @@ class FormControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user, 'DRAFT');
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId() . '/embed',
@@ -354,16 +354,16 @@ class FormControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
     private function createTestUser(string $email = 'test@example.com'): User
     {
         $this->removeUserIfExists($email);
-        
+
         $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
-        
+
         $user = new User();
         $user->setId(Uuid::v4());
         $user->setEmail($email);
@@ -372,10 +372,10 @@ class FormControllerTest extends WebTestCase
         $user->setRole('USER');
         $user->setIsEmailVerified(true);
         $user->setPasswordHash($passwordHasher->hashPassword($user, 'password123'));
-        
+
         $this->em->persist($user);
         $this->em->flush();
-        
+
         return $user;
     }
 
@@ -387,14 +387,14 @@ class FormControllerTest extends WebTestCase
         $form->setDescription('Description du formulaire de test');
         $form->setStatus($status);
         $form->setUser($user);
-        
+
         if ($status === 'PUBLISHED') {
             $form->setPublishedAt(new \DateTimeImmutable());
         }
-        
+
         $this->em->persist($form);
         $this->em->flush();
-        
+
         return $form;
     }
 
@@ -411,8 +411,9 @@ class FormControllerTest extends WebTestCase
                 'password' => 'password123',
             ])
         );
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
+
         return $responseData['token'];
     }
 

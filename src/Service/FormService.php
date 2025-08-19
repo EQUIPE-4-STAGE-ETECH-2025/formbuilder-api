@@ -27,14 +27,15 @@ class FormService
         private FormVersionService $formVersionService,
         private AuthorizationService $authorizationService,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     public function createForm(CreateFormDto $dto, User $user): FormResponseDto
     {
         try {
             $this->logger->info('Création d\'un nouveau formulaire', [
                 'user_id' => $user->getId(),
-                'title' => $dto->title
+                'title' => $dto->title,
             ]);
 
             $form = new Form();
@@ -48,21 +49,22 @@ class FormService
             $this->entityManager->flush();
 
             // Créer la première version si un schéma est fourni
-            if (!empty($dto->schema)) {
+            if (! empty($dto->schema)) {
                 $this->formVersionService->createVersion($form, $dto->schema);
             }
 
             $this->logger->info('Formulaire créé avec succès', [
                 'form_id' => $form->getId(),
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->mapToDto($form);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la création du formulaire', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -95,18 +97,18 @@ class FormService
 
         $forms = $queryBuilder->getQuery()->getResult();
 
-        return array_map(fn(Form $form) => $this->mapToDto($form), $forms);
+        return array_map(fn (Form $form) => $this->mapToDto($form), $forms);
     }
 
     public function getFormById(string $id, User $user): FormResponseDto
     {
         $form = $this->formRepository->find($id);
 
-        if (!$form) {
+        if (! $form) {
             throw new \InvalidArgumentException('Formulaire non trouvé');
         }
 
-        if (!$this->authorizationService->canAccessForm($user, $form)) {
+        if (! $this->authorizationService->canAccessForm($user, $form)) {
             throw new AccessDeniedException('Accès refusé à ce formulaire');
         }
 
@@ -117,18 +119,18 @@ class FormService
     {
         $form = $this->formRepository->find($id);
 
-        if (!$form) {
+        if (! $form) {
             throw new \InvalidArgumentException('Formulaire non trouvé');
         }
 
-        if (!$this->authorizationService->canModifyForm($user, $form)) {
+        if (! $this->authorizationService->canModifyForm($user, $form)) {
             throw new AccessDeniedException('Vous n\'avez pas les permissions pour modifier ce formulaire');
         }
 
         try {
             $this->logger->info('Mise à jour du formulaire', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             if ($dto->title !== null) {
@@ -141,7 +143,7 @@ class FormService
 
             if ($dto->status !== null) {
                 $form->setStatus($dto->status);
-                if ($dto->status === 'PUBLISHED' && !$form->getPublishedAt()) {
+                if ($dto->status === 'PUBLISHED' && ! $form->getPublishedAt()) {
                     $form->setPublishedAt(new \DateTimeImmutable());
                 }
             }
@@ -157,7 +159,7 @@ class FormService
 
             $this->logger->info('Formulaire mis à jour avec succès', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->mapToDto($form);
@@ -165,8 +167,9 @@ class FormService
             $this->logger->error('Erreur lors de la mise à jour du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -175,32 +178,33 @@ class FormService
     {
         $form = $this->formRepository->find($id);
 
-        if (!$form) {
+        if (! $form) {
             throw new \InvalidArgumentException('Formulaire non trouvé');
         }
 
-        if (!$this->authorizationService->canModifyForm($user, $form)) {
+        if (! $this->authorizationService->canModifyForm($user, $form)) {
             throw new AccessDeniedException('Vous n\'avez pas les permissions pour supprimer ce formulaire');
         }
 
         try {
             $this->logger->info('Suppression du formulaire', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             $this->formRepository->remove($form, true);
 
             $this->logger->info('Formulaire supprimé avec succès', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la suppression du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -209,18 +213,18 @@ class FormService
     {
         $form = $this->formRepository->find($id);
 
-        if (!$form) {
+        if (! $form) {
             throw new \InvalidArgumentException('Formulaire non trouvé');
         }
 
-        if (!$this->authorizationService->canModifyForm($user, $form)) {
+        if (! $this->authorizationService->canModifyForm($user, $form)) {
             throw new AccessDeniedException('Vous n\'avez pas les permissions pour publier ce formulaire');
         }
 
         try {
             $this->logger->info('Publication du formulaire', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             $form->setStatus('PUBLISHED');
@@ -231,7 +235,7 @@ class FormService
 
             $this->logger->info('Formulaire publié avec succès', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->mapToDto($form);
@@ -239,8 +243,9 @@ class FormService
             $this->logger->error('Erreur lors de la publication du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -248,28 +253,41 @@ class FormService
     private function mapToDto(Form $form, bool $includeVersions = false): FormResponseDto
     {
         $submissionsCount = $form->getSubmissions()->count();
-        
+
         $versions = [];
         $currentVersion = null;
-        
+
         if ($includeVersions) {
             $formVersions = $this->formVersionRepository->findBy(
-                ['form' => $form], 
+                ['form' => $form],
                 ['versionNumber' => 'DESC']
             );
-            
-            $versions = array_map(fn(FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
-            $currentVersion = !empty($versions) ? $versions[0] : null;
+
+            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
+            $currentVersion = ! empty($versions) ? $versions[0] : null;
+        }
+
+        // Validation des propriétés requises
+        $formId = $form->getId();
+        $formTitle = $form->getTitle();
+        $formDescription = $form->getDescription();
+        $formStatus = $form->getStatus();
+        $formCreatedAt = $form->getCreatedAt();
+        $formUpdatedAt = $form->getUpdatedAt();
+
+        if ($formId === null || $formTitle === null || $formDescription === null ||
+            $formStatus === null || $formCreatedAt === null || $formUpdatedAt === null) {
+            throw new \InvalidArgumentException('Le formulaire a des propriétés manquantes');
         }
 
         return new FormResponseDto(
-            id: $form->getId(),
-            title: $form->getTitle(),
-            description: $form->getDescription(),
-            status: $form->getStatus(),
+            id: $formId,
+            title: $formTitle,
+            description: $formDescription,
+            status: $formStatus,
             publishedAt: $form->getPublishedAt(),
-            createdAt: $form->getCreatedAt(),
-            updatedAt: $form->getUpdatedAt(),
+            createdAt: $formCreatedAt,
+            updatedAt: $formUpdatedAt,
             schema: $currentVersion?->schema ?? [],
             submissionsCount: $submissionsCount,
             currentVersion: $currentVersion,
@@ -280,23 +298,45 @@ class FormService
     private function mapVersionToDto(FormVersion $version): FormVersionDto
     {
         $fields = array_map(
-            fn(FormField $field) => new FormFieldDto(
-                id: $field->getId(),
-                label: $field->getLabel(),
-                type: $field->getType(),
-                isRequired: $field->isRequired(),
-                options: $field->getOptions(),
-                position: $field->getPosition(),
-                validationRules: $field->getValidationRules()
-            ),
+            function (FormField $field): FormFieldDto {
+                $fieldId = $field->getId();
+                $fieldLabel = $field->getLabel();
+                $fieldType = $field->getType();
+                $fieldIsRequired = $field->isRequired();
+                $fieldPosition = $field->getPosition();
+
+                if ($fieldId === null || $fieldLabel === null || $fieldType === null ||
+                    $fieldIsRequired === null || $fieldPosition === null) {
+                    throw new \InvalidArgumentException('Le champ a des propriétés manquantes');
+                }
+
+                return new FormFieldDto(
+                    id: $fieldId,
+                    label: $fieldLabel,
+                    type: $fieldType,
+                    isRequired: $fieldIsRequired,
+                    options: $field->getOptions(),
+                    position: $fieldPosition,
+                    validationRules: $field->getValidationRules()
+                );
+            },
             $version->getFormFields()->toArray()
         );
 
+        // Validation des propriétés de version requises
+        $versionId = $version->getId();
+        $versionNumber = $version->getVersionNumber();
+        $versionCreatedAt = $version->getCreatedAt();
+
+        if ($versionId === null || $versionNumber === null || $versionCreatedAt === null) {
+            throw new \InvalidArgumentException('La version a des propriétés manquantes');
+        }
+
         return new FormVersionDto(
-            id: $version->getId(),
-            versionNumber: $version->getVersionNumber(),
+            id: $versionId,
+            versionNumber: $versionNumber,
             schema: $version->getSchema(),
-            createdAt: $version->getCreatedAt(),
+            createdAt: $versionCreatedAt,
             fields: $fields
         );
     }

@@ -14,5 +14,6 @@ readonly class FormFieldDto
         public int $position,
         /** @var array<string, mixed> */
         public array $validationRules
-    ) {}
+    ) {
+    }
 }

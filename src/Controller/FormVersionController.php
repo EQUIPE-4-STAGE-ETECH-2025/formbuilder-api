@@ -24,24 +24,26 @@ class FormVersionController extends AbstractController
         private FormRepository $formRepository,
         private AuthorizationService $authorizationService,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     #[Route('', methods: ['GET'], requirements: ['formId' => '[0-9a-f-]{36}'])]
     public function index(string $formId): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formRepository->find($formId);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Formulaire non trouvé'
+                    'message' => 'Formulaire non trouvé',
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            if (!$this->authorizationService->canAccessForm($user, $form)) {
+            if (! $this->authorizationService->canAccessForm($user, $form)) {
                 throw new AccessDeniedException('Accès refusé à ce formulaire');
             }
 
@@ -50,28 +52,28 @@ class FormVersionController extends AbstractController
             $this->logger->info('Versions du formulaire récupérées', [
                 'form_id' => $formId,
                 'user_id' => $user->getId(),
-                'versions_count' => count($versions)
+                'versions_count' => count($versions),
             ]);
 
             return $this->json([
                 'success' => true,
-                'data' => $versions
+                'data' => $versions,
             ], Response::HTTP_OK);
         } catch (AccessDeniedException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_FORBIDDEN);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la récupération des versions', [
                 'error' => $e->getMessage(),
                 'form_id' => $formId,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des versions'
+                'message' => 'Erreur lors de la récupération des versions',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -79,28 +81,29 @@ class FormVersionController extends AbstractController
     #[Route('', methods: ['POST'], requirements: ['formId' => '[0-9a-f-]{36}'])]
     public function create(string $formId, Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formRepository->find($formId);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Formulaire non trouvé'
+                    'message' => 'Formulaire non trouvé',
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            if (!$this->authorizationService->canModifyForm($user, $form)) {
+            if (! $this->authorizationService->canModifyForm($user, $form)) {
                 throw new AccessDeniedException('Vous n\'avez pas les permissions pour modifier ce formulaire');
             }
 
             $data = json_decode($request->getContent(), true);
 
-            if (!is_array($data) || !isset($data['schema']) || !is_array($data['schema'])) {
+            if (! is_array($data) || ! isset($data['schema']) || ! is_array($data['schema'])) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Schéma de formulaire requis'
+                    'message' => 'Schéma de formulaire requis',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -109,28 +112,28 @@ class FormVersionController extends AbstractController
             return $this->json([
                 'success' => true,
                 'data' => $version,
-                'message' => 'Version créée avec succès'
+                'message' => 'Version créée avec succès',
             ], Response::HTTP_CREATED);
         } catch (AccessDeniedException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_FORBIDDEN);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la création de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $formId,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création de la version'
+                'message' => 'Erreur lors de la création de la version',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -138,19 +141,20 @@ class FormVersionController extends AbstractController
     #[Route('/{version}/restore', methods: ['POST'], requirements: ['formId' => '[0-9a-f-]{36}', 'version' => '\d+'])]
     public function restore(string $formId, int $version): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formRepository->find($formId);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Formulaire non trouvé'
+                    'message' => 'Formulaire non trouvé',
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            if (!$this->authorizationService->canModifyForm($user, $form)) {
+            if (! $this->authorizationService->canModifyForm($user, $form)) {
                 throw new AccessDeniedException('Vous n\'avez pas les permissions pour modifier ce formulaire');
             }
 
@@ -159,29 +163,29 @@ class FormVersionController extends AbstractController
             return $this->json([
                 'success' => true,
                 'data' => $restoredVersion,
-                'message' => "Version {$version} restaurée avec succès"
+                'message' => "Version {$version} restaurée avec succès",
             ], Response::HTTP_OK);
         } catch (AccessDeniedException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_FORBIDDEN);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la restauration de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $formId,
                 'version' => $version,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la restauration de la version'
+                'message' => 'Erreur lors de la restauration de la version',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -189,19 +193,20 @@ class FormVersionController extends AbstractController
     #[Route('/{version}', methods: ['DELETE'], requirements: ['formId' => '[0-9a-f-]{36}', 'version' => '\d+'])]
     public function delete(string $formId, int $version): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formRepository->find($formId);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Formulaire non trouvé'
+                    'message' => 'Formulaire non trouvé',
                 ], Response::HTTP_NOT_FOUND);
             }
 
-            if (!$this->authorizationService->canModifyForm($user, $form)) {
+            if (! $this->authorizationService->canModifyForm($user, $form)) {
                 throw new AccessDeniedException('Vous n\'avez pas les permissions pour modifier ce formulaire');
             }
 
@@ -209,29 +214,29 @@ class FormVersionController extends AbstractController
 
             return $this->json([
                 'success' => true,
-                'message' => "Version {$version} supprimée avec succès"
+                'message' => "Version {$version} supprimée avec succès",
             ], Response::HTTP_NO_CONTENT);
         } catch (AccessDeniedException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_FORBIDDEN);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la suppression de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $formId,
                 'version' => $version,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression de la version'
+                'message' => 'Erreur lors de la suppression de la version',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

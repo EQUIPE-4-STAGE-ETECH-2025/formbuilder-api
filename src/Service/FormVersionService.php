@@ -20,7 +20,8 @@ class FormVersionService
         private EntityManagerInterface $entityManager,
         private FormSchemaValidatorService $schemaValidator,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     /**
      * @param array<string, mixed> $schema
@@ -29,7 +30,7 @@ class FormVersionService
     {
         try {
             $this->logger->info('Création d\'une nouvelle version de formulaire', [
-                'form_id' => $form->getId()
+                'form_id' => $form->getId(),
             ]);
 
             // Valider le schéma
@@ -56,15 +57,16 @@ class FormVersionService
 
             $this->logger->info('Version de formulaire créée avec succès', [
                 'form_id' => $form->getId(),
-                'version_number' => $nextVersionNumber
+                'version_number' => $nextVersionNumber,
             ]);
 
             return $this->mapToDto($version);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la création de la version', [
                 'error' => $e->getMessage(),
-                'form_id' => $form->getId()
+                'form_id' => $form->getId(),
             ]);
+
             throw $e;
         }
     }
@@ -79,24 +81,24 @@ class FormVersionService
             ['versionNumber' => 'DESC']
         );
 
-        return array_map(fn(FormVersion $version) => $this->mapToDto($version), $versions);
+        return array_map(fn (FormVersion $version) => $this->mapToDto($version), $versions);
     }
 
     public function restoreVersion(Form $form, int $versionNumber): FormVersionDto
     {
         $versionToRestore = $this->formVersionRepository->findOneBy([
             'form' => $form,
-            'versionNumber' => $versionNumber
+            'versionNumber' => $versionNumber,
         ]);
 
-        if (!$versionToRestore) {
+        if (! $versionToRestore) {
             throw new \InvalidArgumentException('Version non trouvée');
         }
 
         try {
             $this->logger->info('Restauration de la version', [
                 'form_id' => $form->getId(),
-                'version_number' => $versionNumber
+                'version_number' => $versionNumber,
             ]);
 
             // Créer une nouvelle version basée sur l'ancienne
@@ -105,7 +107,7 @@ class FormVersionService
             $this->logger->info('Version restaurée avec succès', [
                 'form_id' => $form->getId(),
                 'restored_from_version' => $versionNumber,
-                'new_version_number' => $restoredVersion->versionNumber
+                'new_version_number' => $restoredVersion->versionNumber,
             ]);
 
             return $restoredVersion;
@@ -113,8 +115,9 @@ class FormVersionService
             $this->logger->error('Erreur lors de la restauration de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $form->getId(),
-                'version_number' => $versionNumber
+                'version_number' => $versionNumber,
             ]);
+
             throw $e;
         }
     }
@@ -123,10 +126,10 @@ class FormVersionService
     {
         $version = $this->formVersionRepository->findOneBy([
             'form' => $form,
-            'versionNumber' => $versionNumber
+            'versionNumber' => $versionNumber,
         ]);
 
-        if (!$version) {
+        if (! $version) {
             throw new \InvalidArgumentException('Version non trouvée');
         }
 
@@ -149,7 +152,7 @@ class FormVersionService
         try {
             $this->logger->info('Suppression de la version', [
                 'form_id' => $form->getId(),
-                'version_number' => $versionNumber
+                'version_number' => $versionNumber,
             ]);
 
             $this->entityManager->remove($version);
@@ -157,14 +160,15 @@ class FormVersionService
 
             $this->logger->info('Version supprimée avec succès', [
                 'form_id' => $form->getId(),
-                'version_number' => $versionNumber
+                'version_number' => $versionNumber,
             ]);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la suppression de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $form->getId(),
-                'version_number' => $versionNumber
+                'version_number' => $versionNumber,
             ]);
+
             throw $e;
         }
     }
@@ -199,13 +203,13 @@ class FormVersionService
      */
     private function createFormFieldsFromSchema(FormVersion $version, array $schema): void
     {
-        if (!isset($schema['fields']) || !is_array($schema['fields'])) {
+        if (! isset($schema['fields']) || ! is_array($schema['fields'])) {
             return;
         }
 
         $position = 1;
         foreach ($schema['fields'] as $fieldData) {
-            if (!is_array($fieldData)) {
+            if (! is_array($fieldData)) {
                 continue;
             }
 
@@ -225,11 +229,20 @@ class FormVersionService
 
     private function mapToDto(FormVersion $version): FormVersionDto
     {
+        // Validation des propriétés requises
+        $versionId = $version->getId();
+        $versionNumber = $version->getVersionNumber();
+        $versionCreatedAt = $version->getCreatedAt();
+
+        if ($versionId === null || $versionNumber === null || $versionCreatedAt === null) {
+            throw new \InvalidArgumentException('La version a des propriétés manquantes');
+        }
+
         return new FormVersionDto(
-            id: $version->getId(),
-            versionNumber: $version->getVersionNumber(),
+            id: $versionId,
+            versionNumber: $versionNumber,
             schema: $version->getSchema(),
-            createdAt: $version->getCreatedAt(),
+            createdAt: $versionCreatedAt,
             fields: []
         );
     }

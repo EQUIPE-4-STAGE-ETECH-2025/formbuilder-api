@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/forms', name: 'api_forms_')]
@@ -26,22 +25,22 @@ class FormController extends AbstractController
         private FormService $formService,
         private FormEmbedService $formEmbedService,
         private FormRepository $formRepository,
-        private SerializerInterface $serializer,
         private ValidatorInterface $validator,
         private LoggerInterface $logger
-    ) {}
+    ) {
+    }
 
     #[Route('', methods: ['GET'])]
     public function index(Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
-            
             // Paramètres de pagination
             $page = max(1, (int) $request->query->get('page', 1));
             $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
-            
+
             // Filtres
             $filters = [];
             if ($request->query->has('status')) {
@@ -57,7 +56,7 @@ class FormController extends AbstractController
                 'user_id' => $user->getId(),
                 'count' => count($forms),
                 'page' => $page,
-                'filters' => $filters
+                'filters' => $filters,
             ]);
 
             return $this->json([
@@ -66,18 +65,18 @@ class FormController extends AbstractController
                 'meta' => [
                     'page' => $page,
                     'limit' => $limit,
-                    'total' => count($forms)
-                ]
+                    'total' => count($forms),
+                ],
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la récupération des formulaires', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération des formulaires'
+                'message' => 'Erreur lors de la récupération des formulaires',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -85,35 +84,36 @@ class FormController extends AbstractController
     #[Route('/{id}', methods: ['GET'], requirements: ['id' => '[0-9a-f-]{36}'])]
     public function show(string $id): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formService->getFormById($id, $user);
 
             $this->logger->info('Formulaire récupéré', [
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => true,
-                'data' => $form
+                'data' => $form,
             ], Response::HTTP_OK);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la récupération du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération du formulaire'
+                'message' => 'Erreur lors de la récupération du formulaire',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -121,15 +121,16 @@ class FormController extends AbstractController
     #[Route('', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $data = json_decode($request->getContent(), true);
 
-            if (!is_array($data)) {
+            if (! is_array($data)) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Données JSON invalides'
+                    'message' => 'Données JSON invalides',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -150,7 +151,7 @@ class FormController extends AbstractController
                 return $this->json([
                     'success' => false,
                     'message' => 'Données de validation invalides',
-                    'errors' => $errorMessages
+                    'errors' => $errorMessages,
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
@@ -159,17 +160,17 @@ class FormController extends AbstractController
             return $this->json([
                 'success' => true,
                 'data' => $form,
-                'message' => 'Formulaire créé avec succès'
+                'message' => 'Formulaire créé avec succès',
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la création du formulaire', [
                 'error' => $e->getMessage(),
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la création du formulaire'
+                'message' => 'Erreur lors de la création du formulaire',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -177,15 +178,16 @@ class FormController extends AbstractController
     #[Route('/{id}', methods: ['PUT'], requirements: ['id' => '[0-9a-f-]{36}'])]
     public function update(string $id, Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $data = json_decode($request->getContent(), true);
 
-            if (!is_array($data)) {
+            if (! is_array($data)) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Données JSON invalides'
+                    'message' => 'Données JSON invalides',
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -206,7 +208,7 @@ class FormController extends AbstractController
                 return $this->json([
                     'success' => false,
                     'message' => 'Données de validation invalides',
-                    'errors' => $errorMessages
+                    'errors' => $errorMessages,
                 ], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
 
@@ -215,23 +217,23 @@ class FormController extends AbstractController
             return $this->json([
                 'success' => true,
                 'data' => $form,
-                'message' => 'Formulaire mis à jour avec succès'
+                'message' => 'Formulaire mis à jour avec succès',
             ], Response::HTTP_OK);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la mise à jour du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la mise à jour du formulaire'
+                'message' => 'Erreur lors de la mise à jour du formulaire',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -239,30 +241,31 @@ class FormController extends AbstractController
     #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '[0-9a-f-]{36}'])]
     public function delete(string $id): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $this->formService->deleteForm($id, $user);
 
             return $this->json([
                 'success' => true,
-                'message' => 'Formulaire supprimé avec succès'
+                'message' => 'Formulaire supprimé avec succès',
             ], Response::HTTP_NO_CONTENT);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la suppression du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la suppression du formulaire'
+                'message' => 'Erreur lors de la suppression du formulaire',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -270,31 +273,32 @@ class FormController extends AbstractController
     #[Route('/{id}/publish', methods: ['POST'], requirements: ['id' => '[0-9a-f-]{36}'])]
     public function publish(string $id): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formService->publishForm($id, $user);
 
             return $this->json([
                 'success' => true,
                 'data' => $form,
-                'message' => 'Formulaire publié avec succès'
+                'message' => 'Formulaire publié avec succès',
             ], Response::HTTP_OK);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_NOT_FOUND);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la publication du formulaire', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la publication du formulaire'
+                'message' => 'Erreur lors de la publication du formulaire',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -302,15 +306,16 @@ class FormController extends AbstractController
     #[Route('/{id}/embed', methods: ['GET'], requirements: ['id' => '[0-9a-f-]{36}'])]
     public function embed(string $id, Request $request): JsonResponse
     {
+        /** @var User $user */
+        $user = $this->getUser();
+
         try {
-            /** @var User $user */
-            $user = $this->getUser();
             $form = $this->formRepository->find($id);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
-                    'message' => 'Formulaire non trouvé'
+                    'message' => 'Formulaire non trouvé',
                 ], Response::HTTP_NOT_FOUND);
             }
 
@@ -336,23 +341,23 @@ class FormController extends AbstractController
 
             return $this->json([
                 'success' => true,
-                'data' => $embedData
+                'data' => $embedData,
             ], Response::HTTP_OK);
         } catch (\InvalidArgumentException $e) {
             return $this->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
             ], Response::HTTP_BAD_REQUEST);
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la génération du code d\'intégration', [
                 'error' => $e->getMessage(),
                 'form_id' => $id,
-                'user_id' => $user->getId()
+                'user_id' => $user->getId(),
             ]);
 
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la génération du code d\'intégration'
+                'message' => 'Erreur lors de la génération du code d\'intégration',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }

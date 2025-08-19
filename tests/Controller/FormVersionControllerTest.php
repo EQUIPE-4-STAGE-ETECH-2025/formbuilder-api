@@ -25,7 +25,7 @@ class FormVersionControllerTest extends WebTestCase
     public function testGetVersionsRequiresAuthentication(): void
     {
         $this->client->request('GET', '/api/forms/' . Uuid::v4() . '/versions');
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_UNAUTHORIZED);
     }
 
@@ -35,7 +35,7 @@ class FormVersionControllerTest extends WebTestCase
         $form = $this->createTestForm($user);
         $version = $this->createTestVersion($form);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId() . '/versions',
@@ -43,9 +43,9 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertIsArray($responseData['data']);
@@ -57,7 +57,7 @@ class FormVersionControllerTest extends WebTestCase
     {
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . Uuid::v4() . '/versions',
@@ -65,7 +65,7 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
@@ -75,7 +75,7 @@ class FormVersionControllerTest extends WebTestCase
         $otherUser = $this->createTestUser('other@example.com');
         $form = $this->createTestForm($user);
         $token = $this->loginUser($otherUser);
-        
+
         $this->client->request(
             'GET',
             '/api/forms/' . $form->getId() . '/versions',
@@ -83,7 +83,7 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
@@ -92,7 +92,7 @@ class FormVersionControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $versionData = [
             'schema' => [
                 'fields' => [
@@ -101,19 +101,19 @@ class FormVersionControllerTest extends WebTestCase
                         'type' => 'text',
                         'label' => 'Nom complet',
                         'required' => true,
-                        'position' => 1
+                        'position' => 1,
                     ],
                     [
                         'id' => 'field2',
                         'type' => 'email',
                         'label' => 'Email',
                         'required' => true,
-                        'position' => 2
-                    ]
-                ]
-            ]
+                        'position' => 2,
+                    ],
+                ],
+            ],
         ];
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/versions',
@@ -121,13 +121,13 @@ class FormVersionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($versionData)
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertArrayHasKey('data', $responseData);
@@ -139,7 +139,7 @@ class FormVersionControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $invalidVersionData = [
             'schema' => [
                 'fields' => [
@@ -148,12 +148,12 @@ class FormVersionControllerTest extends WebTestCase
                         'type' => 'invalid_type', // Type invalide
                         'label' => 'Nom',
                         'required' => true,
-                        'position' => 1
-                    ]
-                ]
-            ]
+                        'position' => 1,
+                    ],
+                ],
+            ],
         ];
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/versions',
@@ -161,11 +161,11 @@ class FormVersionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode($invalidVersionData)
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
@@ -174,7 +174,7 @@ class FormVersionControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/versions',
@@ -182,11 +182,11 @@ class FormVersionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode([])
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
     }
 
@@ -197,7 +197,7 @@ class FormVersionControllerTest extends WebTestCase
         $version1 = $this->createTestVersion($form, 1);
         $version2 = $this->createTestVersion($form, 2);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/versions/1/restore',
@@ -205,9 +205,9 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseIsSuccessful();
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertStringContainsString('restaurée avec succès', $responseData['message']);
@@ -220,7 +220,7 @@ class FormVersionControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $form = $this->createTestForm($user);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'POST',
             '/api/forms/' . $form->getId() . '/versions/99/restore',
@@ -228,7 +228,7 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
@@ -239,7 +239,7 @@ class FormVersionControllerTest extends WebTestCase
         $version1 = $this->createTestVersion($form, 1);
         $version2 = $this->createTestVersion($form, 2);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'DELETE',
             '/api/forms/' . $form->getId() . '/versions/1',
@@ -247,7 +247,7 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_NO_CONTENT);
     }
 
@@ -257,7 +257,7 @@ class FormVersionControllerTest extends WebTestCase
         $form = $this->createTestForm($user);
         $version = $this->createTestVersion($form, 1);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'DELETE',
             '/api/forms/' . $form->getId() . '/versions/1',
@@ -265,9 +265,9 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertFalse($responseData['success']);
         $this->assertStringContainsString('dernière version', $responseData['message']);
@@ -280,7 +280,7 @@ class FormVersionControllerTest extends WebTestCase
         $version1 = $this->createTestVersion($form, 1);
         $version2 = $this->createTestVersion($form, 2);
         $token = $this->loginUser($user);
-        
+
         $this->client->request(
             'DELETE',
             '/api/forms/' . $form->getId() . '/versions/2',
@@ -288,9 +288,9 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertFalse($responseData['success']);
         $this->assertStringContainsString('plus récente', $responseData['message']);
@@ -303,7 +303,7 @@ class FormVersionControllerTest extends WebTestCase
         $form = $this->createTestForm($user);
         $version = $this->createTestVersion($form);
         $token = $this->loginUser($otherUser);
-        
+
         // Test création
         $this->client->request(
             'POST',
@@ -312,13 +312,13 @@ class FormVersionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_Authorization' => 'Bearer ' . $token
+                'HTTP_Authorization' => 'Bearer ' . $token,
             ],
             json_encode(['schema' => ['fields' => []]])
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-        
+
         // Test restauration
         $this->client->request(
             'POST',
@@ -327,9 +327,9 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
-        
+
         // Test suppression
         $this->client->request(
             'DELETE',
@@ -338,16 +338,16 @@ class FormVersionControllerTest extends WebTestCase
             [],
             ['HTTP_Authorization' => 'Bearer ' . $token]
         );
-        
+
         $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
     }
 
     private function createTestUser(string $email = 'test@example.com'): User
     {
         $this->removeUserIfExists($email);
-        
+
         $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
-        
+
         $user = new User();
         $user->setId(Uuid::v4());
         $user->setEmail($email);
@@ -356,10 +356,10 @@ class FormVersionControllerTest extends WebTestCase
         $user->setRole('USER');
         $user->setIsEmailVerified(true);
         $user->setPasswordHash($passwordHasher->hashPassword($user, 'password123'));
-        
+
         $this->em->persist($user);
         $this->em->flush();
-        
+
         return $user;
     }
 
@@ -371,10 +371,10 @@ class FormVersionControllerTest extends WebTestCase
         $form->setDescription('Description du formulaire de test');
         $form->setStatus('DRAFT');
         $form->setUser($user);
-        
+
         $this->em->persist($form);
         $this->em->flush();
-        
+
         return $form;
     }
 
@@ -391,14 +391,14 @@ class FormVersionControllerTest extends WebTestCase
                     'type' => 'text',
                     'label' => 'Nom',
                     'required' => true,
-                    'position' => 1
-                ]
-            ]
+                    'position' => 1,
+                ],
+            ],
         ]);
-        
+
         $this->em->persist($version);
         $this->em->flush();
-        
+
         return $version;
     }
 
@@ -415,8 +415,9 @@ class FormVersionControllerTest extends WebTestCase
                 'password' => 'password123',
             ])
         );
-        
+
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
+
         return $responseData['token'];
     }
 

@@ -33,7 +33,7 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'type' => 'text',
                     'label' => 'Name',
                     'required' => true,
-                    'position' => 1
+                    'position' => 1,
                 ],
                 [
                     'id' => 'field2',
@@ -41,9 +41,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'label' => 'Email Address',
                     'required' => false,
                     'position' => 2,
-                    'placeholder' => 'Enter your email'
-                ]
-            ]
+                    'placeholder' => 'Enter your email',
+                ],
+            ],
         ];
 
         $this->validator->validateSchema($schema);
@@ -60,18 +60,18 @@ class FormSchemaValidatorServiceTest extends TestCase
                 ['id' => 'f4', 'type' => 'textarea', 'label' => 'Textarea Field', 'position' => 4],
                 ['id' => 'f5', 'type' => 'select', 'label' => 'Select Field', 'position' => 5, 'options' => [
                     ['value' => 'option1', 'label' => 'Option 1'],
-                    ['value' => 'option2', 'label' => 'Option 2']
+                    ['value' => 'option2', 'label' => 'Option 2'],
                 ]],
                 ['id' => 'f6', 'type' => 'checkbox', 'label' => 'Checkbox Field', 'position' => 6],
                 ['id' => 'f7', 'type' => 'radio', 'label' => 'Radio Field', 'position' => 7, 'options' => [
                     ['value' => 'yes', 'label' => 'Yes'],
-                    ['value' => 'no', 'label' => 'No']
+                    ['value' => 'no', 'label' => 'No'],
                 ]],
                 ['id' => 'f8', 'type' => 'date', 'label' => 'Date Field', 'position' => 8],
                 ['id' => 'f9', 'type' => 'file', 'label' => 'File Field', 'position' => 9],
                 ['id' => 'f10', 'type' => 'url', 'label' => 'URL Field', 'position' => 10],
-                ['id' => 'f11', 'type' => 'tel', 'label' => 'Tel Field', 'position' => 11]
-            ]
+                ['id' => 'f11', 'type' => 'tel', 'label' => 'Tel Field', 'position' => 11],
+            ],
         ];
 
         $this->validator->validateSchema($schema);
@@ -85,9 +85,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                 [
                     'id' => 'field1',
                     'type' => 'invalid_type',
-                    'label' => 'Invalid Field'
-                ]
-            ]
+                    'label' => 'Invalid Field',
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -102,10 +102,10 @@ class FormSchemaValidatorServiceTest extends TestCase
             'fields' => [
                 [
                     'id' => 'field1',
-                    'type' => 'text'
+                    'type' => 'text',
                     // Manque 'label'
-                ]
-            ]
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -121,9 +121,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                 [
                     'id' => 'field1',
                     'type' => 'text',
-                    'label' => ''
-                ]
-            ]
+                    'label' => '',
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -140,9 +140,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'text',
                     'label' => 'Test Field',
-                    'required' => 'yes' // Doit être un booléen
-                ]
-            ]
+                    'required' => 'yes', // Doit être un booléen
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -159,9 +159,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'text',
                     'label' => 'Test Field',
-                    'position' => 0 // Doit être positif
-                ]
-            ]
+                    'position' => 0, // Doit être positif
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -177,14 +177,14 @@ class FormSchemaValidatorServiceTest extends TestCase
                 [
                     'id' => 'field1',
                     'type' => 'text',
-                    'label' => 'Field 1'
+                    'label' => 'Field 1',
                 ],
                 [
                     'id' => 'field1', // ID dupliqué
                     'type' => 'email',
-                    'label' => 'Field 2'
-                ]
-            ]
+                    'label' => 'Field 2',
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -201,15 +201,15 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'text',
                     'label' => 'Field 1',
-                    'position' => 1
+                    'position' => 1,
                 ],
                 [
                     'id' => 'field2',
                     'type' => 'email',
                     'label' => 'Field 2',
-                    'position' => 1 // Position dupliquée
-                ]
-            ]
+                    'position' => 1, // Position dupliquée
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -226,9 +226,9 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'id' => 'field1',
                     'type' => 'select',
                     'label' => 'Select Field',
-                    'options' => [] // Options vides
-                ]
-            ]
+                    'options' => [], // Options vides
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -247,12 +247,12 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'label' => 'Select Field',
                     'options' => [
                         [
-                            'value' => 'option1'
+                            'value' => 'option1',
                             // Manque 'label'
-                        ]
-                    ]
-                ]
-            ]
+                        ],
+                    ],
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -273,8 +273,8 @@ class FormSchemaValidatorServiceTest extends TestCase
                         'required' => true,
                         'minLength' => 3,
                         'maxLength' => 50,
-                        'pattern' => '/^[a-zA-Z]+$/'
-                    ]
+                        'pattern' => '/^[a-zA-Z]+$/',
+                    ],
                 ],
                 [
                     'id' => 'field2',
@@ -283,8 +283,8 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'validation' => [
                         'min' => 0,
                         'max' => 100,
-                        'step' => 5
-                    ]
+                        'step' => 5,
+                    ],
                 ],
                 [
                     'id' => 'field3',
@@ -292,10 +292,10 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'label' => 'File Field',
                     'validation' => [
                         'maxSize' => 1024,
-                        'allowedTypes' => ['jpg', 'png', 'pdf']
-                    ]
-                ]
-            ]
+                        'allowedTypes' => ['jpg', 'png', 'pdf'],
+                    ],
+                ],
+            ],
         ];
 
         $this->validator->validateSchema($schema);
@@ -311,10 +311,10 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'type' => 'text',
                     'label' => 'Text Field',
                     'validation' => [
-                        'invalidRule' => true
-                    ]
-                ]
-            ]
+                        'invalidRule' => true,
+                    ],
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -332,10 +332,10 @@ class FormSchemaValidatorServiceTest extends TestCase
                     'type' => 'text',
                     'label' => 'Text Field',
                     'validation' => [
-                        'pattern' => '[invalid-regex'
-                    ]
-                ]
-            ]
+                        'pattern' => '[invalid-regex',
+                    ],
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -350,20 +350,20 @@ class FormSchemaValidatorServiceTest extends TestCase
             'fields' => [],
             'settings' => [
                 'submitButton' => [
-                    'text' => 'Submit Form'
+                    'text' => 'Submit Form',
                 ],
                 'successMessage' => 'Thank you for your submission!',
                 'errorMessage' => 'Please correct the errors below.',
                 'redirectUrl' => 'https://example.com/thank-you',
                 'emailNotification' => [
                     'enabled' => true,
-                    'recipients' => ['admin@example.com']
+                    'recipients' => ['admin@example.com'],
                 ],
                 'theme' => [
                     'primaryColor' => '#007bff',
-                    'backgroundColor' => '#ffffff'
-                ]
-            ]
+                    'backgroundColor' => '#ffffff',
+                ],
+            ],
         ];
 
         $this->validator->validateSchema($schema);
@@ -374,8 +374,8 @@ class FormSchemaValidatorServiceTest extends TestCase
     {
         $schema = [
             'settings' => [
-                'invalidSetting' => 'value'
-            ]
+                'invalidSetting' => 'value',
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -390,9 +390,9 @@ class FormSchemaValidatorServiceTest extends TestCase
             'settings' => [
                 'emailNotification' => [
                     'enabled' => true,
-                    'recipients' => [] // Tableau vide
-                ]
-            ]
+                    'recipients' => [], // Tableau vide
+                ],
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -405,7 +405,7 @@ class FormSchemaValidatorServiceTest extends TestCase
     {
         $schema = [
             'title' => 123, // Doit être une chaîne
-            'fields' => []
+            'fields' => [],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
@@ -418,8 +418,8 @@ class FormSchemaValidatorServiceTest extends TestCase
     {
         $schema = [
             'fields' => [
-                'not-an-array' // Doit être un tableau
-            ]
+                'not-an-array', // Doit être un tableau
+            ],
         ];
 
         $this->expectException(\InvalidArgumentException::class);
