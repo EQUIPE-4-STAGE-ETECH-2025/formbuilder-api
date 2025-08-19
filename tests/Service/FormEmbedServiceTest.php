@@ -251,7 +251,7 @@ class FormEmbedServiceTest extends TestCase
         $formId = Uuid::v4();
         $token = 'valid-jwt-token';
 
-        $payload = [
+        $payload = (object) [
             'form_id' => $formId,
             'type' => 'embed',
             'exp' => (new \DateTimeImmutable('+1 hour'))->getTimestamp(),
@@ -321,7 +321,7 @@ class FormEmbedServiceTest extends TestCase
      */
     public function testValidateEmbedTokenWrongType(): void
     {
-        $payload = [
+        $payload = (object) [
             'form_id' => Uuid::v4(),
             'type' => 'email_verification', // Mauvais type
         ];
@@ -400,7 +400,7 @@ class FormEmbedServiceTest extends TestCase
         $formId = Uuid::v4();
         $token = 'expired-token';
 
-        $payload = [
+        $payload = (object) [
             'form_id' => $formId,
             'type' => 'embed',
         ];
