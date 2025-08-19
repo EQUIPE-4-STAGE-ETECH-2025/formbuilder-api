@@ -19,8 +19,15 @@ class FormToken
     private ?Form $form = null;
 
     #[ORM\Column(type: 'text')]
-    #[Assert\NotBlank(message: 'Le JWT est obligatoire')]
-    private ?string $jwt = null;
+    #[Assert\NotBlank(message: 'Le token est obligatoire')]
+    private ?string $token = null;
+
+    #[ORM\Column(length: 50)]
+    #[Assert\NotBlank(message: 'Le type de token est obligatoire')]
+    private ?string $type = null;
+
+    #[ORM\Column]
+    private ?bool $isActive = true;
 
     #[ORM\Column]
     #[Assert\NotNull(message: 'La date d\'expiration est obligatoire')]
@@ -59,14 +66,38 @@ class FormToken
         return $this;
     }
 
-    public function getJwt(): ?string
+    public function getToken(): ?string
     {
-        return $this->jwt;
+        return $this->token;
     }
 
-    public function setJwt(string $jwt): static
+    public function setToken(string $token): static
     {
-        $this->jwt = $jwt;
+        $this->token = $token;
+
+        return $this;
+    }
+
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function isActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(bool $isActive): static
+    {
+        $this->isActive = $isActive;
 
         return $this;
     }
