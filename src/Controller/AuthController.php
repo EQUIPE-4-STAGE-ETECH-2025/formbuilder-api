@@ -47,7 +47,7 @@ class AuthController extends AbstractController
             $result = $authService->register($dto);
 
             return $this->json([
-                'message' => 'Inscription réussie',
+                'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
                 'user' => $result['user']->toArray(),
             ], 201);
         } catch (RuntimeException $e) {
@@ -140,6 +140,32 @@ class AuthController extends AbstractController
         }
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[Route('/api/auth/resend-verification', name: 'auth_resend_verification', methods: ['POST'])]
+    public function resendVerification(Request $request, AuthService $authService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? '';
+
+        if (! $email) {
+            return $this->json(['error' => 'Email manquant'], 400);
+        }
+
+        try {
+            $authService->resendEmailVerification($email);
+
+            return $this->json(['message' => 'Email de vérification renvoyé avec succès']);
+        } catch (RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+
+    /**
+     * @throws TransportExceptionInterface
+     */
     #[Route('/api/auth/forgot-password', name: 'auth_forgot_password', methods: ['POST'])]
     public function forgotPassword(
         Request $request,
