@@ -49,7 +49,6 @@ class AuthController extends AbstractController
             return $this->json([
                 'message' => 'Inscription réussie',
                 'user' => $result['user']->toArray(),
-                'token' => $result['token'],
             ], 201);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);

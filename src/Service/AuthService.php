@@ -53,12 +53,6 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
-        $authToken = $this->jwtService->generateToken([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'role' => $user->getRole(),
-        ]);
-
         $verificationUrl = sprintf(
             '%s/api/auth/verify-email?token=%s',
             $_ENV['APP_URL'],
@@ -73,7 +67,6 @@ class AuthService
 
         return [
             'user' => new UserResponseDto($user),
-            'token' => $authToken,
         ];
     }
 
