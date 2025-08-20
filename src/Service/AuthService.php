@@ -201,6 +201,41 @@ class AuthService
     /**
      * @throws TransportExceptionInterface
      */
+    public function resendEmailVerification(string $email): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (! $user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        if ($user->isEmailVerified()) {
+            throw new RuntimeException('Email déjà vérifié.');
+        }
+
+        $verificationToken = $this->jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'email_verification',
+        ]);
+
+        $verificationUrl = sprintf(
+            '%s/verify-email?token=%s',
+            $_ENV['FRONTEND_URL'],
+            $verificationToken
+        );
+
+        $this->emailService->sendEmailVerification(
+            $user->getEmail(),
+            $user->getFirstName() ?? '',
+            $verificationUrl
+        );
+    }
+
+
+    /**
+     * @throws TransportExceptionInterface
+     */
     public function forgotPassword(string $email): void
     {
         $user = $this->userRepository->findOneBy(['email' => $email]);
