@@ -40,6 +40,21 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /**
+     * Compte le nombre de formulaires pour un utilisateur
+     */
+    public function countByUser(\App\Entity\User $user): int
+    {
+        $result = $this->createQueryBuilder('f')
+            ->select('COUNT(f.id)')
+            ->andWhere('f.user = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
+    /**
      * @return array<string, int>
      */
     public function countFormsByStatusForUser(string $userId): array
