@@ -40,6 +40,33 @@ class SubmissionRepository extends ServiceEntityRepository
         }
     }
 
+    /**
+     * Compte le nombre de soumissions pour un utilisateur pour un mois donné
+     */
+    public function countByUserForMonth(\App\Entity\User $user, \DateTime $month): int
+    {
+        $startOfMonth = clone $month;
+        $startOfMonth->setDate((int) $month->format('Y'), (int) $month->format('n'), 1);
+        $startOfMonth->setTime(0, 0, 0);
+
+        $endOfMonth = clone $startOfMonth;
+        $endOfMonth->modify('+1 month');
+
+        $result = $this->createQueryBuilder('s')
+            ->select('COUNT(s.id)')
+            ->join('s.form', 'f')
+            ->andWhere('f.user = :user')
+            ->andWhere('s.submittedAt >= :startOfMonth')
+            ->andWhere('s.submittedAt < :endOfMonth')
+            ->setParameter('user', $user)
+            ->setParameter('startOfMonth', $startOfMonth)
+            ->setParameter('endOfMonth', $endOfMonth)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
     public function countByUserForms(string $userId): int
     {
         $qb = $this->createQueryBuilder('s')
