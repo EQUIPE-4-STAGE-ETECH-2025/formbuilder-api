@@ -81,7 +81,6 @@ class AuthController extends AbstractController
 
         try {
             $authData = $authService->login($dto);
-
             return $this->json(['success' => true, 'data' => $authData]);
         } catch (UnauthorizedHttpException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
@@ -212,7 +211,6 @@ class AuthController extends AbstractController
 
         try {
             $authService->resetPassword($dto);
-
             return $this->json(['success' => true, 'message' => 'Mot de passe réinitialisé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
