@@ -54,8 +54,8 @@ class AuthService
         ]);
 
         $verificationUrl = sprintf(
-            '%s/api/auth/verify-email?token=%s',
-            $_ENV['APP_URL'],
+            '%s/verify-email?token=%s',
+            $_ENV['FRONTEND_URL'],
             $verificationToken
         );
 
