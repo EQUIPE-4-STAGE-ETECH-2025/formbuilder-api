@@ -54,9 +54,10 @@ class AuthService
         ]);
 
         $verificationUrl = sprintf(
-            '%s/verify-email?token=%s',
+            '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
-            $verificationToken
+            $verificationToken,
+            urlencode($user->getEmail())
         );
 
         $this->emailService->sendEmailVerification(
@@ -151,11 +152,16 @@ class AuthService
         }
 
         if ($user->isEmailVerified()) {
-            throw new RuntimeException('Email déjà vérifié.');
+            return;
         }
 
         $user->setIsEmailVerified(true);
         $this->userRepository->save($user, true);
+
+        $this->jwtService->blacklistToken(new BlackListedTokenDto(
+            token: $token,
+            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+        ));
     }
 
     /**
@@ -180,9 +186,10 @@ class AuthService
         ]);
 
         $verificationUrl = sprintf(
-            '%s/verify-email?token=%s',
+            '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
-            $verificationToken
+            $verificationToken,
+            urlencode($user->getEmail())
         );
 
         $this->emailService->sendEmailVerification(
