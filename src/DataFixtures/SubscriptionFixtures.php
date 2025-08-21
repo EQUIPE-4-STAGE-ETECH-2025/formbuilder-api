@@ -21,7 +21,7 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
                 'stripeSubscriptionId' => 'sub_premium_123',
                 'startDate' => '2024-01-15',
                 'endDate' => '2025-01-15',
-                'isActive' => true,
+                'status' => Subscription::STATUS_ACTIVE,
                 'createdAt' => '2024-01-15T10:00:00Z',
                 'updatedAt' => '2024-01-15T10:00:00Z',
             ],
@@ -32,7 +32,7 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
                 'stripeSubscriptionId' => 'sub_free_456',
                 'startDate' => '2024-03-20',
                 'endDate' => '2025-03-20',
-                'isActive' => true,
+                'status' => Subscription::STATUS_ACTIVE,
                 'createdAt' => '2024-03-20T14:00:00Z',
                 'updatedAt' => '2024-03-20T14:00:00Z',
             ],
@@ -43,7 +43,7 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
                 'stripeSubscriptionId' => 'sub_pro_789',
                 'startDate' => '2024-02-10',
                 'endDate' => '2025-02-10',
-                'isActive' => false,
+                'status' => Subscription::STATUS_CANCELLED,
                 'createdAt' => '2024-02-10T11:30:00Z',
                 'updatedAt' => '2024-07-14T10:30:00Z',
             ],
@@ -57,7 +57,7 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             $subscription->setStripeSubscriptionId($subscriptionData['stripeSubscriptionId']);
             $subscription->setStartDate(new \DateTime($subscriptionData['startDate']));
             $subscription->setEndDate(new \DateTime($subscriptionData['endDate']));
-            $subscription->setIsActive($subscriptionData['isActive']);
+            $subscription->setStatus($subscriptionData['status']);
             $subscription->setCreatedAt(new \DateTimeImmutable($subscriptionData['createdAt']));
             $subscription->setUpdatedAt(new \DateTimeImmutable($subscriptionData['updatedAt']));
 
