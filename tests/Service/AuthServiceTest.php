@@ -5,6 +5,7 @@ namespace App\Tests\Service;
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
 use App\Dto\ResetPasswordDto;
+use App\Dto\UserResponseDto;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AuthService;
@@ -31,6 +32,7 @@ class AuthServiceTest extends TestCase
         $user->setFirstName('John');
         $user->setLastName('Doe');
         $user->setRole('USER');
+        $user->setIsEmailVerified(true);
 
         $dto = new LoginDto();
         $dto->setEmail('test@example.com');
@@ -77,6 +79,37 @@ class AuthServiceTest extends TestCase
 
         $this->expectException(UnauthorizedHttpException::class);
         $authService->login($dto);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testLoginThrowsIfEmailNotVerified(): void
+    {
+        $user = new User();
+        $user->setEmail('test@example.com');
+        $user->setPasswordHash('hashed');
+        $user->setIsEmailVerified(false);
+
+        $dto = new LoginDto();
+        $dto->setEmail('test@example.com');
+        $dto->setPassword('secret');
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->willReturn($user);
+
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+        $hasher->method('isPasswordValid')->willReturn(true);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $emailService = $this->createMock(EmailService::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+
+        $this->expectException(UnauthorizedHttpException::class);
+        $this->expectExceptionMessage('Email non vérifié.');
+
+        $service->login($dto);
     }
 
     /**
@@ -168,7 +201,7 @@ class AuthServiceTest extends TestCase
 
         $userRepo = $this->createMock(UserRepository::class);
         $userRepo->method('findOneBy')->willReturn(null);
-        $userRepo->method('save')->willReturnCallback(function (User $user, bool $flush) {
+        $userRepo->method('save')->willReturnCallback(function (User $user) {
             // Simuler ID auto généré
             $user->setId(Uuid::v4());
         });
@@ -187,8 +220,8 @@ class AuthServiceTest extends TestCase
         $result = $authService->register($dto);
 
         $this->assertArrayHasKey('user', $result);
-        $this->assertArrayHasKey('token', $result);
-        $this->assertEquals('fake-token', $result['token']);
+        $this->assertInstanceOf(UserResponseDto::class, $result['user']);
+
     }
 
     /**
@@ -204,6 +237,7 @@ class AuthServiceTest extends TestCase
         $tokenPayload = (object) [
             'id' => $user->getId(),
             'type' => 'email_verification',
+            'exp' => (new DateTimeImmutable('+1 hour'))->getTimestamp(),
         ];
 
         $jwtService = $this->createMock(JwtService::class);
@@ -288,10 +322,85 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
 
+        $authService->verifyEmail('token');
+        $this->assertTrue($user->isEmailVerified());
+    }
+
+    /**
+     * @throws Exception
+     * @throws TransportExceptionInterface
+     */
+    public function testResendEmailVerificationSuccess(): void
+    {
+        $_ENV['FRONTEND_URL'] = 'http://frontend.test';
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail('user@example.com');
+        $user->setFirstName('Alice');
+        $user->setIsEmailVerified(false);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->with(['email' => 'user@example.com'])->willReturn($user);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('generateToken')->willReturn('resend-token');
+
+        $emailService = $this->createMock(EmailService::class);
+        $emailService->expects($this->once())
+            ->method('sendEmailVerification')
+            ->with('user@example.com', 'Alice', 'http://frontend.test/verify-email?token=resend-token&email=user%40example.com');
+
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service->resendEmailVerification('user@example.com');
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws Exception
+     */
+    public function testResendEmailVerificationThrowsIfUserNotFound(): void
+    {
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->willReturn(null);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $emailService = $this->createMock(EmailService::class);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Utilisateur inexistant.');
+
+        $service->resendEmailVerification('notfound@example.com');
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws Exception
+     */
+    public function testResendEmailVerificationThrowsIfAlreadyVerified(): void
+    {
+        $user = new User();
+        $user->setEmail('verified@example.com');
+        $user->setIsEmailVerified(true);
+
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('findOneBy')->willReturn($user);
+
+        $jwtService = $this->createMock(JwtService::class);
+        $emailService = $this->createMock(EmailService::class);
+        $hasher = $this->createMock(UserPasswordHasherInterface::class);
+
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Email déjà vérifié.');
 
-        $authService->verifyEmail('token');
+        $service->resendEmailVerification('verified@example.com');
     }
 
     /**
