@@ -120,7 +120,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 2.1 Controllers de formulaires
 
--   [ ] **FORMS-001** `(Dépendances -> AUTH-012, FORMS-004, FORMS-007)` : Créer `FormController` avec CRUD complet
+-   [x] **FORMS-001** `(Dépendances -> AUTH-012, FORMS-004, FORMS-007)` : Créer `FormController` avec CRUD complet
 
     -   Endpoint : `GET /api/forms` (liste avec pagination)
     -   Endpoint : `GET /api/forms/{id}` (détail)
@@ -130,14 +130,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des permissions utilisateur
     -   Gestion des erreurs appropriées
 
--   [ ] **FORMS-002** `(Dépendances -> FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
+-   [x] **FORMS-002** `(Dépendances -> FORMS-006, AUTH-012)` : Implémenter la publication de formulaires
 
     -   Endpoint : `POST /api/forms/{id}/publish`
     -   Changement de statut vers "published"
     -   Génération du token JWT pour l'iframe
     -   Mise à jour de `published_at`
 
--   [ ] **FORMS-003** `(Dépendances -> FORMS-006, AUTH-012)` : Créer l'endpoint de génération du code iframe
+-   [x] **FORMS-003** `(Dépendances -> FORMS-006, AUTH-012)` : Créer l'endpoint de génération du code iframe
     -   Endpoint : `GET /api/forms/{id}/embed`
     -   Génération du code HTML avec token JWT
     -   Paramètres de personnalisation
@@ -145,7 +145,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 2.2 Controllers de versions
 
--   [ ] **VERSIONS-001** `(Dépendances -> FORMS-005, AUTH-012)` : Créer `FormVersionController`
+-   [x] **VERSIONS-001** `(Dépendances -> FORMS-005, AUTH-012)` : Créer `FormVersionController`
     -   Endpoint : `GET /api/forms/{id}/versions`
     -   Endpoint : `POST /api/forms/{id}/versions`
     -   Endpoint : `POST /api/forms/{id}/versions/{version}/restore`
@@ -155,21 +155,21 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 2.3 Services de formulaires
 
--   [ ] **FORMS-004** `(Dépendances -> AUTH-012)` : Créer `FormService`
+-   [x] **FORMS-004** `(Dépendances -> AUTH-012)` : Créer `FormService`
 
     -   Logique métier de création/modification
     -   Validation des schémas de formulaires
     -   Gestion des permissions
     -   Optimisation des requêtes
 
--   [ ] **FORMS-005** `(Dépendances -> Aucune)` : Créer `FormVersionService`
+-   [x] **FORMS-005** `(Dépendances -> Aucune)` : Créer `FormVersionService`
 
     -   Logique de création de versions
     -   Validation des changements
     -   Gestion de l'historique
     -   Restauration de versions
 
--   [ ] **FORMS-006** `(Dépendances -> AUTH-009)` : Créer `FormEmbedService`
+-   [x] **FORMS-006** `(Dépendances -> AUTH-009)` : Créer `FormEmbedService`
     -   Génération des tokens JWT pour iframe (via JwtService)
     -   Personnalisation du code HTML
     -   Validation de sécurité
@@ -177,7 +177,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 2.4 DTOs de formulaires
 
--   [ ] **FORMS-007** `(Dépendances -> Aucune)` : Créer les DTOs de formulaires
+-   [x] **FORMS-007** `(Dépendances -> Aucune)` : Créer les DTOs de formulaires
     -   `CreateFormDto` avec validation
     -   `UpdateFormDto` avec validation
     -   `FormResponseDto` pour les réponses
@@ -186,7 +186,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 2.5 Validation et templates
 
--   [ ] **FORMS-008** `(Dépendances -> Aucune)` : Implémenter la validation des schémas de formulaires
+-   [x] **FORMS-008** `(Dépendances -> Aucune)` : Implémenter la validation des schémas de formulaires
 
     -   Service de validation JSON Schema
     -   Validation des types de champs
@@ -332,51 +332,34 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 5.1 Controllers de quotas
 
--   [ ] **QUOTAS-001** `(Dépendances -> QUOTAS-002, SUBSCRIPTIONS-005, AUTH-012)` : Créer `QuotaController`
+-   [x] **QUOTAS-001** `(Dépendances -> QUOTAS-002, AUTH-012)` : Créer `QuotaController`
     -   Endpoint : `GET /api/users/{id}/quotas`
     -   Calcul en temps réel des utilisations
     -   Comparaison avec les limites du plan
-    -   Historique des utilisations
+    -   Gestion des permissions et erreurs
 
 ### 5.2 Services de quotas
 
--   [ ] **QUOTAS-002** `(Dépendances -> Aucune)` : Créer `QuotaService`
+-   [x] **QUOTAS-002** `(Dépendances -> Aucune)` : Créer `QuotaService`
 
     -   Calcul des quotas en temps réel
-    -   Vérification avant actions
-    -   Notifications automatiques
-    -   Blocage des actions
+    -   Vérification avant actions (create_form, submit_form, upload_file)
+    -   Blocage des actions si quota dépassé
+    -   Intégration avec les plans d'abonnement
 
--   [ ] **QUOTAS-003** `(Dépendances -> AUTH-008)` : Créer `QuotaNotificationService`
+-   [x] **QUOTAS-003** `(Dépendances -> AUTH-008)` : Créer `QuotaNotificationService`
     -   Notification à 80% d'utilisation
     -   Notification à 100% d'utilisation
-    -   Envoi d'emails d'alerte
-    -   Gestion des seuils
+    -   Envoi d'emails d'alerte simples
 
 ### 5.3 Middleware de quotas
 
--   [ ] **QUOTAS-004** `(Dépendances -> QUOTAS-002)` : Créer `QuotaMiddleware`
+-   [x] **QUOTAS-004** `(Dépendances -> QUOTAS-002)` : Créer `QuotaMiddleware`
     -   Vérification automatique des quotas
     -   Blocage des requêtes si quota dépassé
-    -   Logs des tentatives d'actions
-    -   Messages d'erreur appropriés
-
-### 5.4 Blocage et alertes
-
--   [ ] **QUOTAS-005** `(Dépendances -> QUOTAS-002)` : Implémenter le système de blocage en temps réel
-
-    -   Middleware de vérification des quotas
-    -   Blocage automatique des actions
-    -   Messages d'erreur appropriés
-    -   Logs des tentatives d'actions
-    -   Configuration des seuils de blocage
-
--   [ ] **QUOTAS-006** `(Dépendances -> QUOTAS-002)` : Créer `QuotaAlertService`
-    -   Alertes en temps réel via WebSocket
-    -   Notifications push pour les seuils critiques
-    -   Dashboard de monitoring des quotas
-    -   Historique des alertes
-    -   Configuration des seuils d'alerte
+    -   Routes protégées : création formulaires, soumissions, uploads
+    -   Support taille de fichiers dynamique
+    -   Messages d'erreur avec code HTTP 429
 
 ---
 

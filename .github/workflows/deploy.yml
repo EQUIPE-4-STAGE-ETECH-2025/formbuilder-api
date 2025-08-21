@@ -7,6 +7,20 @@ on:
     pull_request:
         branches: [main, dev]
 
+# Variables d'environnement globales pour éviter les répétitions
+env:
+    PHP_VERSION: "8.2.12"
+    PHP_EXTENSIONS: "mbstring, pdo_pgsql, intl, zip"
+    APP_SECRET: "ci_secret_key_for_testing"
+    APP_URL: "http://localhost:8000"
+    JWT_SECRET: "A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78="
+    MAILER_DSN: "null://null"
+    FRONTEND_URL: "http://localhost:3000"
+    DATABASE_HOST: "localhost"
+    DATABASE_PORT: "5432"
+    DATABASE_USER: "postgres"
+    DATABASE_PASSWORD: "postgres"
+
 jobs:
     # Job 1: Vérifications de qualité de code
     quality:
@@ -19,8 +33,8 @@ jobs:
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
-                  php-version: "8.2.12"
-                  extensions: mbstring, pdo_pgsql, intl, zip
+                  php-version: ${{ env.PHP_VERSION }}
+                  extensions: ${{ env.PHP_EXTENSIONS }}
                   coverage: xdebug
 
             - name: Cache dependencies
@@ -37,17 +51,20 @@ jobs:
             # Création du fichier .env pour l'environnement CI
             - name: Create .env file
               run: |
-                  echo "APP_ENV=dev" > .env
-                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
-                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
-                  echo "DATABASE_HOST=localhost" >> .env
-                  echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder_dev" >> .env
-                  echo "DATABASE_USER=postgres" >> .env
-                  echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
+                  cat << EOF > .env
+                  APP_ENV=dev
+                  APP_SECRET=${{ env.APP_SECRET }}
+                  APP_URL=${{ env.APP_URL }}
+                  DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db
+                  DATABASE_HOST=${{ env.DATABASE_HOST }}
+                  DATABASE_PORT=${{ env.DATABASE_PORT }}
+                  DATABASE_NAME=formbuilder_dev
+                  DATABASE_USER=${{ env.DATABASE_USER }}
+                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
+                  JWT_SECRET=${{ env.JWT_SECRET }}
+                  MAILER_DSN=${{ env.MAILER_DSN }}
+                  FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  EOF
 
             # Vérification de la syntaxe PHP
             - name: PHP Lint
@@ -83,7 +100,7 @@ jobs:
             postgres:
                 image: postgres:15
                 env:
-                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_PASSWORD: ${{ env.DATABASE_PASSWORD }}
                     POSTGRES_DB: formbuilder_test
                 options: >-
                     --health-cmd pg_isready
@@ -100,8 +117,8 @@ jobs:
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
-                  php-version: "8.2.12"
-                  extensions: mbstring, pdo_pgsql, intl, zip
+                  php-version: ${{ env.PHP_VERSION }}
+                  extensions: ${{ env.PHP_EXTENSIONS }}
                   coverage: xdebug
 
             - name: Cache dependencies
@@ -119,26 +136,33 @@ jobs:
             - name: Setup test environment
               run: |
                   # Créer le fichier .env principal pour les tests
-                  echo "APP_ENV=test" > .env
-                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
-                  echo "DATABASE_HOST=localhost" >> .env
-                  echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder" >> .env
-                  echo "DATABASE_USER=postgres" >> .env
-                  echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
+                  cat << EOF > .env
+                  APP_ENV=test
+                  APP_SECRET=${{ env.APP_SECRET }}
+                  APP_URL=${{ env.APP_URL }}
+                  DATABASE_HOST=${{ env.DATABASE_HOST }}
+                  DATABASE_PORT=${{ env.DATABASE_PORT }}
+                  DATABASE_NAME=formbuilder
+                  DATABASE_USER=${{ env.DATABASE_USER }}
+                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
+                  JWT_SECRET=${{ env.JWT_SECRET }}
+                  MAILER_DSN=${{ env.MAILER_DSN }}
+                  FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  EOF
+
                   # Créer le fichier .env.test.local pour les variables spécifiques aux tests
-                  echo "APP_ENV=test" > .env.test.local
-                  echo "APP_URL=http://localhost:8000" >> .env.test.local
-                  echo "DATABASE_HOST=localhost" >> .env.test.local
-                  echo "DATABASE_PORT=5432" >> .env.test.local
-                  echo "DATABASE_NAME=formbuilder" >> .env.test.local
-                  echo "DATABASE_USER=postgres" >> .env.test.local
-                  echo "DATABASE_PASSWORD=postgres" >> .env.test.local
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env.test.local
-                  echo "MAILER_DSN=null://null" >> .env.test.local
+                  cat << EOF > .env.test.local
+                  APP_ENV=test
+                  APP_URL=${{ env.APP_URL }}
+                  DATABASE_HOST=${{ env.DATABASE_HOST }}
+                  DATABASE_PORT=${{ env.DATABASE_PORT }}
+                  DATABASE_NAME=formbuilder
+                  DATABASE_USER=${{ env.DATABASE_USER }}
+                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
+                  JWT_SECRET=${{ env.JWT_SECRET }}
+                  MAILER_DSN=${{ env.MAILER_DSN }}
+                  FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  EOF
 
             # Création du schéma de base de données pour les tests
             - name: Create database schema
@@ -183,8 +207,8 @@ jobs:
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
-                  php-version: "8.2.12"
-                  extensions: mbstring, pdo_pgsql, intl, zip
+                  php-version: ${{ env.PHP_VERSION }}
+                  extensions: ${{ env.PHP_EXTENSIONS }}
 
             # Mise en cache des dépendances pour accélérer les builds
             - name: Cache dependencies
@@ -201,17 +225,20 @@ jobs:
             # Création du fichier .env pour l'environnement CI
             - name: Create .env file
               run: |
-                  echo "APP_ENV=dev" > .env
-                  echo "APP_SECRET=ci_secret_key_for_testing" >> .env
-                  echo "APP_URL=http://localhost:8000" >> .env
-                  echo "DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db" >> .env
-                  echo "DATABASE_HOST=localhost" >> .env
-                  echo "DATABASE_PORT=5432" >> .env
-                  echo "DATABASE_NAME=formbuilder_dev" >> .env
-                  echo "DATABASE_USER=postgres" >> .env
-                  echo "DATABASE_PASSWORD=postgres" >> .env
-                  echo "JWT_SECRET=A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78=" >> .env
-                  echo "MAILER_DSN=null://null" >> .env
+                  cat << EOF > .env
+                  APP_ENV=dev
+                  APP_SECRET=${{ env.APP_SECRET }}
+                  APP_URL=${{ env.APP_URL }}
+                  DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db
+                  DATABASE_HOST=${{ env.DATABASE_HOST }}
+                  DATABASE_PORT=${{ env.DATABASE_PORT }}
+                  DATABASE_NAME=formbuilder_dev
+                  DATABASE_USER=${{ env.DATABASE_USER }}
+                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
+                  JWT_SECRET=${{ env.JWT_SECRET }}
+                  MAILER_DSN=${{ env.MAILER_DSN }}
+                  FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  EOF
 
             # Vérification des vulnérabilités de sécurité dans les dépendances
             - name: Security check
