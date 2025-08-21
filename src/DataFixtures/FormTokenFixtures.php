@@ -16,14 +16,18 @@ class FormTokenFixtures extends Fixture implements DependentFixtureInterface
             [
                 'id' => '550e8400-e29b-41d4-a716-446655440901',
                 'form' => '550e8400-e29b-41d4-a716-446655440301',
-                'jwt' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb3JtX2lkIjoiZm9ybS0xIiwiaWF0IjoxNjM5NzI5NjAwLCJleHAiOjE2Mzk4MTYwMDB9.mock-signature',
+                'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb3JtX2lkIjoiZm9ybS0xIiwiaWF0IjoxNjM5NzI5NjAwLCJleHAiOjE2Mzk4MTYwMDB9.mock-signature',
+                'type' => 'EMBED',
+                'isActive' => true,
                 'expiresAt' => '2024-12-31T23:59:59Z',
                 'createdAt' => '2024-07-14T10:30:00Z',
             ],
             [
                 'id' => '550e8400-e29b-41d4-a716-446655440902',
                 'form' => '550e8400-e29b-41d4-a716-446655440302',
-                'jwt' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb3JtX2lkIjoiZm9ybS0yIiwiaWF0IjoxNjM5NzI5NjAwLCJleHAiOjE2Mzk4MTYwMDB9.mock-signature',
+                'token' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb3JtX2lkIjoiZm9ybS0yIiwiaWF0IjoxNjM5NzI5NjAwLCJleHAiOjE2Mzk4MTYwMDB9.mock-signature',
+                'type' => 'EMBED',
+                'isActive' => true,
                 'expiresAt' => '2024-12-31T23:59:59Z',
                 'createdAt' => '2024-07-14T10:30:00Z',
             ],
@@ -33,7 +37,9 @@ class FormTokenFixtures extends Fixture implements DependentFixtureInterface
             $formToken = new FormToken();
             $formToken->setId($tokenData['id']);
             $formToken->setForm($this->getReference($tokenData['form'], Form::class));
-            $formToken->setJwt($tokenData['jwt']);
+            $formToken->setToken($tokenData['token']);
+            $formToken->setType($tokenData['type']);
+            $formToken->setIsActive($tokenData['isActive']);
             $formToken->setExpiresAt(new \DateTimeImmutable($tokenData['expiresAt']));
             $formToken->setCreatedAt(new \DateTimeImmutable($tokenData['createdAt']));
 

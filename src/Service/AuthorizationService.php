@@ -65,4 +65,19 @@ class AuthorizationService
 
         return false;
     }
+
+    public function canAccessUserData(User $currentUser, User $targetUser): bool
+    {
+        // L'utilisateur peut accéder à ses propres données
+        if ($currentUser->getId() === $targetUser->getId()) {
+            return true;
+        }
+
+        // Les administrateurs peuvent accéder aux données de tous les utilisateurs
+        if ($currentUser->getRole() === 'ADMIN') {
+            return true;
+        }
+
+        return false;
+    }
 }

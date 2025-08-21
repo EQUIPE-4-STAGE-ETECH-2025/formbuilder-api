@@ -335,51 +335,34 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 5.1 Controllers de quotas
 
--   [ ] **QUOTAS-001** `(Dépendances -> QUOTAS-002, SUBSCRIPTIONS-005, AUTH-012)` : Créer `QuotaController`
+-   [x] **QUOTAS-001** `(Dépendances -> QUOTAS-002, AUTH-012)` : Créer `QuotaController`
     -   Endpoint : `GET /api/users/{id}/quotas`
     -   Calcul en temps réel des utilisations
     -   Comparaison avec les limites du plan
-    -   Historique des utilisations
+    -   Gestion des permissions et erreurs
 
 ### 5.2 Services de quotas
 
--   [ ] **QUOTAS-002** `(Dépendances -> Aucune)` : Créer `QuotaService`
+-   [x] **QUOTAS-002** `(Dépendances -> Aucune)` : Créer `QuotaService`
 
     -   Calcul des quotas en temps réel
-    -   Vérification avant actions
-    -   Notifications automatiques
-    -   Blocage des actions
+    -   Vérification avant actions (create_form, submit_form, upload_file)
+    -   Blocage des actions si quota dépassé
+    -   Intégration avec les plans d'abonnement
 
--   [ ] **QUOTAS-003** `(Dépendances -> AUTH-008)` : Créer `QuotaNotificationService`
+-   [x] **QUOTAS-003** `(Dépendances -> AUTH-008)` : Créer `QuotaNotificationService`
     -   Notification à 80% d'utilisation
     -   Notification à 100% d'utilisation
-    -   Envoi d'emails d'alerte
-    -   Gestion des seuils
+    -   Envoi d'emails d'alerte simples
 
 ### 5.3 Middleware de quotas
 
--   [ ] **QUOTAS-004** `(Dépendances -> QUOTAS-002)` : Créer `QuotaMiddleware`
+-   [x] **QUOTAS-004** `(Dépendances -> QUOTAS-002)` : Créer `QuotaMiddleware`
     -   Vérification automatique des quotas
     -   Blocage des requêtes si quota dépassé
-    -   Logs des tentatives d'actions
-    -   Messages d'erreur appropriés
-
-### 5.4 Blocage et alertes
-
--   [ ] **QUOTAS-005** `(Dépendances -> QUOTAS-002)` : Implémenter le système de blocage en temps réel
-
-    -   Middleware de vérification des quotas
-    -   Blocage automatique des actions
-    -   Messages d'erreur appropriés
-    -   Logs des tentatives d'actions
-    -   Configuration des seuils de blocage
-
--   [ ] **QUOTAS-006** `(Dépendances -> QUOTAS-002)` : Créer `QuotaAlertService`
-    -   Alertes en temps réel via WebSocket
-    -   Notifications push pour les seuils critiques
-    -   Dashboard de monitoring des quotas
-    -   Historique des alertes
-    -   Configuration des seuils d'alerte
+    -   Routes protégées : création formulaires, soumissions, uploads
+    -   Support taille de fichiers dynamique
+    -   Messages d'erreur avec code HTTP 429
 
 ---
 
