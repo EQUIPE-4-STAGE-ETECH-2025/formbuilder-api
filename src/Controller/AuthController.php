@@ -10,6 +10,7 @@ use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -47,9 +48,8 @@ class AuthController extends AbstractController
             $result = $authService->register($dto);
 
             return $this->json([
-                'message' => 'Inscription réussie',
+                'message' => 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
                 'user' => $result['user']->toArray(),
-                'token' => $result['token'],
             ], 201);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
@@ -76,12 +76,15 @@ class AuthController extends AbstractController
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
 
-            return $this->json(['errors' => $errorMessages], 422);
+            return $this->json(['success' => false, 'error' => $errorMessages], 422);
         }
 
-        $authData = $authService->login($dto);
-
-        return $this->json($authData);
+        try {
+            $authData = $authService->login($dto);
+            return $this->json(['success' => true, 'data' => $authData]);
+        } catch (UnauthorizedHttpException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
+        }
     }
 
     #[Route('/api/auth/me', name: 'auth_me', methods: ['GET'])]
@@ -135,12 +138,38 @@ class AuthController extends AbstractController
         try {
             $authService->verifyEmail($token);
 
-            return $this->json(['message' => 'Email vérifié avec succès']);
+            return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
+        } catch (RuntimeException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[Route('/api/auth/resend-verification', name: 'auth_resend_verification', methods: ['POST'])]
+    public function resendVerification(Request $request, AuthService $authService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $email = $data['email'] ?? '';
+
+        if (! $email) {
+            return $this->json(['error' => 'Email manquant'], 400);
+        }
+
+        try {
+            $authService->resendEmailVerification($email);
+
+            return $this->json(['message' => 'Email de vérification renvoyé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['error' => $e->getMessage()], 400);
         }
     }
 
+
+    /**
+     * @throws TransportExceptionInterface
+     */
     #[Route('/api/auth/forgot-password', name: 'auth_forgot_password', methods: ['POST'])]
     public function forgotPassword(
         Request $request,
