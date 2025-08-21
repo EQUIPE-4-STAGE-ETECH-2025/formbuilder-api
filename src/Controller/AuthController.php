@@ -10,6 +10,7 @@ use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -75,12 +76,15 @@ class AuthController extends AbstractController
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
 
-            return $this->json(['errors' => $errorMessages], 422);
+            return $this->json(['success' => false, 'error' => $errorMessages], 422);
         }
 
-        $authData = $authService->login($dto);
-
-        return $this->json($authData);
+        try {
+            $authData = $authService->login($dto);
+            return $this->json(['success' => true, 'data' => $authData]);
+        } catch (UnauthorizedHttpException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
+        }
     }
 
     #[Route('/api/auth/me', name: 'auth_me', methods: ['GET'])]
@@ -134,9 +138,9 @@ class AuthController extends AbstractController
         try {
             $authService->verifyEmail($token);
 
-            return $this->json(['message' => 'Email vérifié avec succès']);
+            return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
-            return $this->json(['error' => $e->getMessage()], 400);
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
         }
     }
 
