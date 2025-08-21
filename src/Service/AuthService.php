@@ -53,16 +53,27 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        $userFirstName = $user->getFirstName();
+
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant');
+        }
+
+        if ($userFirstName === null) {
+            throw new RuntimeException('Prénom utilisateur manquant');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail())
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail() ?? '',
-            $user->getFirstName() ?? '',
+            $userEmail,
+            $userFirstName,
             $verificationUrl
         );
 
@@ -82,7 +93,7 @@ class AuthService
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
         }
 
-        if (! $user->isEmailVerified()){
+        if (! $user->isEmailVerified()) {
             throw new UnauthorizedHttpException('', 'Email non vérifié.');
         }
 
@@ -126,13 +137,13 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($jwt);
 
-        if (! isset($payload->exp)) {
-            throw new RuntimeException('Token invalide : propriété exp manquante');
+        if (! isset($payload->exp) || ! is_numeric($payload->exp)) {
+            throw new RuntimeException('Token invalide : propriété exp manquante ou invalide');
         }
 
         $dto = new BlackListedTokenDto(
             token: $jwt,
-            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+            expiresAt: (new DateTimeImmutable())->setTimestamp((int) $payload->exp)
         );
 
         $this->jwtService->blacklistToken($dto);
@@ -158,9 +169,13 @@ class AuthService
         $user->setIsEmailVerified(true);
         $this->userRepository->save($user, true);
 
+        if (! isset($payload->exp) || ! is_numeric($payload->exp)) {
+            throw new RuntimeException('Token invalide : propriété exp manquante ou invalide');
+        }
+
         $this->jwtService->blacklistToken(new BlackListedTokenDto(
             token: $token,
-            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+            expiresAt: (new DateTimeImmutable())->setTimestamp((int) $payload->exp)
         ));
     }
 
@@ -185,16 +200,27 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        $userFirstName = $user->getFirstName();
+
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant');
+        }
+
+        if ($userFirstName === null) {
+            throw new RuntimeException('Prénom utilisateur manquant');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail())
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail(),
-            $user->getFirstName() ?? '',
+            $userEmail,
+            $userFirstName,
             $verificationUrl
         );
     }

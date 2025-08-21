@@ -81,6 +81,7 @@ class AuthController extends AbstractController
 
         try {
             $authData = $authService->login($dto);
+
             return $this->json(['success' => true, 'data' => $authData]);
         } catch (UnauthorizedHttpException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
