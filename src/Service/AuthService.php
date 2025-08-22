@@ -53,27 +53,32 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
-        $authToken = $this->jwtService->generateToken([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'role' => $user->getRole(),
-        ]);
+        $userEmail = $user->getEmail();
+        $userFirstName = $user->getFirstName();
+
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant');
+        }
+
+        if ($userFirstName === null) {
+            throw new RuntimeException('Prénom utilisateur manquant');
+        }
 
         $verificationUrl = sprintf(
-            '%s/api/auth/verify-email?token=%s',
-            $_ENV['APP_URL'],
-            $verificationToken
+            '%s/verify-email?token=%s&email=%s',
+            $_ENV['FRONTEND_URL'],
+            $verificationToken,
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail() ?? '',
-            $user->getFirstName() ?? '',
+            $userEmail,
+            $userFirstName,
             $verificationUrl
         );
 
         return [
             'user' => new UserResponseDto($user),
-            'token' => $authToken,
         ];
     }
 
@@ -86,6 +91,10 @@ class AuthService
 
         if (! $user || ! $this->passwordHasher->isPasswordValid($user, $dto->getPassword())) {
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
+        }
+
+        if (! $user->isEmailVerified()) {
+            throw new UnauthorizedHttpException('', 'Email non vérifié.');
         }
 
         $payload = [
@@ -128,13 +137,13 @@ class AuthService
     {
         $payload = $this->jwtService->validateToken($jwt);
 
-        if (! isset($payload->exp)) {
-            throw new RuntimeException('Token invalide : propriété exp manquante');
+        if (! isset($payload->exp) || ! is_numeric($payload->exp)) {
+            throw new RuntimeException('Token invalide : propriété exp manquante ou invalide');
         }
 
         $dto = new BlackListedTokenDto(
             token: $jwt,
-            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+            expiresAt: (new DateTimeImmutable())->setTimestamp((int) $payload->exp)
         );
 
         $this->jwtService->blacklistToken($dto);
@@ -154,12 +163,68 @@ class AuthService
         }
 
         if ($user->isEmailVerified()) {
-            throw new RuntimeException('Email déjà vérifié.');
+            return;
         }
 
         $user->setIsEmailVerified(true);
         $this->userRepository->save($user, true);
+
+        if (! isset($payload->exp) || ! is_numeric($payload->exp)) {
+            throw new RuntimeException('Token invalide : propriété exp manquante ou invalide');
+        }
+
+        $this->jwtService->blacklistToken(new BlackListedTokenDto(
+            token: $token,
+            expiresAt: (new DateTimeImmutable())->setTimestamp((int) $payload->exp)
+        ));
     }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function resendEmailVerification(string $email): void
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+
+        if (! $user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        if ($user->isEmailVerified()) {
+            throw new RuntimeException('Email déjà vérifié.');
+        }
+
+        $verificationToken = $this->jwtService->generateToken([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'type' => 'email_verification',
+        ]);
+
+        $userEmail = $user->getEmail();
+        $userFirstName = $user->getFirstName();
+
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant');
+        }
+
+        if ($userFirstName === null) {
+            throw new RuntimeException('Prénom utilisateur manquant');
+        }
+
+        $verificationUrl = sprintf(
+            '%s/verify-email?token=%s&email=%s',
+            $_ENV['FRONTEND_URL'],
+            $verificationToken,
+            urlencode($userEmail)
+        );
+
+        $this->emailService->sendEmailVerification(
+            $userEmail,
+            $userFirstName,
+            $verificationUrl
+        );
+    }
+
 
     /**
      * @throws TransportExceptionInterface

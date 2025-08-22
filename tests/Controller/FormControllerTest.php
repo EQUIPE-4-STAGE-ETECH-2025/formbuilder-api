@@ -414,7 +414,11 @@ class FormControllerTest extends WebTestCase
 
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
 
-        return $responseData['token'];
+        if (! isset($responseData['success']) || ! $responseData['success'] || ! isset($responseData['data']['token'])) {
+            throw new \RuntimeException('Échec de la connexion: ' . json_encode($responseData));
+        }
+
+        return $responseData['data']['token'];
     }
 
     private function removeUserIfExists(string $email): void

@@ -282,7 +282,11 @@ class QuotaControllerTest extends WebTestCase
 
         $data = json_decode($response->getContent() ?: '', true);
 
-        return $data['token'];
+        if (! isset($data['success']) || ! $data['success'] || ! isset($data['data']['token'])) {
+            throw new \RuntimeException('Échec de la connexion: ' . json_encode($data));
+        }
+
+        return $data['data']['token'];
     }
 
     private function cleanupUser(User $user): void

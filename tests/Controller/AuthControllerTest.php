@@ -55,8 +55,9 @@ class AuthControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('token', $data);
-        $this->assertEquals($email, $data['user']['email']);
+        $this->assertArrayHasKey('data', $data);
+        $this->assertArrayHasKey('token', $data['data']);
+        $this->assertEquals($email, $data['data']['user']['email']);
     }
 
     public function testLoginValidationError(): void
@@ -76,9 +77,9 @@ class AuthControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(422);
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('errors', $data);
-        $this->assertArrayHasKey('email', $data['errors']);
-        $this->assertArrayHasKey('password', $data['errors']);
+        $this->assertArrayHasKey('error', $data);
+        $this->assertArrayHasKey('email', $data['error']);
+        $this->assertArrayHasKey('password', $data['error']);
     }
 
     public function testMeEndpointReturnsUser(): void
@@ -111,7 +112,7 @@ class AuthControllerTest extends WebTestCase
         );
 
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
-        $token = $responseData['token'];
+        $token = $responseData['data']['token'];
 
         // Test de l'endpoint /me
         $this->client->request(
@@ -158,7 +159,7 @@ class AuthControllerTest extends WebTestCase
         );
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
-        $token = $data['token'];
+        $token = $data['data']['token'];
 
         // Test de logout
         $this->client->request(
@@ -208,7 +209,6 @@ class AuthControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
 
         $this->assertArrayHasKey('user', $data);
-        $this->assertArrayHasKey('token', $data);
         $this->assertEquals($email, $data['user']['email']);
         $this->assertFalse($data['user']['isEmailVerified']);
     }
@@ -264,7 +264,7 @@ class AuthControllerTest extends WebTestCase
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'type' => 'email_verification',
-        ], 3600);
+        ]);
 
         $this->client->request('GET', '/api/auth/verify-email?token=' . $verificationToken);
 
@@ -365,7 +365,7 @@ class AuthControllerTest extends WebTestCase
             'id' => $user->getId(),
             'email' => $user->getEmail(),
             'type' => 'password_reset',
-        ], 3600);
+        ]);
 
         $newPassword = 'NewStrongPass456!';
 
