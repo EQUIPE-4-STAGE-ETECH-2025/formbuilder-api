@@ -220,7 +220,7 @@ class QuotaControllerTest extends WebTestCase
         $subscription->setStripeSubscriptionId('sub_test_' . uniqid());
         $subscription->setStartDate(new \DateTime('2024-01-01'));
         $subscription->setEndDate(new \DateTime('2024-12-31'));
-        $subscription->setIsActive(true);
+        $subscription->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->removeUserIfExists($email);
         $this->em->persist($plan);
