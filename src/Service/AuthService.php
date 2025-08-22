@@ -264,12 +264,12 @@ class AuthService
         $user->setUpdatedAt(new DateTimeImmutable());
 
         $this->userRepository->save($user, true);
-
+        
         if (isset($payload->exp)) {
-            $this->jwtService->blacklistToken(new BlackListedTokenDto(
-                token: $token,
-                expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
-            ));
-        }
+        $this->jwtService->blacklistToken(new BlackListedTokenDto(
+            token: $token,
+            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+        ));
+    }
     }
 }
