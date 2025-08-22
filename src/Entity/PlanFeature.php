@@ -23,9 +23,6 @@ class PlanFeature
     #[Assert\NotNull(message: 'La fonctionnalité est obligatoire')]
     private ?Feature $feature = null;
 
-    
-    #[ORM\Column(type: 'integer', nullable: true)]
-    private ?int $limitValue = null;
 
     public function getId(): ?string
     {
