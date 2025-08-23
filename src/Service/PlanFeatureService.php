@@ -51,22 +51,28 @@ class PlanFeatureService
     }
 
     /**
-     * Dans notre cas actuel, on retourne juste null car il n'y a pas de limite
-     * spécifique stockée par fonctionnalité.
+     * Retourne la limite associée à une fonctionnalité du plan.
      */
     public function getLimit(string $planId, string $featureCode): ?int
     {
         $plan = $this->findPlanOrFail($planId);
 
         foreach ($plan->getPlanFeatures() as $planFeature) {
-            if (strtolower($planFeature->getFeature()->getCode()) === strtolower($featureCode)) {
-                return $planFeature->getLimitValue(); // retourne la limite ou null
+            $featureCodeLower = strtolower($planFeature->getFeature()->getCode());
+
+            if ($featureCodeLower === strtolower($featureCode)) {
+                // On mappe les codes des features aux champs du plan
+                return match ($featureCodeLower) {
+                    'max_forms' => $plan->getMaxForms(),
+                    'max_submissions_per_month' => $plan->getMaxSubmissionsPerMonth(),
+                    'max_storage_mb' => $plan->getMaxStorageMb(),
+                    default => null,
+                };
             }
         }
 
-        return null; 
+        return null;
     }
-
 
     /**
      * Trouve un plan ou lance une exception 404.
@@ -82,6 +88,3 @@ class PlanFeatureService
         return $plan;
     }
 }
-
-
-
