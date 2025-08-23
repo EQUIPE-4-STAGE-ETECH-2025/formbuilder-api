@@ -30,10 +30,13 @@ class AdminControllerTest extends WebTestCase
 
     public function testListUsers(): void
     {
+        // Générer un email unique
+        $uniqueEmail = 'admin+' . uniqid() . '@example.com';
+
         $user = new User();
         $user->setFirstName('Jane');
         $user->setLastName('Doe');
-        $user->setEmail('admin@example.com');
+        $user->setEmail($uniqueEmail);
         $user->setPasswordHash(password_hash('secret', PASSWORD_BCRYPT));
         $user->setRole('ADMIN');
 
@@ -57,16 +60,20 @@ class AdminControllerTest extends WebTestCase
             $response->getContent()
         );
 
+        // Nettoyer
         $this->em->remove($user);
         $this->em->flush();
     }
 
     public function testStats(): void
     {
+        // Générer un email unique
+        $uniqueEmail = 'admin+' . uniqid() . '@example.com';
+
         $user = new User();
         $user->setFirstName('Jane');
         $user->setLastName('Doe');
-        $user->setEmail('admin@example.com');
+        $user->setEmail($uniqueEmail);
         $user->setPasswordHash(password_hash('secret', PASSWORD_BCRYPT));
         $user->setRole('ADMIN');
 
@@ -98,6 +105,7 @@ class AdminControllerTest extends WebTestCase
             $response->getContent()
         );
 
+        // Nettoyer
         $this->em->remove($user);
         $this->em->flush();
     }

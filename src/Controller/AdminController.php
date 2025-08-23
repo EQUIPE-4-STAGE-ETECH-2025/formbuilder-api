@@ -14,7 +14,7 @@ class AdminController extends AbstractController
     {
     }
 
-    #[Route('/api/admin/users', name: 'list_users', methods: ['GET'])]
+    #[Route('/api/admin/users', name: 'admin_list_users', methods: ['GET'])]
     public function listUsers(): JsonResponse
     {
         $users = $this->adminService->listUsers();
