@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Doctrine\Common\Collections\ArrayCollection;
 
-
 class PlanFeatureServiceTest extends TestCase
 {
     private $planRepository;
@@ -82,35 +81,34 @@ class PlanFeatureServiceTest extends TestCase
     public function testGetLimitReturnsValue()
     {
         $feature = $this->createMock(Feature::class);
-        $feature->method('getCode')->willReturn('FEATURE_CODE');
+        $feature->method('getCode')->willReturn('max_forms');
 
         $planFeature = $this->createMock(PlanFeature::class);
         $planFeature->method('getFeature')->willReturn($feature);
-        $planFeature->method('getLimitValue')->willReturn(10);
 
         $plan = $this->createMock(Plan::class);
         $plan->method('getPlanFeatures')->willReturn(new ArrayCollection([$planFeature]));
+        $plan->method('getMaxForms')->willReturn(10);
 
         $this->planRepository->method('find')->willReturn($plan);
 
-        $this->assertEquals(10, $this->service->getLimit('plan-id', 'FEATURE_CODE'));
+        $this->assertEquals(10, $this->service->getLimit('plan-id', 'max_forms'));
     }
 
     public function testGetLimitReturnsNull()
     {
         $feature = $this->createMock(Feature::class);
-        $feature->method('getCode')->willReturn('OTHER_CODE');
+        $feature->method('getCode')->willReturn('unknown_feature');
 
         $planFeature = $this->createMock(PlanFeature::class);
         $planFeature->method('getFeature')->willReturn($feature);
-        $planFeature->method('getLimitValue')->willReturn(null);
 
         $plan = $this->createMock(Plan::class);
         $plan->method('getPlanFeatures')->willReturn(new ArrayCollection([$planFeature]));
 
         $this->planRepository->method('find')->willReturn($plan);
 
-        $this->assertNull($this->service->getLimit('plan-id', 'FEATURE_CODE'));
+        $this->assertNull($this->service->getLimit('plan-id', 'unknown_feature'));
     }
 
     public function testGetFeaturesThrowsNotFoundException()
