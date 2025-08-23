@@ -129,7 +129,7 @@ class QuotaService
     {
         return $this->subscriptionRepository->findOneBy([
             'user' => $user,
-            'isActive' => true,
+            'status' => \App\Entity\Subscription::STATUS_ACTIVE,
         ]);
     }
 }
