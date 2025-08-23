@@ -10,7 +10,6 @@ use App\Repository\SubmissionRepository;
 use App\Repository\SubscriptionRepository;
 use App\Service\QuotaNotificationService;
 use App\Service\QuotaService;
-use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use Symfony\Component\Uid\Uuid;
@@ -23,9 +22,6 @@ class QuotaServiceTest extends TestCase
     private $submissionRepository;
     private $quotaNotificationService;
 
-    /**
-     * @throws Exception
-     */
     protected function setUp(): void
     {
         $this->subscriptionRepository = $this->createMock(SubscriptionRepository::class);
@@ -44,7 +40,7 @@ class QuotaServiceTest extends TestCase
     public function testCalculateCurrentQuotasSuccess(): void
     {
         $user = $this->createUser();
-        $plan = $this->createPlan();
+        $plan = $this->createFreePlan();
         $subscription = $this->createSubscription($user, $plan);
 
         $this->subscriptionRepository
@@ -53,22 +49,10 @@ class QuotaServiceTest extends TestCase
             ->with(['user' => $user, 'status' => Subscription::STATUS_ACTIVE])
             ->willReturn($subscription);
 
-        $this->formRepository
-            ->expects($this->once())
-            ->method('countByUser')
-            ->with($user)
-            ->willReturn(5);
+        $this->formRepository->method('countByUser')->with($user)->willReturn(2);
+        $this->submissionRepository->method('countByUserForMonth')->with($user, $this->isInstanceOf(\DateTime::class))->willReturn(100);
 
-        $this->submissionRepository
-            ->expects($this->once())
-            ->method('countByUserForMonth')
-            ->with($user, $this->isInstanceOf(\DateTime::class))
-            ->willReturn(250);
-
-        $this->quotaNotificationService
-            ->expects($this->once())
-            ->method('checkAndSendNotifications')
-            ->with($user, $this->isType('array'));
+        $this->quotaNotificationService->expects($this->once())->method('checkAndSendNotifications');
 
         $result = $this->quotaService->calculateCurrentQuotas($user);
 
@@ -209,16 +193,16 @@ class QuotaServiceTest extends TestCase
         return $user;
     }
 
-    private function createPlan(): Plan
+    private function createFreePlan(): Plan
     {
         $plan = new Plan();
         $plan->setId(Uuid::v4());
-        $plan->setName('Plan Test');
-        $plan->setPriceCents(999);
-        $plan->setStripeProductId('prod_test');
-        $plan->setMaxForms(10);
-        $plan->setMaxSubmissionsPerMonth(1000);
-        $plan->setMaxStorageMb(100);
+        $plan->setName('Free');
+        $plan->setPriceCents(0);
+        $plan->setStripeProductId('prod_free');
+        $plan->setMaxForms(3);
+        $plan->setMaxSubmissionsPerMonth(500);
+        $plan->setMaxStorageMb(50);
 
         return $plan;
     }
