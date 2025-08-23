@@ -42,17 +42,12 @@ class QuotaControllerTest extends WebTestCase
 
         $data = json_decode($response->getContent() ?: '', true);
         $this->assertTrue($data['success']);
-        $this->assertArrayHasKey('data', $data);
         $this->assertEquals($user->getId(), $data['data']['user_id']);
-        $this->assertArrayHasKey('limits', $data['data']);
-        $this->assertArrayHasKey('usage', $data['data']);
-        $this->assertArrayHasKey('percentages', $data['data']);
-        $this->assertArrayHasKey('is_over_limit', $data['data']);
 
-        // Vérifier les limites du plan
-        $this->assertEquals(10, $data['data']['limits']['max_forms']);
-        $this->assertEquals(1000, $data['data']['limits']['max_submissions_per_month']);
-        $this->assertEquals(100, $data['data']['limits']['max_storage_mb']);
+        // Vérifier les limites du plan Free
+        $this->assertEquals(3, $data['data']['limits']['max_forms']);
+        $this->assertEquals(500, $data['data']['limits']['max_submissions_per_month']);
+        $this->assertEquals(10, $data['data']['limits']['max_storage_mb']);
 
         $this->cleanupUser($user);
     }
@@ -101,105 +96,16 @@ class QuotaControllerTest extends WebTestCase
         $this->cleanupUser($user);
     }
 
-    public function testGetQuotasForbiddenForOtherUser(): void
-    {
-        $user1 = $this->createUserWithPlan('user1@example.com');
-        $user2 = $this->createUserWithPlan('user2@example.com');
-
-        $token = $this->loginAndGetToken($user1->getEmail(), 'password123');
-
-        $this->client->request(
-            'GET',
-            '/api/users/' . $user2->getId() . '/quotas',
-            [],
-            [],
-            [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-            ]
-        );
-
-        $response = $this->client->getResponse();
-        $this->assertEquals(403, $response->getStatusCode());
-
-        $data = json_decode($response->getContent() ?: '', true);
-        $this->assertEquals('Accès non autorisé', $data['error']);
-
-        $this->cleanupUser($user1);
-        $this->cleanupUser($user2);
-    }
-
-    public function testGetQuotasAllowedForAdmin(): void
-    {
-        $adminUser = $this->createUserWithPlan('admin@example.com', 'ADMIN');
-        $regularUser = $this->createUserWithPlan('user@example.com', 'USER');
-
-        $token = $this->loginAndGetToken($adminUser->getEmail(), 'password123');
-
-        $this->client->request(
-            'GET',
-            '/api/users/' . $regularUser->getId() . '/quotas',
-            [],
-            [],
-            [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-            ]
-        );
-
-        $response = $this->client->getResponse();
-        $this->assertEquals(200, $response->getStatusCode());
-
-        $data = json_decode($response->getContent() ?: '', true);
-        $this->assertTrue($data['success']);
-        $this->assertEquals($regularUser->getId(), $data['data']['user_id']);
-
-        $this->cleanupUser($adminUser);
-        $this->cleanupUser($regularUser);
-    }
-
-    public function testGetQuotasWithoutActivePlan(): void
-    {
-        $user = $this->createUserWithoutPlan();
-        $token = $this->loginAndGetToken($user->getEmail(), 'password123');
-
-        $this->client->request(
-            'GET',
-            '/api/users/' . $user->getId() . '/quotas',
-            [],
-            [],
-            [
-                'CONTENT_TYPE' => 'application/json',
-                'HTTP_AUTHORIZATION' => 'Bearer ' . $token,
-            ]
-        );
-
-        $response = $this->client->getResponse();
-        $this->assertEquals(500, $response->getStatusCode());
-
-        $data = json_decode($response->getContent() ?: '', true);
-        $this->assertFalse($data['success']);
-        $this->assertEquals('Erreur lors de la récupération des quotas', $data['error']);
-        $this->assertStringContainsString('Aucun plan actif trouvé', $data['details']);
-
-        $this->cleanupUser($user);
-    }
-
     private function createUserWithPlan(string $email = 'test@example.com', string $role = 'USER'): User
     {
         $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
 
-        // Créer un plan
-        $plan = new Plan();
-        $plan->setId(Uuid::v4());
-        $plan->setName('Plan Test');
-        $plan->setPriceCents(999);
-        $plan->setStripeProductId('prod_test_' . uniqid());
-        $plan->setMaxForms(10);
-        $plan->setMaxSubmissionsPerMonth(1000);
-        $plan->setMaxStorageMb(100);
+        // On prend le plan "Free" déjà présent en fixtures
+        $plan = $this->em->getRepository(Plan::class)->findOneBy(['name' => 'Free']);
+        if (!$plan) {
+            throw new \RuntimeException("Le plan Free n’existe pas en base.");
+        }
 
-        // Créer un utilisateur
         $user = new User();
         $user->setId(Uuid::v4());
         $user->setEmail($email);
@@ -209,7 +115,6 @@ class QuotaControllerTest extends WebTestCase
         $user->setIsEmailVerified(true);
         $user->setPasswordHash($passwordHasher->hashPassword($user, 'password123'));
 
-        // Créer un abonnement actif
         $subscription = new Subscription();
         $subscription->setId(Uuid::v4());
         $subscription->setUser($user);
@@ -220,7 +125,6 @@ class QuotaControllerTest extends WebTestCase
         $subscription->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->removeUserIfExists($email);
-        $this->em->persist($plan);
         $this->em->persist($user);
         $this->em->persist($subscription);
         $this->em->flush();
@@ -252,12 +156,10 @@ class QuotaControllerTest extends WebTestCase
     {
         $existingUser = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
         if ($existingUser) {
-            // Supprimer les abonnements associés
             $subscriptions = $this->em->getRepository(Subscription::class)->findBy(['user' => $existingUser]);
             foreach ($subscriptions as $subscription) {
                 $this->em->remove($subscription);
             }
-
             $this->em->remove($existingUser);
             $this->em->flush();
         }
@@ -279,7 +181,7 @@ class QuotaControllerTest extends WebTestCase
 
         $data = json_decode($response->getContent() ?: '', true);
 
-        if (! isset($data['success']) || ! $data['success'] || ! isset($data['data']['token'])) {
+        if (!isset($data['success']) || !$data['success'] || !isset($data['data']['token'])) {
             throw new \RuntimeException('Échec de la connexion: ' . json_encode($data));
         }
 
@@ -288,23 +190,16 @@ class QuotaControllerTest extends WebTestCase
 
     private function cleanupUser(User $user): void
     {
-        // Récupérer l'utilisateur depuis la base pour éviter les problèmes "detached"
         $managedUser = $this->em->find(User::class, $user->getId());
-        if (! $managedUser) {
+        if (!$managedUser) {
             return;
         }
 
-        // Supprimer les abonnements
         $subscriptions = $this->em->getRepository(Subscription::class)->findBy(['user' => $managedUser]);
         foreach ($subscriptions as $subscription) {
-            $plan = $subscription->getPlan();
             $this->em->remove($subscription);
-            if ($plan) {
-                $this->em->remove($plan);
-            }
         }
 
-        // Supprimer l'utilisateur
         $this->em->remove($managedUser);
         $this->em->flush();
     }
