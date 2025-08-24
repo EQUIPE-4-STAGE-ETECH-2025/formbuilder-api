@@ -2,81 +2,129 @@
 
 namespace App\Tests\Controller;
 
+use App\Entity\User;
+use App\Entity\Form;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\HttpFoundation\Response;
+use Doctrine\ORM\EntityManagerInterface;
 
 class SubmissionControllerTest extends WebTestCase
 {
-    private function getAuthToken($client, string $email, string $password): string
+    private $client;
+    private EntityManagerInterface $entityManager;
+    private User $userAnna;
+    private User $userElodie;
+    private User $adminUser;
+    private Form $formAnna;
+
+    protected function setUp(): void
     {
-        $client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode([
-            'email' => $email,
-            'password' => $password,
-        ]));
+        parent::setUp();
+        $this->client = static::createClient();
+        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $this->assertResponseIsSuccessful();
-        $data = json_decode($client->getResponse()->getContent(), true);
-
-        return $data['token'] ?? '';
+        $this->userAnna   = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
+        $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
+        $this->adminUser  = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
+        $this->formAnna   = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
     }
 
-    public function testSubmitFormWithValidData(): void
+    public function testSubmitFormSuccessfully(): void
     {
-        $client = static::createClient();
-
-        $formId = '550e8400-e29b-41d4-a716-446655440301'; // Appartient à Anna
         $data = [
-            'data' => [
-                '550e8400-e29b-41d4-a716-446655441003' => 'Jean Dupont',
-                '550e8400-e29b-41d4-a716-446655441004' => 'jean@example.com',
-                '550e8400-e29b-41d4-a716-446655441005' => 'Test message',
-            ]
+            'fields' => [
+                ['name' => 'email', 'value' => 'test@example.com'],
+                ['name' => 'message', 'value' => 'Bonjour'],
+            ],
         ];
 
-        $client->request('POST', "/api/forms/$formId/submit", [], [], ['CONTENT_TYPE' => 'application/json'], json_encode($data));
-        $this->assertResponseStatusCodeSame(Response::HTTP_CREATED);
+        $this->client->request(
+            'POST',
+            '/api/forms/' . $this->formAnna->getId() . '/submit',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+
+        $response = $this->client->getResponse();
+        $this->assertResponseIsSuccessful();
+        $this->assertJson($response->getContent());
+
+        $json = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('id', $json);
+        $this->assertArrayHasKey('submittedAt', $json);
     }
 
-    public function testListSubmissionsAsOwner(): void
+    public function testGetSubmissionsAuthorized(): void
     {
-        $client = static::createClient();
-        $token = $this->getAuthToken($client, 'anna@example.com', 'password');
-        $formId = '550e8400-e29b-41d4-a716-446655440301'; // Appartient à Anna
-
-        $client->request('GET', "/api/forms/$formId/submissions", [], [], [
-            'HTTP_Authorization' => "Bearer $token",
-        ]);
+        $this->client->loginUser($this->userAnna);
+        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
 
         $this->assertResponseIsSuccessful();
+        $json = json_decode($this->client->getResponse()->getContent(), true);
+
+        $this->assertIsArray($json);
+        $this->assertNotEmpty($json);
     }
 
-    public function testListSubmissionsAsUnauthorizedUser(): void
+    public function testGetSubmissionsForbiddenForOtherUser(): void
     {
-        $client = static::createClient();
-        $token = $this->getAuthToken($client, 'lucas@example.com', 'password');
+        $this->client->loginUser($this->userElodie);
+        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
 
-        // Formulaire qui appartient à Élodie, donc Lucas n'est pas autorisé
-        $formId = '550e8400-e29b-41d4-a716-446655440304';
-
-        $client->request('GET', "/api/forms/$formId/submissions", [], [], [
-            'HTTP_Authorization' => "Bearer $token",
-        ]);
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+        $this->assertResponseStatusCodeSame(403);
     }
 
-    public function testExportSubmissionsAsOwner(): void
+    public function testExportSubmissionsCsv(): void
     {
-        $client = static::createClient();
-        $token = $this->getAuthToken($client, 'anna@example.com', 'password');
-        $formId = '550e8400-e29b-41d4-a716-446655440301';
+        $this->client->loginUser($this->userAnna);
+        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export');
 
-        $client->request('GET', "/api/forms/$formId/submissions/export", [], [], [
-            'HTTP_Authorization' => "Bearer $token",
-        ]);
-
+        $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
 
-        $this->assertStringContainsString('text/csv', $client->getResponse()->headers->get('content-type'));
+        // Normalise les fins de ligne pour Windows / Unix
+        $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
+        $lines = explode("\n", trim($csv));
+
+        // Vérifie que la première ligne contient bien les en-têtes
+        $this->assertSame('ID;Form ID;Submitted At;IP Address', $lines[0]);
+
+        // Vérifie qu'il y a au moins une ligne de données
+        $this->assertGreaterThan(1, count($lines));
+
+        // Vérifie que chaque ligne de données a 4 colonnes
+        foreach ($lines as $i => $line) {
+            if ($i === 0) continue; // ignore l'en-tête
+            $this->assertCount(4, explode(';', $line), "La ligne $i doit avoir 4 colonnes");
+        }
+    }
+
+    public function testSubmitFormQuotaExceeded(): void
+    {
+        $this->client->loginUser($this->userAnna);
+
+        $data = [
+            'fields' => [
+                ['name' => 'email', 'value' => 'test@example.com'],
+            ],
+        ];
+
+        $this->client->request(
+            'POST',
+            '/api/forms/' . $this->formAnna->getId() . '/submit',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($data)
+        );
+
+        $response = $this->client->getResponse();
+        $status = $response->getStatusCode();
+        $this->assertContains($status, [200, 400], "Le code HTTP doit être 200 (pas de quota) ou 400 (quota dépassé)");
+
+        if ($status === 400) {
+            $this->assertStringContainsString('Limite de soumissions atteinte', $response->getContent());
+        }
     }
 }

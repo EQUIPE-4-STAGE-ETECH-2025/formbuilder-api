@@ -3,88 +3,99 @@
 namespace App\Controller;
 
 use App\Dto\SubmitFormDto;
-use App\Dto\SubmissionResponseDto;
-use App\Repository\FormRepository;
-use App\Repository\SubmissionRepository;
-use App\Service\SubmissionExportService;
+use App\Entity\Form;
 use App\Service\SubmissionService;
-use App\Security\FormVoter;
+use App\Service\SubmissionExportService;
+use App\Service\AuthorizationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpFoundation\Response;
 
+#[Route('/api/forms')]
 class SubmissionController extends AbstractController
 {
     public function __construct(
-        private SubmissionService $submissionService,
-        private SubmissionExportService $exportService,
-        private FormRepository $formRepository,
-        private SubmissionRepository $submissionRepository
+        private readonly SubmissionService $submissionService,
+        private readonly SubmissionExportService $submissionExportService,
+        private readonly AuthorizationService $authorizationService,
     ) {}
 
-    #[Route('/api/forms/{id}/submit', name: 'submit_form', methods: ['POST'])]
-    public function submit(string $id, Request $request): JsonResponse
+    #[Route('/{id}/submit', name: 'submit_form', methods: ['POST'])]
+    public function submitForm(Request $request, string $id): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $dto = new SubmitFormDto($data['data'] ?? []);
+        $form = $this->submissionService->getFormById($id);
+        if (! $form) {
+            throw new NotFoundHttpException('Formulaire introuvable.');
+        }
 
-        $ipAddress = $request->getClientIp() ?? '0.0.0.0';
-        $submission = $this->submissionService->submit($id, $dto, $ipAddress);
+        $data = json_decode($request->getContent(), true);
+        $dto = new SubmitFormDto($data);
+
+        $user = $this->getUser(); // null si non authentifié
+
+        $submission = $this->submissionService->submitForm($form, $dto->getData(), $user, $request->getClientIp());
 
         return $this->json([
-            'message' => 'Soumission enregistrée avec succès.',
-            'data' => (new SubmissionResponseDto($submission))->toArray(),
-        ], Response::HTTP_CREATED);
+            'id' => $submission->getId(),
+            'formId' => $submission->getForm()?->getId(),
+            'data' => $submission->getData(),
+            'submittedAt' => $submission->getSubmittedAt()?->format('c'),
+            'ipAddress' => $submission->getIpAddress(),
+        ]);
     }
 
-    #[Route('/api/forms/{id}/submissions', name: 'get_form_submissions', methods: ['GET'])]
-    #[IsGranted('ROLE_USER')]
-    public function list(string $id, Request $request): JsonResponse
+    #[Route('/{id}/submissions', name: 'list_submissions', methods: ['GET'])]
+    public function listSubmissions(string $id): JsonResponse
     {
-        $form = $this->formRepository->find($id);
-        if (!$form) {
-            return $this->json(['error' => 'Formulaire introuvable.'], Response::HTTP_NOT_FOUND);
+        $form = $this->submissionService->getFormById($id);
+        if (! $form) {
+            throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
-        // Vérifie l'accès via Voter
-        $this->denyAccessUnlessGranted(FormVoter::VIEW_SUBMISSIONS, $form);
+        $user = $this->getUser();
+        if (! $this->authorizationService->canAccessForm($user, $form)) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
 
-        $limit = (int) $request->query->get('limit', 20);
-        $offset = (int) $request->query->get('offset', 0);
+        $submissions = $this->submissionService->getFormSubmissions($form);
 
-        $submissions = $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC'], $limit, $offset);
-        $dtos = array_map(fn($s) => (new SubmissionResponseDto($s))->toArray(), $submissions);
+        $result = array_map(fn($s) => [
+            'id' => $s->getId(),
+            'formId' => $s->getForm()?->getId(),
+            'data' => $s->getData(),
+            'submittedAt' => $s->getSubmittedAt()?->format('c'),
+            'ipAddress' => $s->getIpAddress(),
+        ], $submissions);
 
-        return $this->json($dtos);
+        return $this->json($result);
     }
 
-    #[Route('/api/forms/{id}/submissions/export', name: 'export_form_submissions', methods: ['GET'])]
-    #[IsGranted('ROLE_USER')]
-    public function export(string $id, Request $request): Response
+    #[Route('/{id}/submissions/export', name: 'export_submissions', methods: ['GET'])]
+    public function exportSubmissions(string $id): Response
     {
-        $form = $this->formRepository->find($id);
-        if (!$form) {
-            return $this->json(['error' => 'Formulaire introuvable.'], Response::HTTP_NOT_FOUND);
+        $form = $this->submissionService->getFormById($id);
+        if (! $form) {
+            throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
-        // Vérifie l’accès via Voter
-        $this->denyAccessUnlessGranted(FormVoter::EXPORT_SUBMISSIONS, $form);
+        $user = $this->getUser();
+        if (! $this->authorizationService->canAccessForm($user, $form)) {
+            return $this->json(['error' => 'Accès refusé'], 403);
+        }
 
-        $limit = $request->query->getInt('limit', 1000);
-        $offset = $request->query->getInt('offset', 0);
-
-        $csv = $this->exportService->exportFormSubmissionsToCsv($form, $this->getUser(), $limit, $offset);
+        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $this->getUser());
 
         return new Response(
-            $csv,
-            Response::HTTP_OK,
+            $csvContent,
+            200,
             [
                 'Content-Type' => 'text/csv',
                 'Content-Disposition' => 'attachment; filename="submissions.csv"',
             ]
         );
+
     }
 }

@@ -16,16 +16,15 @@ class SubmissionExportDto
 
     public function __construct(Submission $submission)
     {
-        $this->id = $submission->getId() ?? '';
-        $this->formId = $submission->getForm()?->getId() ?? '';
+        $this->id = (string) $submission->getId();
+        $this->formId = (string) ($submission->getForm()?->getId() ?? '');
         $this->submittedAt = $submission->getSubmittedAt()?->format('Y-m-d H:i:s') ?? '';
         $this->ipAddress = $submission->getIpAddress() ?? '';
-        $this->data = $submission->getData();
+        $this->data = $submission->getData() ?? [];
     }
 
     /**
      * Retourne une ligne CSV à partir des champs fixes + dynamiques.
-     * L'ordre des colonnes dynamiques est à gérer dans l’export global.
      *
      * @param string[] $fieldOrder Ordre des clés dynamiques à afficher
      * @return string[]
@@ -39,10 +38,10 @@ class SubmissionExportDto
             $this->ipAddress,
         ];
 
-        foreach ($fieldOrder as $field) {
-            $value = $this->data[$field] ?? '';
-            // on nettoie les sauts de ligne, tabulations, etc.
-            $row[] = is_scalar($value) ? str_replace(["\n", "\r", "\t"], ' ', (string) $value) : json_encode($value);
+        foreach ($fieldOrder as $fieldName) {
+            $value = $this->data[$fieldName] ?? '';
+            $value = str_replace("\n", ' ', $value); // supprime les sauts de ligne
+            $row[] = (string) $value;
         }
 
         return $row;

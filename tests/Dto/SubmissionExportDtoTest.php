@@ -6,6 +6,7 @@ use App\Dto\SubmissionExportDto;
 use App\Entity\Form;
 use App\Entity\Submission;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Uid\Uuid;
 
 class SubmissionExportDtoTest extends TestCase
 {
@@ -15,13 +16,13 @@ class SubmissionExportDtoTest extends TestCase
         $formReflection = new \ReflectionClass($form);
         $formIdProp = $formReflection->getProperty('id');
         $formIdProp->setAccessible(true);
-        $formIdProp->setValue($form, 'form-001');
+        $formIdProp->setValue($form, Uuid::fromString('550e8400-e29b-41d4-a716-446655440001'));
 
         $submission = new Submission();
         $submissionReflection = new \ReflectionClass($submission);
         $subIdProp = $submissionReflection->getProperty('id');
         $subIdProp->setAccessible(true);
-        $subIdProp->setValue($submission, 'sub-123');
+        $subIdProp->setValue($submission, Uuid::fromString('550e8400-e29b-41d4-a716-446655440002'));
 
         $submission->setForm($form);
         $submission->setIpAddress('192.168.0.1');
@@ -36,8 +37,8 @@ class SubmissionExportDtoTest extends TestCase
         $row = $dto->toCsvRow(['name', 'email', 'message']);
 
         $expected = [
-            'sub-123',
-            'form-001',
+            '550e8400-e29b-41d4-a716-446655440002', // submission id
+            '550e8400-e29b-41d4-a716-446655440001', // form id
             '2025-07-30 12:00:00',
             '192.168.0.1',
             'Alice',
