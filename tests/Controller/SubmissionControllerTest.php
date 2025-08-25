@@ -130,13 +130,17 @@ class SubmissionControllerTest extends WebTestCase
         $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?limit=-1');
         $this->assertResponseStatusCodeSame(400);
         $response = $this->client->getResponse();
-        $this->assertStringContainsString('Le paramètre limit doit être un entier positif', $response->getContent());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertStringContainsString('Le paramètre limit doit être un entier positif', $responseData['error']);
 
         // Test avec offset négatif
         $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?offset=-1');
         $this->assertResponseStatusCodeSame(400);
         $response = $this->client->getResponse();
-        $this->assertStringContainsString('Le paramètre offset doit être un entier positif ou nul', $response->getContent());
+        $responseData = json_decode($response->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertStringContainsString('Le paramètre offset doit être un entier positif ou nul', $responseData['error']);
     }
 
     public function testExportSubmissionsCsvFilename(): void
@@ -178,7 +182,9 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertContains($status, [200, 400], "Le code HTTP doit être 200 (pas de quota) ou 400 (quota dépassé)");
 
         if ($status === 400) {
-            $this->assertStringContainsString('Limite de soumissions atteinte', $response->getContent());
+            $responseData = json_decode($response->getContent(), true);
+            $this->assertArrayHasKey('error', $responseData);
+            $this->assertStringContainsString('Limite de soumissions atteinte', $responseData['error']);
         }
     }
 }
