@@ -20,9 +20,10 @@ class FormSchemaValidatorService
 
     /**
      * @param array<string, mixed> $schema
+     * @param array<string, mixed>|null $submissionData
      * @throws \InvalidArgumentException
      */
-    public function validateSchema(array $schema): void
+    public function validateSchema(array $schema, ?array $submissionData = null): void
     {
         try {
             $this->logger->debug('Validation du schéma de formulaire');
@@ -38,6 +39,11 @@ class FormSchemaValidatorService
             // Validation des paramètres globaux
             if (isset($schema['settings']) && is_array($schema['settings'])) {
                 $this->validateSettings($schema['settings']);
+            }
+
+            // Validation des données de soumission si fournies
+            if ($submissionData !== null && isset($schema['fields']) && is_array($schema['fields'])) {
+                $this->validateSubmissionData($schema['fields'], $submissionData);
             }
 
             $this->logger->debug('Schéma de formulaire valide');
@@ -349,6 +355,122 @@ class FormSchemaValidatorService
                 }
 
                 break;
+        }
+    }
+
+    /**
+     * @param array<int, mixed> $fields
+     * @param array<string, mixed> $submissionData
+     */
+    private function validateSubmissionData(array $fields, array $submissionData): void
+    {
+        foreach ($fields as $field) {
+            if (! is_array($field) || ! isset($field['id'])) {
+                continue;
+            }
+
+            $fieldId = $field['id'];
+            $fieldType = $field['type'] ?? 'text';
+            $isRequired = $field['required'] ?? false;
+            $fieldValue = $submissionData[$fieldId] ?? null;
+
+            // Vérification des champs obligatoires
+            if ($isRequired && ($fieldValue === null || $fieldValue === '')) {
+                throw new \InvalidArgumentException("Le champ '{$field['label']}' est obligatoire");
+            }
+
+            // Validation spécifique par type de champ
+            if ($fieldValue !== null && $fieldValue !== '') {
+                $this->validateFieldValue($fieldType, $fieldValue, $field);
+            }
+        }
+    }
+
+    /**
+     * @param mixed $value
+     * @param array<string, mixed> $field
+     */
+    private function validateFieldValue(string $type, $value, array $field): void
+    {
+        switch ($type) {
+            case 'email':
+                if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    throw new \InvalidArgumentException('Email invalide');
+                }
+
+                break;
+
+            case 'number':
+                if (! is_numeric($value)) {
+                    throw new \InvalidArgumentException('Valeur numérique invalide');
+                }
+
+                break;
+
+            case 'url':
+                if (! filter_var($value, FILTER_VALIDATE_URL)) {
+                    throw new \InvalidArgumentException('URL invalide');
+                }
+
+                break;
+
+            case 'date':
+                if (! strtotime($value)) {
+                    throw new \InvalidArgumentException('Date invalide');
+                }
+
+                break;
+        }
+
+        // Validation des règles personnalisées
+        if (isset($field['validation']) && is_array($field['validation'])) {
+            $this->validateFieldWithRules($value, $field['validation'], $field['label'] ?? 'Champ');
+        }
+    }
+
+    /**
+     * @param mixed $value
+     * @param array<string, mixed> $rules
+     */
+    private function validateFieldWithRules($value, array $rules, string $fieldLabel): void
+    {
+        foreach ($rules as $rule => $ruleValue) {
+            switch ($rule) {
+                case 'minLength':
+                    if (is_string($value) && strlen($value) < $ruleValue) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldLabel}' doit contenir au moins {$ruleValue} caractères");
+                    }
+
+                    break;
+
+                case 'maxLength':
+                    if (is_string($value) && strlen($value) > $ruleValue) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldLabel}' ne peut pas dépasser {$ruleValue} caractères");
+                    }
+
+                    break;
+
+                case 'min':
+                    if (is_numeric($value) && $value < $ruleValue) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldLabel}' doit être supérieur ou égal à {$ruleValue}");
+                    }
+
+                    break;
+
+                case 'max':
+                    if (is_numeric($value) && $value > $ruleValue) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldLabel}' doit être inférieur ou égal à {$ruleValue}");
+                    }
+
+                    break;
+
+                case 'pattern':
+                    if (is_string($value) && ! preg_match($ruleValue, $value)) {
+                        throw new \InvalidArgumentException("Le champ '{$fieldLabel}' ne respecte pas le format requis");
+                    }
+
+                    break;
+            }
         }
     }
 }

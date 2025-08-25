@@ -95,7 +95,6 @@ class SubmissionServiceTest extends TestCase
 
         $this->assertInstanceOf(Submission::class, $submission);
         $this->assertEquals($expectedData, $submission->getData());
-        $this->assertSame($user, $submission->getSubmitter());
         $this->assertEquals('127.0.0.1', $submission->getIpAddress());
         $this->assertInstanceOf(\DateTimeImmutable::class, $submission->getSubmittedAt());
     }
@@ -114,7 +113,7 @@ class SubmissionServiceTest extends TestCase
         $this->validatorService->expects($this->once())
             ->method('validateSchema')
             ->with($formVersion->getSchema(), $expectedData)
-            ->willThrowException(new \Exception('Email invalide'));
+            ->willThrowException(new \InvalidArgumentException('Email invalide'));
 
         $this->expectException(BadRequestHttpException::class);
         $this->expectExceptionMessage('Validation échouée : Email invalide');

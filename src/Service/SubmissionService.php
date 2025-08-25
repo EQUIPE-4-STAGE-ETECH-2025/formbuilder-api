@@ -66,9 +66,9 @@ class SubmissionService
 
         // Validation dynamique
         try {
-            $this->formSchemaValidatorService->validateSchema($schema);
+            $this->formSchemaValidatorService->validateSchema($schema, $filteredData);
         } catch (\Exception $e) {
-            throw new BadRequestHttpException('Validation echouee : ' . $e->getMessage());
+            throw new BadRequestHttpException('Validation échouée : ' . $e->getMessage());
         }
 
         // Création de la soumission
