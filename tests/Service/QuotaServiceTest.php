@@ -50,7 +50,7 @@ class QuotaServiceTest extends TestCase
         $this->subscriptionRepository
             ->expects($this->once())
             ->method('findOneBy')
-            ->with(['user' => $user, 'isActive' => true])
+            ->with(['user' => $user, 'status' => Subscription::STATUS_ACTIVE])
             ->willReturn($subscription);
 
         $this->formRepository
@@ -95,7 +95,7 @@ class QuotaServiceTest extends TestCase
         $this->subscriptionRepository
             ->expects($this->once())
             ->method('findOneBy')
-            ->with(['user' => $user, 'isActive' => true])
+            ->with(['user' => $user, 'status' => Subscription::STATUS_ACTIVE])
             ->willReturn(null);
 
         $this->expectException(RuntimeException::class);
@@ -232,7 +232,7 @@ class QuotaServiceTest extends TestCase
         $subscription->setStripeSubscriptionId('sub_test');
         $subscription->setStartDate(new \DateTime('2024-01-01'));
         $subscription->setEndDate(new \DateTime('2024-12-31'));
-        $subscription->setIsActive(true);
+        $subscription->setStatus(Subscription::STATUS_ACTIVE);
 
         return $subscription;
     }
@@ -241,7 +241,7 @@ class QuotaServiceTest extends TestCase
     {
         $this->subscriptionRepository
             ->method('findOneBy')
-            ->with(['user' => $user, 'isActive' => true])
+            ->with(['user' => $user, 'status' => Subscription::STATUS_ACTIVE])
             ->willReturn($subscription);
 
         $this->formRepository

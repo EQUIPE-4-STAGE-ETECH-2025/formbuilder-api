@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250728193536 extends AbstractMigration
+final class Version20250824121735 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -27,6 +27,10 @@ final class Version20250728193536 extends AbstractMigration
         $this->addSql('COMMENT ON COLUMN audit_log.admin_id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN audit_log.target_user_id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN audit_log.created_at IS \'(DC2Type:datetime_immutable)\'');
+        $this->addSql('CREATE TABLE black_listed_token (id UUID NOT NULL, token TEXT NOT NULL, expires_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE UNIQUE INDEX UNIQ_7F4339965F37A13B ON black_listed_token (token)');
+        $this->addSql('COMMENT ON COLUMN black_listed_token.id IS \'(DC2Type:uuid)\'');
+        $this->addSql('COMMENT ON COLUMN black_listed_token.expires_at IS \'(DC2Type:datetime_immutable)\'');
         $this->addSql('CREATE TABLE feature (id UUID NOT NULL, code VARCHAR(255) NOT NULL, label VARCHAR(255) NOT NULL, PRIMARY KEY(id))');
         $this->addSql('COMMENT ON COLUMN feature.id IS \'(DC2Type:uuid)\'');
         $this->addSql('CREATE TABLE form (id UUID NOT NULL, user_id UUID NOT NULL, title VARCHAR(255) NOT NULL, description TEXT NOT NULL, status VARCHAR(20) NOT NULL, published_at TIMESTAMP(0) WITHOUT TIME ZONE DEFAULT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
@@ -40,7 +44,7 @@ final class Version20250728193536 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_D8B2E19B427B6B91 ON form_field (form_version_id)');
         $this->addSql('COMMENT ON COLUMN form_field.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN form_field.form_version_id IS \'(DC2Type:uuid)\'');
-        $this->addSql('CREATE TABLE form_token (id UUID NOT NULL, form_id UUID NOT NULL, jwt TEXT NOT NULL, expires_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE form_token (id UUID NOT NULL, form_id UUID NOT NULL, token TEXT NOT NULL, type VARCHAR(50) NOT NULL, is_active BOOLEAN NOT NULL, expires_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_DC7005F85FF69B7D ON form_token (form_id)');
         $this->addSql('COMMENT ON COLUMN form_token.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN form_token.form_id IS \'(DC2Type:uuid)\'');
@@ -63,12 +67,14 @@ final class Version20250728193536 extends AbstractMigration
         $this->addSql('CREATE INDEX IDX_C5F2C5A5A76ED395 ON quota_status (user_id)');
         $this->addSql('COMMENT ON COLUMN quota_status.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN quota_status.user_id IS \'(DC2Type:uuid)\'');
-        $this->addSql('CREATE TABLE submission (id UUID NOT NULL, form_id UUID NOT NULL, data JSON NOT NULL, submitted_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, ip_address VARCHAR(45) NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE submission (id UUID NOT NULL, form_id UUID NOT NULL, submitter_id UUID DEFAULT NULL, data JSON NOT NULL, submitted_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, ip_address VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_DB055AF35FF69B7D ON submission (form_id)');
+        $this->addSql('CREATE INDEX IDX_DB055AF3919E5513 ON submission (submitter_id)');
         $this->addSql('COMMENT ON COLUMN submission.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN submission.form_id IS \'(DC2Type:uuid)\'');
+        $this->addSql('COMMENT ON COLUMN submission.submitter_id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN submission.submitted_at IS \'(DC2Type:datetime_immutable)\'');
-        $this->addSql('CREATE TABLE subscription (id UUID NOT NULL, user_id UUID NOT NULL, plan_id UUID NOT NULL, stripe_subscription_id VARCHAR(255) NOT NULL, start_date DATE NOT NULL, end_date DATE NOT NULL, is_active BOOLEAN NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE subscription (id UUID NOT NULL, user_id UUID NOT NULL, plan_id UUID NOT NULL, stripe_subscription_id VARCHAR(255) NOT NULL, start_date DATE NOT NULL, end_date DATE NOT NULL, status VARCHAR(20) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_A3C664D3A76ED395 ON subscription (user_id)');
         $this->addSql('CREATE INDEX IDX_A3C664D3E899029B ON subscription (plan_id)');
         $this->addSql('COMMENT ON COLUMN subscription.id IS \'(DC2Type:uuid)\'');
@@ -91,6 +97,7 @@ final class Version20250728193536 extends AbstractMigration
         $this->addSql('ALTER TABLE plan_feature ADD CONSTRAINT FK_A1683D6E60E4B879 FOREIGN KEY (feature_id) REFERENCES feature (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE quota_status ADD CONSTRAINT FK_C5F2C5A5A76ED395 FOREIGN KEY (user_id) REFERENCES users (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE submission ADD CONSTRAINT FK_DB055AF35FF69B7D FOREIGN KEY (form_id) REFERENCES form (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
+        $this->addSql('ALTER TABLE submission ADD CONSTRAINT FK_DB055AF3919E5513 FOREIGN KEY (submitter_id) REFERENCES users (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE subscription ADD CONSTRAINT FK_A3C664D3A76ED395 FOREIGN KEY (user_id) REFERENCES users (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
         $this->addSql('ALTER TABLE subscription ADD CONSTRAINT FK_A3C664D3E899029B FOREIGN KEY (plan_id) REFERENCES plan (id) NOT DEFERRABLE INITIALLY IMMEDIATE');
     }
@@ -99,14 +106,6 @@ final class Version20250728193536 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SCHEMA public');
-        $this->addSql('CREATE SCHEMA storage');
-        $this->addSql('CREATE SCHEMA auth');
-        $this->addSql('CREATE SCHEMA graphql');
-        $this->addSql('CREATE SCHEMA graphql_public');
-        $this->addSql('CREATE SCHEMA vault');
-        $this->addSql('CREATE SCHEMA realtime');
-        $this->addSql('CREATE SCHEMA extensions');
-        $this->addSql('CREATE SCHEMA pgbouncer');
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F5642B8210');
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F56C066AFE');
         $this->addSql('ALTER TABLE form DROP CONSTRAINT FK_5288FD4FA76ED395');
@@ -117,9 +116,11 @@ final class Version20250728193536 extends AbstractMigration
         $this->addSql('ALTER TABLE plan_feature DROP CONSTRAINT FK_A1683D6E60E4B879');
         $this->addSql('ALTER TABLE quota_status DROP CONSTRAINT FK_C5F2C5A5A76ED395');
         $this->addSql('ALTER TABLE submission DROP CONSTRAINT FK_DB055AF35FF69B7D');
+        $this->addSql('ALTER TABLE submission DROP CONSTRAINT FK_DB055AF3919E5513');
         $this->addSql('ALTER TABLE subscription DROP CONSTRAINT FK_A3C664D3A76ED395');
         $this->addSql('ALTER TABLE subscription DROP CONSTRAINT FK_A3C664D3E899029B');
         $this->addSql('DROP TABLE audit_log');
+        $this->addSql('DROP TABLE black_listed_token');
         $this->addSql('DROP TABLE feature');
         $this->addSql('DROP TABLE form');
         $this->addSql('DROP TABLE form_field');

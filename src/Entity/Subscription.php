@@ -5,12 +5,18 @@ namespace App\Entity;
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Uid\Uuid;
+
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]
 class Subscription
 {
+    public const STATUS_ACTIVE = 'ACTIVE';
+    public const STATUS_SUSPENDED = 'SUSPENDED';
+    public const STATUS_CANCELLED = 'CANCELLED';
+
     #[ORM\Id]
-    #[ORM\Column(type: 'uuid')]
+    #[ORM\Column(type: 'uuid', unique: true)]
     private ?string $id = null;
 
     #[ORM\ManyToOne(inversedBy: 'subscriptions')]
@@ -37,8 +43,12 @@ class Subscription
     #[Assert\GreaterThan(propertyPath: 'startDate', message: 'La date de fin doit être postérieure à la date de début')]
     private ?\DateTimeInterface $endDate = null;
 
-    #[ORM\Column]
-    private ?bool $isActive = true;
+    #[ORM\Column(length: 20)]
+    #[Assert\Choice(
+        choices: [self::STATUS_ACTIVE, self::STATUS_SUSPENDED, self::STATUS_CANCELLED],
+        message: 'Le statut doit être ACTIVE, SUSPENDED ou CANCELLED'
+    )]
+    private string $status = self::STATUS_ACTIVE;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
@@ -48,8 +58,10 @@ class Subscription
 
     public function __construct()
     {
+        $this->id = Uuid::v4();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
+        $this->status = self::STATUS_ACTIVE;
     }
 
     public function getId(): ?string
@@ -60,7 +72,6 @@ class Subscription
     public function setId(string $id): static
     {
         $this->id = $id;
-
         return $this;
     }
 
@@ -72,7 +83,6 @@ class Subscription
     public function setUser(?User $user): static
     {
         $this->user = $user;
-
         return $this;
     }
 
@@ -84,7 +94,6 @@ class Subscription
     public function setPlan(?Plan $plan): static
     {
         $this->plan = $plan;
-
         return $this;
     }
 
@@ -96,7 +105,6 @@ class Subscription
     public function setStripeSubscriptionId(string $stripeSubscriptionId): static
     {
         $this->stripeSubscriptionId = $stripeSubscriptionId;
-
         return $this;
     }
 
@@ -108,7 +116,6 @@ class Subscription
     public function setStartDate(\DateTimeInterface $startDate): static
     {
         $this->startDate = $startDate;
-
         return $this;
     }
 
@@ -120,20 +127,36 @@ class Subscription
     public function setEndDate(\DateTimeInterface $endDate): static
     {
         $this->endDate = $endDate;
-
         return $this;
     }
 
-    public function isActive(): ?bool
+    public function getStatus(): string
     {
-        return $this->isActive;
+        return $this->status;
     }
 
-    public function setIsActive(bool $isActive): static
+    public function setStatus(string $status): static
     {
-        $this->isActive = $isActive;
-
+        if (!in_array($status, [self::STATUS_ACTIVE, self::STATUS_SUSPENDED, self::STATUS_CANCELLED])) {
+            throw new \InvalidArgumentException("Statut invalide pour l'abonnement");
+        }
+        $this->status = $status;
         return $this;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable
@@ -144,7 +167,6 @@ class Subscription
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -156,7 +178,6 @@ class Subscription
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
     }
 }
