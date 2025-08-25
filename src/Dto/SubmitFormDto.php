@@ -13,6 +13,9 @@ class SubmitFormDto
     #[Assert\Type(type: 'array', message: 'Les données doivent être un tableau')]
     private array $data = [];
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(array $data = [])
     {
         $this->data = $data;

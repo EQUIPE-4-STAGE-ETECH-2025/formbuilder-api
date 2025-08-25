@@ -30,7 +30,7 @@ class SubmissionExportDtoTest extends TestCase
         $submission->setData([
             'name' => 'Alice',
             'email' => "alice@example.com",
-            'message' => "Hello\nNew line"
+            'message' => "Hello\nNew line",
         ]);
 
         $dto = new SubmissionExportDto($submission);
@@ -43,7 +43,7 @@ class SubmissionExportDtoTest extends TestCase
             '192.168.0.1',
             'Alice',
             'alice@example.com',
-            'Hello New line' // saut de ligne supprimé
+            'Hello New line', // saut de ligne supprimé
         ];
 
         $this->assertSame($expected, $row);

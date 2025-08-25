@@ -7,13 +7,14 @@ use App\Entity\User;
 use App\Service\DashboardService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class DashboardControllerTest extends WebTestCase
 {
     private $client;
     private EntityManagerInterface $em;
-    private DashboardService $dashboardService;
+    private MockObject $dashboardService;
 
     /**
      * @throws Exception

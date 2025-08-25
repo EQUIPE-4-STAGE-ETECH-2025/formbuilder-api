@@ -3,15 +3,15 @@
 namespace App\Controller;
 
 use App\Dto\SubmitFormDto;
-use App\Entity\Form;
-use App\Service\SubmissionService;
-use App\Service\SubmissionExportService;
+use App\Entity\User;
 use App\Service\AuthorizationService;
+use App\Service\SubmissionExportService;
+use App\Service\SubmissionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/forms')]
@@ -21,28 +21,30 @@ class SubmissionController extends AbstractController
         private readonly SubmissionService $submissionService,
         private readonly SubmissionExportService $submissionExportService,
         private readonly AuthorizationService $authorizationService,
-    ) {}
+    ) {
+    }
 
     #[Route('/{id}/submit', name: 'submit_form', methods: ['POST'])]
     public function submitForm(Request $request, string $id): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
-        if (!$form) {
+        if (! $form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $data = json_decode($request->getContent(), true);
-        if (!is_array($data)) {
+        if (! is_array($data)) {
             return $this->json(['error' => 'Données invalides'], 400);
         }
 
         $dto = new SubmitFormDto($data);
         $user = $this->getUser(); // null si non authentifié
+        $userEntity = $user instanceof User ? $user : null;
 
         $submission = $this->submissionService->submitForm(
             $form,
             $dto->getData(),
-            $user,
+            $userEntity,
             $request->getClientIp()
         );
 
@@ -59,18 +61,19 @@ class SubmissionController extends AbstractController
     public function listSubmissions(string $id): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
-        if (!$form) {
+        if (! $form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $user = $this->getUser();
-        if (!$this->authorizationService->canAccessForm($user, $form)) {
+        $userEntity = $user instanceof User ? $user : null;
+        if (! $userEntity || ! $this->authorizationService->canAccessForm($userEntity, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
         $submissions = $this->submissionService->getFormSubmissions($form);
 
-        $result = array_map(fn($s) => [
+        $result = array_map(fn ($s) => [
             'id' => $s->getId(),
             'formId' => $s->getForm()?->getId(),
             'data' => $s->getData(),
@@ -82,26 +85,43 @@ class SubmissionController extends AbstractController
     }
 
     #[Route('/{id}/submissions/export', name: 'export_submissions', methods: ['GET'])]
-    public function exportSubmissions(string $id): Response
+    public function exportSubmissions(Request $request, string $id): Response
     {
         $form = $this->submissionService->getFormById($id);
-        if (!$form) {
+        if (! $form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $user = $this->getUser();
-        if (!$this->authorizationService->canAccessForm($user, $form)) {
+        $userEntity = $user instanceof User ? $user : null;
+        if (! $userEntity || ! $this->authorizationService->canAccessForm($userEntity, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $user);
+        // Récupération des paramètres de pagination
+        $limit = $request->query->has('limit') ? $request->query->getInt('limit') : null;
+        $offset = $request->query->getInt('offset', 0);
+
+        // Validation des paramètres
+        if ($limit !== null && $limit <= 0) {
+            return $this->json(['error' => 'Le paramètre limit doit être un entier positif'], 400);
+        }
+
+        if ($offset < 0) {
+            return $this->json(['error' => 'Le paramètre offset doit être un entier positif ou nul'], 400);
+        }
+
+        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $userEntity, $limit, $offset);
+
+        $filename = sprintf('submissions_%s_%s.csv', $form->getTitle(), date('Y-m-d_H-i-s'));
+        $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $filename);
 
         return new Response(
             $csvContent,
             200,
             [
                 'Content-Type' => 'text/csv',
-                'Content-Disposition' => 'attachment; filename="submissions.csv"',
+                'Content-Disposition' => sprintf('attachment; filename="%s"', $filename),
             ]
         );
     }
