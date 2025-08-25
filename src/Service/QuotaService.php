@@ -2,8 +2,8 @@
 
 namespace App\Service;
 
-use App\Entity\User;
 use App\Entity\Subscription;
+use App\Entity\User;
 use App\Repository\FormRepository;
 use App\Repository\SubmissionRepository;
 use App\Repository\SubscriptionRepository;
@@ -127,11 +127,11 @@ class QuotaService
     }
 
     private function getActiveSubscription(User $user): ?\App\Entity\Subscription
-{
-    return $this->subscriptionRepository->findOneBy([
-        'user' => $user,
-        'status' => Subscription::STATUS_ACTIVE,
-    ]);
-}
+    {
+        return $this->subscriptionRepository->findOneBy([
+            'user' => $user,
+            'status' => Subscription::STATUS_ACTIVE,
+        ]);
+    }
 
 }
