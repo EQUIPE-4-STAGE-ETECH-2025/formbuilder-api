@@ -26,10 +26,12 @@ class SubmissionService
 
     public function submitForm(Form $form, array $submissionData, ?User $user = null, ?string $ipAddress = null): Submission
     {
+        // Vérification du quota
         if ($user) {
             $this->quotaService->enforceQuotaLimit($user, 'submit_form');
         }
 
+        // Récupération de la dernière version
         $formVersions = $form->getFormVersions();
         if ($formVersions->isEmpty()) {
             throw new BadRequestHttpException('Le formulaire n’a pas de version valide.');
@@ -38,24 +40,31 @@ class SubmissionService
         $latestVersion = $formVersions->last();
         $schema = $latestVersion->getSchema();
 
-        $allowedKeys = [];
+        // Mapping labels → IDs
+        $fieldMap = [];
         if (isset($schema['fields']) && is_array($schema['fields'])) {
             foreach ($schema['fields'] as $field) {
-                if (isset($field['name']) && is_string($field['name'])) {
-                    $allowedKeys[] = $field['name'];
+                if (isset($field['id']) && isset($field['label'])) {
+                    $fieldMap[$field['label']] = $field['id'];
                 }
             }
         }
 
-        $allowedKeys = array_merge($allowedKeys);
-        $filteredData = array_intersect_key($submissionData, array_flip($allowedKeys));
+        $filteredData = [];
+        foreach ($submissionData as $label => $value) {
+            if (isset($fieldMap[$label])) {
+                $filteredData[$fieldMap[$label]] = $value;
+            }
+        }
 
+        // Validation dynamique
         try {
             $this->formSchemaValidatorService->validateSchema($schema, $filteredData);
         } catch (\Exception $e) {
             throw new BadRequestHttpException('Validation échouée : ' . $e->getMessage());
         }
 
+        // Création de la soumission
         $submission = new Submission();
         $submission->setForm($form)
                    ->setData($filteredData)
@@ -66,6 +75,7 @@ class SubmissionService
         $this->entityManager->persist($submission);
         $this->entityManager->flush();
 
+        // Notification email au propriétaire du formulaire
         if ($form->getUser()?->getEmail()) {
             $subject = sprintf("Nouvelle soumission pour votre formulaire '%s'", $form->getTitle());
             $content = sprintf(
@@ -77,7 +87,7 @@ class SubmissionService
             try {
                 $this->emailService->sendEmail($form->getUser()->getEmail(), $subject, $content);
             } catch (\Exception) {
-                // Log uniquement
+                // Log uniquement, on ne bloque pas la soumission
             }
         }
 
@@ -97,6 +107,8 @@ class SubmissionService
         }
 
         $csv = fopen('php://temp', 'r+');
+
+        // Entêtes CSV (IDs des champs)
         $first = $submissions[0]->getData();
         fputcsv($csv, array_keys($first));
 

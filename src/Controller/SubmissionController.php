@@ -10,9 +10,9 @@ use App\Service\AuthorizationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
 #[Route('/api/forms')]
 class SubmissionController extends AbstractController
@@ -27,16 +27,24 @@ class SubmissionController extends AbstractController
     public function submitForm(Request $request, string $id): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
-        if (! $form) {
+        if (!$form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $data = json_decode($request->getContent(), true);
-        $dto = new SubmitFormDto($data);
+        if (!is_array($data)) {
+            return $this->json(['error' => 'Données invalides'], 400);
+        }
 
+        $dto = new SubmitFormDto($data);
         $user = $this->getUser(); // null si non authentifié
 
-        $submission = $this->submissionService->submitForm($form, $dto->getData(), $user, $request->getClientIp());
+        $submission = $this->submissionService->submitForm(
+            $form,
+            $dto->getData(),
+            $user,
+            $request->getClientIp()
+        );
 
         return $this->json([
             'id' => $submission->getId(),
@@ -51,12 +59,12 @@ class SubmissionController extends AbstractController
     public function listSubmissions(string $id): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
-        if (! $form) {
+        if (!$form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $user = $this->getUser();
-        if (! $this->authorizationService->canAccessForm($user, $form)) {
+        if (!$this->authorizationService->canAccessForm($user, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
@@ -77,16 +85,16 @@ class SubmissionController extends AbstractController
     public function exportSubmissions(string $id): Response
     {
         $form = $this->submissionService->getFormById($id);
-        if (! $form) {
+        if (!$form) {
             throw new NotFoundHttpException('Formulaire introuvable.');
         }
 
         $user = $this->getUser();
-        if (! $this->authorizationService->canAccessForm($user, $form)) {
+        if (!$this->authorizationService->canAccessForm($user, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $this->getUser());
+        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $user);
 
         return new Response(
             $csvContent,
@@ -96,6 +104,5 @@ class SubmissionController extends AbstractController
                 'Content-Disposition' => 'attachment; filename="submissions.csv"',
             ]
         );
-
     }
 }

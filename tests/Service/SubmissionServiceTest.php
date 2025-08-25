@@ -13,6 +13,7 @@ use App\Service\SubmissionService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use App\Repository\SubmissionRepository;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SubmissionServiceTest extends TestCase
 {
@@ -46,16 +47,34 @@ class SubmissionServiceTest extends TestCase
         $user->setEmail('owner@example.com');
 
         $formVersion = new FormVersion();
-        $formVersion->setSchema(['fields' => [['name' => 'email', 'type' => 'email']]]);
+        // On utilise 'id' et 'label' comme dans SubmissionService
+        $formVersion->setSchema([
+            'fields' => [
+                ['id' => 'field1', 'label' => 'Nom complet', 'type' => 'text'],
+                ['id' => 'field2', 'label' => 'Email', 'type' => 'email'],
+                ['id' => 'field3', 'label' => 'Message', 'type' => 'textarea'],
+            ]
+        ]);
 
         $form = new Form();
         $form->setUser($user)->setTitle('Test Form')->addFormVersion($formVersion);
 
-        $submissionData = ['email' => 'test@example.com'];
+        $submissionData = [
+            'Nom complet' => 'Alice Dupont',
+            'Email' => 'alice@example.com',
+            'Message' => 'Bonjour'
+        ];
+
+        // Transformation labels → ids pour matcher SubmissionService
+        $expectedData = [
+            'field1' => 'Alice Dupont',
+            'field2' => 'alice@example.com',
+            'field3' => 'Bonjour'
+        ];
 
         $this->validatorService->expects($this->once())
             ->method('validateSchema')
-            ->with($formVersion->getSchema(), $submissionData);
+            ->with($formVersion->getSchema(), $expectedData);
 
         $this->quotaService->expects($this->once())
             ->method('enforceQuotaLimit')
@@ -75,7 +94,7 @@ class SubmissionServiceTest extends TestCase
         $submission = $this->submissionService->submitForm($form, $submissionData, $user, '127.0.0.1');
 
         $this->assertInstanceOf(Submission::class, $submission);
-        $this->assertEquals($submissionData, $submission->getData());
+        $this->assertEquals($expectedData, $submission->getData());
         $this->assertSame($user, $submission->getSubmitter());
         $this->assertEquals('127.0.0.1', $submission->getIpAddress());
         $this->assertInstanceOf(\DateTimeImmutable::class, $submission->getSubmittedAt());
@@ -84,18 +103,20 @@ class SubmissionServiceTest extends TestCase
     public function testSubmitFormValidationFails(): void
     {
         $formVersion = new FormVersion();
-        $formVersion->setSchema(['fields' => [['name' => 'email', 'type' => 'email']]]);
+        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email', 'type' => 'email']]]);
 
         $form = new Form();
         $form->setTitle('Test Form')->addFormVersion($formVersion);
 
-        $submissionData = ['email' => 'invalid-email'];
+        $submissionData = ['Email' => 'invalid-email'];
+        $expectedData = ['field1' => 'invalid-email'];
 
         $this->validatorService->expects($this->once())
             ->method('validateSchema')
+            ->with($formVersion->getSchema(), $expectedData)
             ->willThrowException(new \Exception('Email invalide'));
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\BadRequestHttpException::class);
+        $this->expectException(BadRequestHttpException::class);
         $this->expectExceptionMessage('Validation échouée : Email invalide');
 
         $this->submissionService->submitForm($form, $submissionData);
@@ -106,12 +127,13 @@ class SubmissionServiceTest extends TestCase
         $user = new User();
 
         $formVersion = new FormVersion();
-        $formVersion->setSchema(['fields' => [['name' => 'email', 'type' => 'email']]]);
+        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email', 'type' => 'email']]]);
 
         $form = new Form();
         $form->setUser($user)->setTitle('Test Form')->addFormVersion($formVersion);
 
-        $submissionData = ['email' => 'test@example.com'];
+        $submissionData = ['Email' => 'test@example.com'];
+        $expectedData = ['field1' => 'test@example.com'];
 
         $this->quotaService->expects($this->once())
             ->method('enforceQuotaLimit')
@@ -129,10 +151,10 @@ class SubmissionServiceTest extends TestCase
         $form->setTitle('CSV Form');
 
         $submission1 = new Submission();
-        $submission1->setData(['email' => 'a@example.com']);
+        $submission1->setData(['field1' => 'a@example.com']);
 
         $submission2 = new Submission();
-        $submission2->setData(['email' => 'b@example.com']);
+        $submission2->setData(['field1' => 'b@example.com']);
 
         $this->submissionRepository->expects($this->any())
             ->method('findBy')
@@ -140,7 +162,7 @@ class SubmissionServiceTest extends TestCase
 
         $csv = $this->submissionService->exportSubmissionsToCsv($form);
 
-        $this->assertStringContainsString('email', $csv);
+        $this->assertStringContainsString('field1', $csv);
         $this->assertStringContainsString('a@example.com', $csv);
         $this->assertStringContainsString('b@example.com', $csv);
     }
