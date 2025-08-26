@@ -96,7 +96,7 @@ class SubmissionControllerTest extends WebTestCase
 
         // Détermine le nombre de colonnes attendues à partir de l'en-tête
         $expectedColumnCount = count(explode(';', $lines[0]));
-        
+
         // Vérifie que chaque ligne de données a le même nombre de colonnes que l'en-tête
         foreach ($lines as $i => $line) {
             if ($i === 0 || empty(trim($line))) {
