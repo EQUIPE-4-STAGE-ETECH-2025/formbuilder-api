@@ -129,7 +129,7 @@ class SubmissionControllerTest extends WebTestCase
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertIsArray($responseData);
         $this->assertNotEmpty($responseData);
-        
+
         // Vérifier la structure des données de soumission
         $submission = $responseData[0];
         $this->assertArrayHasKey('id', $submission);
@@ -377,7 +377,7 @@ class SubmissionControllerTest extends WebTestCase
 
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
 
-        if (!isset($responseData['success']) || !$responseData['success'] || !isset($responseData['data']['token'])) {
+        if (! isset($responseData['success']) || ! $responseData['success'] || ! isset($responseData['data']['token'])) {
             throw new \RuntimeException('Échec de la connexion: ' . json_encode($responseData));
         }
 
