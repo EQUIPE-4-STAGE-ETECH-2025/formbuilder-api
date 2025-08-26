@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Dto\BlackListedTokenDto;
+use App\Dto\ChangePasswordDto;
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
 use App\Dto\ResetPasswordDto;
@@ -264,12 +265,31 @@ class AuthService
         $user->setUpdatedAt(new DateTimeImmutable());
 
         $this->userRepository->save($user, true);
-        
+
         if (isset($payload->exp)) {
         $this->jwtService->blacklistToken(new BlackListedTokenDto(
             token: $token,
             expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
         ));
     }
+    }
+
+    public function changePassword(string $token, ChangePasswordDto $dto): void
+    {
+        $payload = $this->jwtService->validateToken($token);
+        $user = $this->userRepository->find($payload->id ?? null);
+        if (!$user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        if (!$this->passwordHasher->isPasswordValid($user, $dto->getCurrentPassword() ?? '')) {
+            throw new RuntimeException('Mot de passe actuel invalide.');
+        }
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getNewPassword() ?? '');
+        $user->setPasswordHash($hashedPassword);
+        $user->setUpdatedAt(new DateTimeImmutable());
+
+        $this->userRepository->save($user, true);
     }
 }
