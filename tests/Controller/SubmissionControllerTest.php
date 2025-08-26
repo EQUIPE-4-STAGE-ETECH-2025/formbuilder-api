@@ -3,6 +3,7 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Form;
+use App\Entity\FormVersion;
 use App\Entity\Submission;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,10 +29,8 @@ class SubmissionControllerTest extends WebTestCase
         $form = $this->createTestForm($user, 'PUBLISHED');
 
         $formData = [
-            'fields' => [
-                ['name' => 'email', 'value' => 'test@example.com'],
-                ['name' => 'message', 'value' => 'Bonjour, ceci est un test'],
-            ],
+            'email' => 'test@example.com',
+            'message' => 'Bonjour, ceci est un test',
         ];
 
         $this->client->request(
@@ -81,9 +80,7 @@ class SubmissionControllerTest extends WebTestCase
         $nonExistentFormId = Uuid::v4();
 
         $formData = [
-            'fields' => [
-                ['name' => 'email', 'value' => 'test@example.com'],
-            ],
+            'email' => 'test@example.com',
         ];
 
         $this->client->request(
@@ -332,7 +329,6 @@ class SubmissionControllerTest extends WebTestCase
         $form->setStatus($status);
         $form->setUser($user);
 
-
         if ($status === 'PUBLISHED') {
             $form->setPublishedAt(new \DateTimeImmutable());
         }
@@ -340,7 +336,41 @@ class SubmissionControllerTest extends WebTestCase
         $this->em->persist($form);
         $this->em->flush();
 
+        // Créer une version du formulaire avec un schéma
+        $this->createTestFormVersion($form);
+
         return $form;
+    }
+
+    private function createTestFormVersion(Form $form): FormVersion
+    {
+        $formVersion = new FormVersion();
+        $formVersion->setId(Uuid::v4());
+        $formVersion->setForm($form);
+        $formVersion->setVersionNumber(1);
+        $formVersion->setSchema([
+            'fields' => [
+                [
+                    'id' => 'field1',
+                    'type' => 'email',
+                    'label' => 'email',
+                    'required' => true,
+                    'position' => 1,
+                ],
+                [
+                    'id' => 'field2',
+                    'type' => 'textarea',
+                    'label' => 'message',
+                    'required' => false,
+                    'position' => 2,
+                ],
+            ],
+        ]);
+
+        $this->em->persist($formVersion);
+        $this->em->flush();
+
+        return $formVersion;
     }
 
     private function createTestSubmission(Form $form): Submission
@@ -349,8 +379,8 @@ class SubmissionControllerTest extends WebTestCase
         $submission->setId(Uuid::v4());
         $submission->setForm($form);
         $submission->setData([
-            'email' => 'submission@example.com',
-            'message' => 'Ceci est une soumission de test',
+            'field1' => 'submission@example.com',
+            'field2' => 'Ceci est une soumission de test',
         ]);
         $submission->setIpAddress('127.0.0.1');
         $submission->setSubmittedAt(new \DateTimeImmutable());
