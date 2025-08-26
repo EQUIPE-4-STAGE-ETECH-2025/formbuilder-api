@@ -87,18 +87,18 @@ class SubmissionControllerTest extends WebTestCase
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Vérifie que la première ligne contient bien les en-têtes
-        $this->assertSame('ID;Form ID;Submitted At;IP Address', $lines[0]);
+        // Vérifie que la première ligne contient bien les en-têtes (fixes + dynamiques)
+        $this->assertSame('ID;Form ID;Submitted At;IP Address;550e8400-e29b-41d4-a716-446655441006;550e8400-e29b-41d4-a716-446655441007', $lines[0]);
 
         // Vérifie qu'il y a au moins une ligne de données
         $this->assertGreaterThan(1, count($lines));
 
-        // Vérifie que chaque ligne de données a 4 colonnes
+        // Vérifie que chaque ligne de données a 6 colonnes (4 fixes + 2 dynamiques)
         foreach ($lines as $i => $line) {
             if ($i === 0) {
                 continue;
             } // ignore l'en-tête
-            $this->assertCount(4, explode(';', $line), "La ligne $i doit avoir 4 colonnes");
+            $this->assertCount(6, explode(';', $line), "La ligne $i doit avoir 6 colonnes");
         }
     }
 
