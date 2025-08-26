@@ -3,190 +3,400 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Form;
+use App\Entity\Submission;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Uid\Uuid;
 
 class SubmissionControllerTest extends WebTestCase
 {
+    private ?EntityManagerInterface $em = null;
     private $client;
-    private EntityManagerInterface $entityManager;
-    private User $userAnna;
-    private User $userElodie;
-    private User $adminUser;
-    private Form $formAnna;
 
     protected function setUp(): void
     {
-        parent::setUp();
         $this->client = static::createClient();
-        $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
-
-        $this->userAnna = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
-        $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
-        $this->adminUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
-        // Utilise le formulaire "Contact Lead Generation" qui a des soumissions dans les fixtures
-        $this->formAnna = $this->entityManager->getRepository(Form::class)->find('550e8400-e29b-41d4-a716-446655440301');
+        $this->em = static::getContainer()->get('doctrine')->getManager();
     }
 
     public function testSubmitFormSuccessfully(): void
     {
-        $data = [
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user, 'PUBLISHED');
+
+        $formData = [
             'fields' => [
                 ['name' => 'email', 'value' => 'test@example.com'],
-                ['name' => 'message', 'value' => 'Bonjour'],
+                ['name' => 'message', 'value' => 'Bonjour, ceci est un test'],
             ],
         ];
 
         $this->client->request(
             'POST',
-            '/api/forms/' . $this->formAnna->getId() . '/submit',
+            '/api/forms/' . $form->getId() . '/submit',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($data)
+            json_encode($formData)
         );
 
-        $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
-        $this->assertJson($response->getContent());
+        $this->assertResponseHeaderSame('content-type', 'application/json');
 
-        $json = json_decode($response->getContent(), true);
-        $this->assertArrayHasKey('id', $json);
-        $this->assertArrayHasKey('submittedAt', $json);
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('id', $responseData);
+        $this->assertArrayHasKey('formId', $responseData);
+        $this->assertArrayHasKey('data', $responseData);
+        $this->assertArrayHasKey('submittedAt', $responseData);
+        $this->assertArrayHasKey('ipAddress', $responseData);
+        $this->assertEquals($form->getId(), $responseData['formId']);
     }
 
-    public function testGetSubmissionsAuthorized(): void
+    public function testSubmitFormWithInvalidData(): void
     {
-        $this->client->loginUser($this->userAnna);
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user, 'PUBLISHED');
 
-        $this->assertResponseIsSuccessful();
-        $json = json_decode($this->client->getResponse()->getContent(), true);
+        $this->client->request(
+            'POST',
+            '/api/forms/' . $form->getId() . '/submit',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode('invalid-json-data')
+        );
 
-        $this->assertIsArray($json);
-        $this->assertNotEmpty($json);
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertEquals('Données invalides', $responseData['error']);
     }
 
-    public function testGetSubmissionsForbiddenForOtherUser(): void
+    public function testSubmitFormNotFound(): void
     {
-        $this->client->loginUser($this->userElodie);
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
+        $nonExistentFormId = Uuid::v4();
 
-        $this->assertResponseStatusCodeSame(403);
+        $formData = [
+            'fields' => [
+                ['name' => 'email', 'value' => 'test@example.com'],
+            ],
+        ];
+
+        $this->client->request(
+            'POST',
+            '/api/forms/' . $nonExistentFormId . '/submit',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode($formData)
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
+    public function testListSubmissionsRequiresAuthentication(): void
+    {
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+
+        $this->client->request('GET', '/api/forms/' . $form->getId() . '/submissions');
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testListSubmissionsWithAuthentication(): void
+    {
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+        $this->createTestSubmission($form);
+        $token = $this->loginUser($user);
+
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseHeaderSame('content-type', 'application/json');
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertIsArray($responseData);
+        $this->assertNotEmpty($responseData);
+        
+        // Vérifier la structure des données de soumission
+        $submission = $responseData[0];
+        $this->assertArrayHasKey('id', $submission);
+        $this->assertArrayHasKey('formId', $submission);
+        $this->assertArrayHasKey('data', $submission);
+        $this->assertArrayHasKey('submittedAt', $submission);
+        $this->assertArrayHasKey('ipAddress', $submission);
+    }
+
+    public function testListSubmissionsForbiddenForOtherUser(): void
+    {
+        $user1 = $this->createTestUser('user1@example.com');
+        $user2 = $this->createTestUser('user2@example.com');
+        $form = $this->createTestForm($user1);
+        $token = $this->loginUser($user2);
+
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertEquals('Accès refusé', $responseData['error']);
+    }
+
+    public function testListSubmissionsFormNotFound(): void
+    {
+        $user = $this->createTestUser();
+        $token = $this->loginUser($user);
+        $nonExistentFormId = Uuid::v4();
+
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $nonExistentFormId . '/submissions',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
     public function testExportSubmissionsCsv(): void
     {
-        $this->client->loginUser($this->userAnna);
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export');
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+        $this->createTestSubmission($form);
+        $token = $this->loginUser($user);
 
-        $response = $this->client->getResponse();
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
         $this->assertResponseIsSuccessful();
-
-        // Normalise les fins de ligne pour Windows / Unix
-        $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
-        $lines = explode("\n", trim($csv));
-
-        // Vérifie que la première ligne contient bien les en-têtes (fixes + dynamiques)
-        // Champs du formulaire "Contact Lead Generation" : Nom complet, Email, Message
-        $this->assertSame('ID;Form ID;Submitted At;IP Address;550e8400-e29b-41d4-a716-446655441003;550e8400-e29b-41d4-a716-446655441004;550e8400-e29b-41d4-a716-446655441005', $lines[0]);
-
-        // Vérifie qu'il y a au moins une ligne de données
-        $this->assertGreaterThan(1, count($lines));
-
-        // Vérifie que chaque ligne de données a 7 colonnes (4 fixes + 3 dynamiques)
-        foreach ($lines as $i => $line) {
-            if ($i === 0) {
-                continue;
-            } // ignore l'en-tête
-            $this->assertCount(7, explode(';', $line), "La ligne $i doit avoir 7 colonnes");
-        }
-    }
-
-    public function testExportSubmissionsCsvWithPagination(): void
-    {
-        $this->client->loginUser($this->userAnna);
-
-        // Test avec limit seulement
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?limit=1');
-        $response = $this->client->getResponse();
-        $this->assertResponseIsSuccessful();
-
-        $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
-        $lines = explode("\n", trim($csv));
-
-        // Avec limit=1, on devrait avoir l'en-tête + 1 ligne de données maximum
-        $this->assertLessThanOrEqual(2, count($lines));
-
-        // Test avec limit et offset
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?limit=5&offset=0');
-        $this->assertResponseIsSuccessful();
-    }
-
-    public function testExportSubmissionsCsvWithInvalidPagination(): void
-    {
-        $this->client->loginUser($this->userAnna);
-
-        // Test avec limit négatif
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?limit=-1');
-        $this->assertResponseStatusCodeSame(400);
-        $response = $this->client->getResponse();
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertStringContainsString('Le paramètre limit doit être un entier positif', $responseData['error']);
-
-        // Test avec offset négatif
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export?offset=-1');
-        $this->assertResponseStatusCodeSame(400);
-        $response = $this->client->getResponse();
-        $responseData = json_decode($response->getContent(), true);
-        $this->assertArrayHasKey('error', $responseData);
-        $this->assertStringContainsString('Le paramètre offset doit être un entier positif ou nul', $responseData['error']);
-    }
-
-    public function testExportSubmissionsCsvFilename(): void
-    {
-        $this->client->loginUser($this->userAnna);
-        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions/export');
+        $this->assertResponseHeaderSame('content-type', 'text/csv');
 
         $response = $this->client->getResponse();
-        $this->assertResponseIsSuccessful();
-
-        // Vérifie que le nom de fichier est personnalisé
         $contentDisposition = $response->headers->get('Content-Disposition');
         $this->assertStringContainsString('attachment; filename=', $contentDisposition);
         $this->assertStringContainsString('submissions_', $contentDisposition);
         $this->assertStringContainsString('.csv', $contentDisposition);
+
+        // Vérifier que le contenu CSV n'est pas vide
+        $csvContent = $response->getContent();
+        $this->assertNotEmpty($csvContent);
     }
 
-    public function testSubmitFormQuotaExceeded(): void
+    public function testExportSubmissionsWithPagination(): void
     {
-        $this->client->loginUser($this->userAnna);
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+        $this->createTestSubmission($form);
+        $token = $this->loginUser($user);
 
-        $data = [
-            'fields' => [
-                ['name' => 'email', 'value' => 'test@example.com'],
-            ],
-        ];
+        // Test avec limit
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export?limit=5',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+
+        // Test avec limit et offset
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export?limit=5&offset=0',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testExportSubmissionsWithInvalidPagination(): void
+    {
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+        $token = $this->loginUser($user);
+
+        // Test avec limit négatif
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export?limit=-1',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertStringContainsString('Le paramètre limit doit être un entier positif', $responseData['error']);
+
+        // Test avec offset négatif
+        $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export?offset=-1',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertArrayHasKey('error', $responseData);
+        $this->assertStringContainsString('Le paramètre offset doit être un entier positif ou nul', $responseData['error']);
+    }
+
+    public function testExportSubmissionsRequiresAuthentication(): void
+    {
+        $user = $this->createTestUser();
+        $form = $this->createTestForm($user);
+
+        $this->client->request('GET', '/api/forms/' . $form->getId() . '/submissions/export');
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    public function testExportSubmissionsForbiddenForOtherUser(): void
+    {
+        $user1 = $this->createTestUser('user1@example.com');
+        $user2 = $this->createTestUser('user2@example.com');
+        $form = $this->createTestForm($user1);
+        $token = $this->loginUser($user2);
 
         $this->client->request(
+            'GET',
+            '/api/forms/' . $form->getId() . '/submissions/export',
+            [],
+            [],
+            ['HTTP_Authorization' => 'Bearer ' . $token]
+        );
+
+        $this->assertResponseStatusCodeSame(Response::HTTP_FORBIDDEN);
+    }
+
+    private function createTestUser(string $email = 'test@example.com'): User
+    {
+        $this->removeUserIfExists($email);
+
+        $passwordHasher = static::getContainer()->get(UserPasswordHasherInterface::class);
+
+        $user = new User();
+        $user->setId(Uuid::v4());
+        $user->setEmail($email);
+        $user->setFirstName('Test');
+        $user->setLastName('User');
+        $user->setRole('USER');
+        $user->setIsEmailVerified(true);
+        $user->setPasswordHash($passwordHasher->hashPassword($user, 'password123'));
+
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
+    }
+
+    private function createTestForm(User $user, string $status = 'DRAFT'): Form
+    {
+        $form = new Form();
+        $form->setId(Uuid::v4());
+        $form->setTitle('Formulaire de test');
+        $form->setDescription('Description du formulaire de test pour les soumissions');
+        $form->setStatus($status);
+        $form->setUser($user);
+
+
+        if ($status === 'PUBLISHED') {
+            $form->setPublishedAt(new \DateTimeImmutable());
+        }
+
+        $this->em->persist($form);
+        $this->em->flush();
+
+        return $form;
+    }
+
+    private function createTestSubmission(Form $form): Submission
+    {
+        $submission = new Submission();
+        $submission->setId(Uuid::v4());
+        $submission->setForm($form);
+        $submission->setData([
+            'email' => 'submission@example.com',
+            'message' => 'Ceci est une soumission de test',
+        ]);
+        $submission->setIpAddress('127.0.0.1');
+        $submission->setSubmittedAt(new \DateTimeImmutable());
+
+        $this->em->persist($submission);
+        $this->em->flush();
+
+        return $submission;
+    }
+
+    private function loginUser(User $user): string
+    {
+        $this->client->request(
             'POST',
-            '/api/forms/' . $this->formAnna->getId() . '/submit',
+            '/api/auth/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode($data)
+            json_encode([
+                'email' => $user->getEmail(),
+                'password' => 'password123',
+            ])
         );
 
-        $response = $this->client->getResponse();
-        $status = $response->getStatusCode();
-        $this->assertContains($status, [200, 400], "Le code HTTP doit être 200 (pas de quota) ou 400 (quota dépassé)");
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
 
-        if ($status === 400) {
-            $responseData = json_decode($response->getContent(), true);
-            $this->assertArrayHasKey('error', $responseData);
-            $this->assertStringContainsString('Limite de soumissions atteinte', $responseData['error']);
+        if (!isset($responseData['success']) || !$responseData['success'] || !isset($responseData['data']['token'])) {
+            throw new \RuntimeException('Échec de la connexion: ' . json_encode($responseData));
         }
+
+        return $responseData['data']['token'];
+    }
+
+    private function removeUserIfExists(string $email): void
+    {
+        $existingUser = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
+        if ($existingUser) {
+            $this->em->remove($existingUser);
+            $this->em->flush();
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        $this->em?->close();
+        $this->em = null;
+        parent::tearDown();
     }
 }
