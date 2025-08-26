@@ -7,6 +7,9 @@ use App\Entity\User;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
+/**
+ * @extends Voter<string, Form>
+ */
 class FormVoter extends Voter
 {
     public const OWNER = 'OWNER';
@@ -18,7 +21,7 @@ class FormVoter extends Voter
         return in_array($attribute, [
             self::OWNER,
             self::VIEW_SUBMISSIONS,
-            self::EXPORT_SUBMISSIONS
+            self::EXPORT_SUBMISSIONS,
         ]) && $subject instanceof Form;
     }
 
@@ -26,7 +29,7 @@ class FormVoter extends Voter
     {
         $user = $token->getUser();
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return false;
         }
 

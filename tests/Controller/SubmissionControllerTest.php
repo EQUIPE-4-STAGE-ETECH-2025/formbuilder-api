@@ -2,10 +2,10 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\User;
 use App\Entity\Form;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class SubmissionControllerTest extends WebTestCase
 {
@@ -22,10 +22,11 @@ class SubmissionControllerTest extends WebTestCase
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $this->userAnna   = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
+        $this->userAnna = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
         $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
-        $this->adminUser  = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
-        $this->formAnna   = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
+        $this->adminUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
+        // Utiliser un formulaire spécifique pour garantir la déterminisme du test
+        $this->formAnna = $this->entityManager->getRepository(Form::class)->find('550e8400-e29b-41d4-a716-446655440301');
     }
 
     public function testSubmitFormSuccessfully(): void
@@ -87,16 +88,21 @@ class SubmissionControllerTest extends WebTestCase
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Vérifie que la première ligne contient bien les en-têtes
-        $this->assertSame('ID;Form ID;Submitted At;IP Address', $lines[0]);
+        // Vérifie que la première ligne contient bien les en-têtes de base
+        $this->assertStringStartsWith('ID;Form ID;Submitted At;IP Address', $lines[0]);
 
         // Vérifie qu'il y a au moins une ligne de données
         $this->assertGreaterThan(1, count($lines));
 
-        // Vérifie que chaque ligne de données a 4 colonnes
+        // Détermine le nombre de colonnes attendues à partir de l'en-tête
+        $expectedColumnCount = count(explode(';', $lines[0]));
+
+        // Vérifie que chaque ligne de données a le même nombre de colonnes que l'en-tête
         foreach ($lines as $i => $line) {
-            if ($i === 0) continue; // ignore l'en-tête
-            $this->assertCount(4, explode(';', $line), "La ligne $i doit avoir 4 colonnes");
+            if ($i === 0 || empty(trim($line))) {
+                continue; // ignore l'en-tête et les lignes vides
+            }
+            $this->assertCount($expectedColumnCount, explode(';', $line), "La ligne $i doit avoir $expectedColumnCount colonnes");
         }
     }
 

@@ -63,7 +63,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getPlanNameForUser(User $user): string
     {
         $activeSubscription = $user->getSubscriptions()
-            ->filter(fn (Subscription $s): bool => $s->isActive() ?? false)
+            ->filter(fn (Subscription $s): bool => $s->isActive() === true)
             ->last();
 
         return $activeSubscription && $activeSubscription->getPlan()
