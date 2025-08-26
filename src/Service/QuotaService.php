@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\User;
+use App\Entity\Subscription;
 use App\Repository\FormRepository;
 use App\Repository\SubmissionRepository;
 use App\Repository\SubscriptionRepository;

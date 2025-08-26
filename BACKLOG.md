@@ -200,7 +200,8 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.1 Controllers de soumissions
 
--   [ ] **SUBMISSIONS-001** `(Dépendances -> FORMS-008, QUOTAS-002, SUBMISSIONS-002, AUTH-012)` : Créer `SubmissionController`
+-   [x] **SUBMISSIONS-001** `(Dépendances -> FORMS-008, QUOTAS-002, SUBMISSIONS-002, AUTH-012)` : Créer `SubmissionController`
+
     -   Endpoint : `POST /api/forms/{id}/submit` (public)
     -   Endpoint : `GET /api/forms/{id}/submissions` (privé)
     -   Endpoint : `GET /api/forms/{id}/submissions/export`
@@ -210,14 +211,15 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.2 Services de soumissions
 
--   [ ] **SUBMISSIONS-002** `(Dépendances -> AUTH-008, QUOTAS-002)` : Créer `SubmissionService`
+-   [x] **SUBMISSIONS-002** `(Dépendances -> AUTH-008, QUOTAS-002)` : Créer `SubmissionService`
 
     -   Validation des données de soumission
     -   Vérification des quotas
     -   Enregistrement sécurisé
     -   Notifications email
 
--   [ ] **SUBMISSIONS-003** `(Dépendances -> Aucune)` : Créer `SubmissionExportService`
+-   [x] **SUBMISSIONS-003** `(Dépendances -> Aucune)` : Créer `SubmissionExportService`
+
     -   Génération de fichiers CSV
     -   Gestion des caractères spéciaux
     -   Pagination des exports
@@ -225,14 +227,15 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 3.3 DTOs de soumissions
 
--   [ ] **SUBMISSIONS-004** `(Dépendances -> Aucune)` : Créer les DTOs de soumissions
+-   [x] **SUBMISSIONS-004** `(Dépendances -> Aucune)` : Créer les DTOs de soumissions
+
     -   `SubmitFormDto` avec validation dynamique
     -   `SubmissionResponseDto` pour les réponses
     -   `SubmissionExportDto` pour les exports
 
 ### 3.4 Validation et analytics
 
--   [ ] **SUBMISSIONS-005** `(Dépendances -> FORMS-008)` : Implémenter la validation des données de soumission
+-   [x] **SUBMISSIONS-005** `(Dépendances -> FORMS-008)` : Implémenter la validation des données de soumission
 
     -   Validation dynamique selon le schéma du formulaire
     -   Gestion des types de données (email, date, nombre, etc.)
@@ -240,7 +243,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Messages d'erreur personnalisés
     -   Validation côté serveur et client
 
--   [ ] **SUBMISSIONS-006** `(Dépendances -> Aucune)` : Créer `SubmissionAnalyticsService`
+-   [x] **SUBMISSIONS-006** `(Dépendances -> Aucune)` : Créer `SubmissionAnalyticsService`
     -   Statistiques des soumissions par formulaire
     -   Endpoint : `GET /api/forms/{id}/submissions/analytics`
     -   Métriques de conversion

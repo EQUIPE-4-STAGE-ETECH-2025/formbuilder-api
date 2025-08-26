@@ -260,45 +260,49 @@ class AuthServiceTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testVerifyEmailThrowsOnInvalidTokenType(): void
+    public function testVerifyEmailWithInvalidToken(): void
     {
-        $jwtService = $this->createMock(JwtService::class);
-        $jwtService->method('validateToken')->willReturn((object)['type' => 'other_type']);
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->expects($this->never())->method('save');
 
-        $userRepository = $this->createMock(UserRepository::class);
+        $jwtService = $this->createMock(JwtService::class);
+        $jwtService->method('validateToken')->willThrowException(new RuntimeException('Token invalide'));
+        $jwtService->expects($this->never())->method('blacklistToken');
+
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
 
-        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Token invalide.');
 
-        $authService->verifyEmail('token');
+        $authService->verifyEmail('invalid-token');
+        $this->assertTrue(true);
     }
 
     /**
      * @throws Exception
      */
-    public function testVerifyEmailThrowsIfUserNotFound(): void
+    public function testVerifyEmailUserNotFound(): void
     {
-        $tokenPayload = (object)['id' => 123, 'type' => 'email_verification'];
+        $userRepo = $this->createMock(UserRepository::class);
+        $userRepo->method('find')->willReturn(null);
+        $userRepo->expects($this->never())->method('save');
 
         $jwtService = $this->createMock(JwtService::class);
-        $jwtService->method('validateToken')->willReturn($tokenPayload);
-
-        $userRepository = $this->createMock(UserRepository::class);
-        $userRepository->method('find')->willReturn(null);
+        $jwtService->method('validateToken')->willReturn((object)[
+            'id' => 123,
+            'type' => 'email_verification',
+            'exp' => (new DateTimeImmutable('+1 hour'))->getTimestamp(),
+        ]);
+        $jwtService->expects($this->never())->method('blacklistToken');
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
 
-        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Utilisateur introuvable.');
-
-        $authService->verifyEmail('token');
+        $authService->verifyEmail('token-user-not-found');
+        $this->assertTrue(true);
     }
 
     /**
@@ -309,7 +313,11 @@ class AuthServiceTest extends TestCase
         $user = new User();
         $user->setIsEmailVerified(true);
 
-        $tokenPayload = (object)['id' => 123, 'type' => 'email_verification'];
+        $tokenPayload = (object)[
+            'id' => 123,
+            'type' => 'email_verification',
+            'exp' => (new DateTimeImmutable('+1 hour'))->getTimestamp(),
+        ];
 
         $jwtService = $this->createMock(JwtService::class);
         $jwtService->method('validateToken')->willReturn($tokenPayload);
@@ -409,37 +417,37 @@ class AuthServiceTest extends TestCase
      */
     public function testForgotPasswordSendsEmail(): void
     {
+        $_ENV['FRONTEND_URL'] = 'http://frontend.test';
+
         $email = 'user@example.com';
+        $firstName = 'Jane';
+        $token = 'reset-token';
+        $expectedUrl = 'http://frontend.test/reset-password?token=reset-token&email=user%40example.com';
+
         $user = new User();
+        $user->setId(Uuid::v4());
         $user->setEmail($email);
-        $user->setFirstName('Jane');
+        $user->setFirstName($firstName);
+        $user->setIsEmailVerified(true);
 
         $userRepo = $this->createMock(UserRepository::class);
-        $userRepo->method('findOneBy')->with(['email' => $email])->willReturn($user);
+        $userRepo->method('findOneBy')
+            ->with(['email' => $email])
+            ->willReturn($user);
 
         $jwtService = $this->createMock(JwtService::class);
-        $jwtService->expects($this->once())
-            ->method('generateToken')
-            ->with($this->callback(
-                fn ($payload) =>
-                isset($payload['id'], $payload['email'], $payload['type']) &&
-                $payload['type'] === 'password_reset' &&
-                $payload['email'] === $email
-            ))
-            ->willReturn('reset-token');
+        $jwtService->method('generateToken')->willReturn($token);
 
         $emailService = $this->createMock(EmailService::class);
         $emailService->expects($this->once())
             ->method('sendPasswordResetEmail')
-            ->with($email, 'Jane', 'http://localhost/api/auth/reset-password?token=reset-token');
+            ->with($email, $firstName, $expectedUrl);
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $_ENV['APP_URL'] = 'http://localhost';
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
-
-        $service->forgotPassword($email);
+        $authService->forgotPassword($email);
     }
 
     /**

@@ -18,7 +18,7 @@ class QuotaStatusFixtures extends Fixture implements DependentFixtureInterface
                 'user' => '550e8400-e29b-41d4-a716-446655440002',
                 'month' => '2024-07',
                 'formCount' => 8,
-                'submissionCount' => 2340,
+                'submissionCount' => 50,
                 'storageUsedMb' => 25,
                 'notified80' => false,
                 'notified100' => false,

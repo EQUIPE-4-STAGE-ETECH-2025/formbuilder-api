@@ -14,7 +14,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
     {
         $submissions = [
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440601',
                 'form' => '550e8400-e29b-41d4-a716-446655440301',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441003' => 'Jean Dupont',
@@ -25,7 +24,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
                 'ipAddress' => '192.168.1.1',
             ],
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440602',
                 'form' => '550e8400-e29b-41d4-a716-446655440301',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441003' => 'Marie Dubois',
@@ -36,7 +34,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
                 'ipAddress' => '192.168.1.2',
             ],
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440603',
                 'form' => '550e8400-e29b-41d4-a716-446655440302',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441006' => 'Pierre Martin',
@@ -46,7 +43,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
                 'ipAddress' => '192.168.1.3',
             ],
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440604',
                 'form' => '550e8400-e29b-41d4-a716-446655440302',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441006' => 'Sophie Bernard',
@@ -56,7 +52,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
                 'ipAddress' => '192.168.1.4',
             ],
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440605',
                 'form' => '550e8400-e29b-41d4-a716-446655440304',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441010' => 'TechCorp',
@@ -68,7 +63,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
                 'ipAddress' => '192.168.1.5',
             ],
             [
-                'id' => '550e8400-e29b-41d4-a716-446655440606',
                 'form' => '550e8400-e29b-41d4-a716-446655440304',
                 'data' => [
                     '550e8400-e29b-41d4-a716-446655441010' => 'StartupXYZ',
@@ -83,7 +77,6 @@ class SubmissionFixtures extends Fixture implements DependentFixtureInterface
 
         foreach ($submissions as $submissionData) {
             $submission = new Submission();
-            $submission->setId($submissionData['id']);
             $submission->setForm($this->getReference($submissionData['form'], Form::class));
             $submission->setData($submissionData['data']);
             $submission->setSubmittedAt(new \DateTimeImmutable($submissionData['submittedAt']));
