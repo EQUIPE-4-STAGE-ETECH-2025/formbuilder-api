@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: FormRepository::class)]
-#[ORM\Cache(usage: 'READ_ONLY')]
 class Form
 {
     #[ORM\Id]
