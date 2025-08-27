@@ -8,6 +8,7 @@ use Symfony\Component\Uid\Uuid;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: SubmissionRepository::class)]
+#[ORM\Cache(usage: 'READ_ONLY')]
 class Submission
 {
     #[ORM\Id]

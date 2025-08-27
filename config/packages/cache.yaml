@@ -15,5 +15,18 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Cache Doctrine pour les métadonnées
+            doctrine.metadata_cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 0 # Pas d'expiration pour les métadonnées
+
+            # Cache Doctrine pour les requêtes
+            doctrine.query_cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 3600 # 1 heure pour les requêtes
+
+            # Cache Doctrine pour les résultats
+            doctrine.result_cache:
+                adapter: cache.adapter.filesystem
+                default_lifetime: 1800 # 30 minutes pour les résultats

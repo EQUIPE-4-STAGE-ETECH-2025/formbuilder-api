@@ -85,6 +85,24 @@ doctrine:
         controller_resolver:
             auto_mapping: false
 
+        # Configuration du cache Doctrine
+        metadata_cache_driver:
+            type: pool
+            pool: doctrine.metadata_cache
+        query_cache_driver:
+            type: pool
+            pool: doctrine.query_cache
+        result_cache_driver:
+            type: pool
+            pool: doctrine.result_cache
+
+        # Cache de second niveau (L2) pour les entités
+        second_level_cache:
+            enabled: true
+            region_cache_driver:
+                type: pool
+                pool: doctrine.result_cache
+
 when@test:
     doctrine:
         dbal:
