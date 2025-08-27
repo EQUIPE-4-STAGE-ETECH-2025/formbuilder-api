@@ -28,11 +28,15 @@ class JwtService
     public function generateToken(array $payload): string
     {
         $issuedAt = new \DateTimeImmutable();
-        $expire = $issuedAt->modify("+{$this->tokenTtl} seconds");
+        
+        // Si une expiration personnalisée est fournie, l'utiliser, sinon utiliser la TTL par défaut
+        if (!isset($payload['exp'])) {
+            $expire = $issuedAt->modify("+{$this->tokenTtl} seconds");
+            $payload['exp'] = $expire->getTimestamp();
+        }
 
         $tokenPayload = array_merge($payload, [
             'iat' => $issuedAt->getTimestamp(),
-            'exp' => $expire->getTimestamp(),
         ]);
 
         return JWT::encode($tokenPayload, $this->secretKey, $this->algorithm);

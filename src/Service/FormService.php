@@ -250,6 +250,42 @@ class FormService
         }
     }
 
+    /**
+     * Formater la réponse d'un formulaire pour l'accès public
+     * @return array<string, mixed>
+     */
+    public function formatFormResponse(Form $form): array
+    {
+        $dto = $this->mapToDto($form, true);
+        
+        // Convertir le DTO en tableau associatif
+        return [
+            'id' => $dto->id,
+            'title' => $dto->title,
+            'description' => $dto->description,
+            'status' => $dto->status,
+            'publishedAt' => $dto->publishedAt?->format('c'),
+            'createdAt' => $dto->createdAt->format('c'),
+            'updatedAt' => $dto->updatedAt->format('c'),
+            'schema' => $dto->schema,
+            'submissionsCount' => $dto->submissionsCount,
+            'currentVersion' => $dto->currentVersion ? [
+                'id' => $dto->currentVersion->id,
+                'versionNumber' => $dto->currentVersion->versionNumber,
+                'schema' => $dto->currentVersion->schema,
+                'createdAt' => $dto->currentVersion->createdAt->format('c'),
+                'fields' => $dto->currentVersion->fields
+            ] : null,
+            'versions' => array_map(fn($version) => [
+                'id' => $version->id,
+                'versionNumber' => $version->versionNumber,
+                'schema' => $version->schema,
+                'createdAt' => $version->createdAt->format('c'),
+                'fields' => $version->fields
+            ], $dto->versions)
+        ];
+    }
+
     private function mapToDto(Form $form, bool $includeVersions = false): FormResponseDto
     {
         $submissionsCount = $form->getSubmissions()->count();
