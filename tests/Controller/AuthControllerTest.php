@@ -272,7 +272,7 @@ class AuthControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Email vérifié avec succès', $data['message']);
-
+        // Correction ici : vider le cache de l'entity manager, pas clear() sur repository
         $em->clear();
 
         $verifiedUser = $userRepository->find($user->getId());
