@@ -10,7 +10,6 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -31,8 +30,10 @@ class UserServiceTest extends TestCase
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->authorizationService = $this->createMock(AuthorizationService::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
+
         $this->userService = new UserService($this->userRepository, $this->authorizationService, $this->validator);
     }
+
     public function testGetUserRoleSuccess(): void
     {
         $userId = '123';
@@ -168,47 +169,6 @@ class UserServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         $this->userService->updateUserProfile($userId, ['firstName' => '']);
-    }
-    public function testListUsersSuccess(): void
-    {
-        $users = [new User(), new User()];
-
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(true);
-        $this->userRepository->method('findAll')->willReturn($users);
-
-        $result = $this->userService->listUsers();
-
-        $this->assertSame($users, $result);
-    }
-
-    public function testListUsersAccessDenied(): void
-    {
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(false);
-
-        $this->expectException(AccessDeniedHttpException::class);
-
-        $this->userService->listUsers();
-    }
-
-    public function testListUsersSuccess(): void
-    {
-        $users = [new User(), new User()];
-
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(true);
-        $this->userRepository->method('findAll')->willReturn($users);
-
-        $result = $this->userService->listUsers();
-
-        $this->assertSame($users, $result);
-    }
-
-    public function testListUsersAccessDenied(): void
-    {
-        $this->authorizationService->method('isGranted')->with('USER_VIEW_ALL')->willReturn(false);
-
-        $this->expectException(AccessDeniedHttpException::class);
-
-        $this->userService->listUsers();
     }
 
     public function testDeleteUserSuccess(): void

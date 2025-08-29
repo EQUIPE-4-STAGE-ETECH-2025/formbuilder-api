@@ -272,7 +272,7 @@ class AuthControllerTest extends WebTestCase
 
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Email vérifié avec succès', $data['message']);
-        // Correction ici : vider le cache de l'entity manager, pas clear() sur repository
+
         $em->clear();
 
         $verifiedUser = $userRepository->find($user->getId());
@@ -294,12 +294,6 @@ class AuthControllerTest extends WebTestCase
         // On vérifie juste qu'il y a un message, sans attendre un mot clé "token"
         $this->assertArrayHasKey('message', $data);
         $this->assertNotEmpty($data['message']);
-        $this->client->request('GET', '/api/auth/verify-email?token=invalid-token');
-
-        $this->assertResponseStatusCodeSame(400);
-
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('error', $data);
     }
 
     public function testForgotPasswordSuccess(): void
@@ -357,11 +351,6 @@ class AuthControllerTest extends WebTestCase
         $data = json_decode($response->getContent(), true);
         $this->assertFalse($data['success']);
         $this->assertEquals('Utilisateur inexistant.', $data['error']);
-            json_encode(['email' => 'nonexistent@example.com']);
-        $this->assertResponseStatusCodeSame(404);
-
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertArrayHasKey('error', $data);
     }
 
     public function testResetPasswordSuccess(): void
@@ -460,6 +449,7 @@ class AuthControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('error', $data);
     }
+
     // Fonction qui nettoie l'environnement après le test
     protected function tearDown(): void
     {

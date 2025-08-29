@@ -36,16 +36,5 @@ services:
                   method: onKernelRequest,
                   priority: 10,
               }
-
-    App\Service\JwtService:
-        arguments:
-            $secretKey: '%env(JWT_SECRET)%'
-            $tokenTtl: 3600 # 1 heure
-            $algorithm: 'HS256'
-
-    App\Security\JwtAuthenticator:
-        arguments:
-            $jwtService: '@App\Service\JwtService'
-
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

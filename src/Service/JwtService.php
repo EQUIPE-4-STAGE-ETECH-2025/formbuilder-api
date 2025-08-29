@@ -73,6 +73,7 @@ class JwtService
 
         return $this->generateToken($payload);
     }
+
     // Révoque un token
     public function blacklistToken(BlackListedTokenDto $token): void
     {
@@ -83,4 +84,3 @@ class JwtService
         $this->blacklistService->blacklist($token);
     }
 }
-
