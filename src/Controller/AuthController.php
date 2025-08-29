@@ -160,6 +160,7 @@ class AuthController extends AbstractController
 
         try {
             $authService->verifyEmail($token);
+
             return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
             // Codes HTTP plus spécifiques selon le type d'erreur
