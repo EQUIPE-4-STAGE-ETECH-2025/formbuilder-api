@@ -10,7 +10,6 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
@@ -31,8 +30,10 @@ class UserServiceTest extends TestCase
         $this->userRepository = $this->createMock(UserRepository::class);
         $this->authorizationService = $this->createMock(AuthorizationService::class);
         $this->validator = $this->createMock(ValidatorInterface::class);
+
         $this->userService = new UserService($this->userRepository, $this->authorizationService, $this->validator);
     }
+
     public function testGetUserRoleSuccess(): void
     {
         $userId = '123';
