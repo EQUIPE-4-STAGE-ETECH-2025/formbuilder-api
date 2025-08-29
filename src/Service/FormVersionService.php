@@ -28,6 +28,9 @@ class FormVersionService
      */
     public function createVersion(Form $form, array $schema): FormVersionDto
     {
+        // Démarrer une transaction pour assurer la cohérence
+        $this->entityManager->beginTransaction();
+
         try {
             $this->logger->info('Création d\'une nouvelle version de formulaire', [
                 'form_id' => $form->getId(),
@@ -38,9 +41,6 @@ class FormVersionService
 
             // Obtenir le prochain numéro de version
             $nextVersionNumber = $this->getNextVersionNumber($form);
-
-            // Supprimer les anciennes versions si nécessaire
-            $this->cleanupOldVersions($form);
 
             $version = new FormVersion();
             $version->setId(Uuid::v4()->toRfc4122());
@@ -55,6 +55,12 @@ class FormVersionService
 
             $this->entityManager->flush();
 
+            // Supprimer les anciennes versions si nécessaire APRÈS la création réussie
+            $this->cleanupOldVersions($form);
+
+            // Valider la transaction
+            $this->entityManager->commit();
+
             $this->logger->info('Version de formulaire créée avec succès', [
                 'form_id' => $form->getId(),
                 'version_number' => $nextVersionNumber,
@@ -62,6 +68,9 @@ class FormVersionService
 
             return $this->mapToDto($version);
         } catch (\Exception $e) {
+            // Annuler la transaction en cas d'erreur
+            $this->entityManager->rollback();
+
             $this->logger->error('Erreur lors de la création de la version', [
                 'error' => $e->getMessage(),
                 'form_id' => $form->getId(),
@@ -104,11 +113,31 @@ class FormVersionService
             // Créer une nouvelle version basée sur l'ancienne
             $restoredVersion = $this->createVersion($form, $versionToRestore->getSchema());
 
-            $this->logger->info('Version restaurée avec succès', [
-                'form_id' => $form->getId(),
-                'restored_from_version' => $versionNumber,
-                'new_version_number' => $restoredVersion->versionNumber,
-            ]);
+            // Supprimer la version restaurée pour éviter la duplication
+            try {
+                $this->logger->info('Suppression de la version restaurée pour éviter la duplication', [
+                    'form_id' => $form->getId(),
+                    'version_to_delete' => $versionNumber,
+                ]);
+
+                $this->entityManager->remove($versionToRestore);
+                $this->entityManager->flush();
+
+                $this->logger->info('Version restaurée avec succès et version originale supprimée', [
+                    'form_id' => $form->getId(),
+                    'restored_from_version' => $versionNumber,
+                    'new_version_number' => $restoredVersion->versionNumber,
+                ]);
+            } catch (\Exception $deleteException) {
+                // La nouvelle version a été créée avec succès, mais la suppression a échoué
+                // On log l'erreur mais on ne fait pas échouer l'opération complète
+                $this->logger->warning('Erreur lors de la suppression de la version restaurée, mais la nouvelle version a été créée', [
+                    'error' => $deleteException->getMessage(),
+                    'form_id' => $form->getId(),
+                    'version_number' => $versionNumber,
+                    'new_version_number' => $restoredVersion->versionNumber,
+                ]);
+            }
 
             return $restoredVersion;
         } catch (\Exception $e) {
@@ -190,11 +219,36 @@ class FormVersionService
             ['versionNumber' => 'DESC']
         );
 
-        if (count($versions) >= self::MAX_VERSIONS) {
-            $versionsToDelete = array_slice($versions, self::MAX_VERSIONS - 1);
+        $versionCount = count($versions);
+
+        if ($versionCount > self::MAX_VERSIONS) {
+            $versionsToDelete = array_slice($versions, self::MAX_VERSIONS);
+            
+            $this->logger->info('Nettoyage automatique des anciennes versions', [
+                'form_id' => $form->getId(),
+                'total_versions' => $versionCount,
+                'versions_to_delete' => count($versionsToDelete),
+                'max_versions_allowed' => self::MAX_VERSIONS,
+            ]);
+
             foreach ($versionsToDelete as $version) {
+                $this->logger->debug('Suppression automatique de la version', [
+                    'form_id' => $form->getId(),
+                    'version_number' => $version->getVersionNumber(),
+                    'version_id' => $version->getId(),
+                ]);
+
                 $this->entityManager->remove($version);
             }
+
+            // Note: Pas de flush ici car nous sommes dans une transaction
+            // Le flush sera fait lors du commit de la transaction
+
+            $this->logger->info('Nettoyage automatique terminé', [
+                'form_id' => $form->getId(),
+                'versions_deleted' => count($versionsToDelete),
+                'remaining_versions' => $versionCount - count($versionsToDelete),
+            ]);
         }
     }
 
