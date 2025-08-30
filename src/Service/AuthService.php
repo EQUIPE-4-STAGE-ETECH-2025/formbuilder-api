@@ -159,7 +159,7 @@ class AuthService
                 expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
             ));
         } catch (\Exception $e) {
-            return;
+            throw new RuntimeException('Lien invalide ou expiré.');
         }
     }
 
