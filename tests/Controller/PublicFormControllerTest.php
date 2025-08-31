@@ -24,7 +24,7 @@ class PublicFormControllerTest extends WebTestCase
             static::$kernel->shutdown();
             static::$kernel = null;
         }
-        
+
         $this->client = static::createClient();
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
         $this->createdEntities = [];
@@ -219,7 +219,7 @@ class PublicFormControllerTest extends WebTestCase
                 $this->em->remove($form);
             }
             $this->em->flush();
-            
+
             // Maintenant on peut supprimer l'utilisateur
             $this->em->remove($existingUser);
             $this->em->flush();
@@ -230,10 +230,10 @@ class PublicFormControllerTest extends WebTestCase
     {
         // Nettoyer toutes les entités créées dans l'ordre inverse des dépendances
         $this->cleanupCreatedEntities();
-        
+
         // Nettoyage de sécurité pour l'utilisateur de test par défaut
         $this->removeUserIfExists('test@example.com');
-        
+
         parent::tearDown();
     }
 
