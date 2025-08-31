@@ -82,6 +82,7 @@ class AuthController extends AbstractController
 
         try {
             $authData = $authService->login($dto);
+
             return $this->json(['success' => true, 'data' => $authData]);
         } catch (UnauthorizedHttpException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
@@ -212,6 +213,7 @@ class AuthController extends AbstractController
 
         try {
             $authService->resetPassword($dto);
+
             return $this->json(['success' => true, 'message' => 'Mot de passe réinitialisé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
@@ -225,7 +227,7 @@ class AuthController extends AbstractController
         AuthService $authService
     ): JsonResponse {
         $authHeader = $request->headers->get('Authorization');
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+        if (! $authHeader || ! str_starts_with($authHeader, 'Bearer ')) {
             return $this->json(['error' => 'Token manquant'], 401);
         }
         $token = substr($authHeader, 7);
@@ -241,11 +243,13 @@ class AuthController extends AbstractController
             foreach ($errors as $error) {
                 $errorMessages[$error->getPropertyPath()] = $error->getMessage();
             }
+
             return $this->json(['errors' => $errorMessages], 422);
         }
 
         try {
             $authService->changePassword($token, $dto);
+
             return $this->json(['success' => true, 'message' => 'Mot de passe changé avec succès']);
         } catch (RuntimeException $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
