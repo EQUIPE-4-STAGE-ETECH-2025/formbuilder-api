@@ -5,8 +5,6 @@ namespace App\Controller;
 use App\Dto\CreateFormDto;
 use App\Dto\UpdateFormDto;
 use App\Entity\User;
-use App\Repository\FormRepository;
-use App\Service\FormEmbedService;
 use App\Service\FormService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,8 +21,6 @@ class FormController extends AbstractController
 {
     public function __construct(
         private FormService $formService,
-        private FormEmbedService $formEmbedService,
-        private FormRepository $formRepository,
         private ValidatorInterface $validator,
         private LoggerInterface $logger
     ) {
@@ -299,65 +295,6 @@ class FormController extends AbstractController
             return $this->json([
                 'success' => false,
                 'message' => 'Erreur lors de la publication du formulaire',
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    #[Route('/{id}/embed', methods: ['GET'], requirements: ['id' => '[0-9a-f-]{36}'])]
-    public function embed(string $id, Request $request): JsonResponse
-    {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        try {
-            $form = $this->formRepository->find($id);
-
-            if (! $form) {
-                return $this->json([
-                    'success' => false,
-                    'message' => 'Formulaire non trouvé',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Récupérer les paramètres de personnalisation
-            $customization = [];
-            if ($request->query->has('width')) {
-                $customization['width'] = $request->query->get('width');
-            }
-            if ($request->query->has('height')) {
-                $customization['height'] = $request->query->get('height');
-            }
-            if ($request->query->has('border')) {
-                $customization['border'] = $request->query->get('border');
-            }
-            if ($request->query->has('borderRadius')) {
-                $customization['borderRadius'] = $request->query->get('borderRadius');
-            }
-            if ($request->query->has('boxShadow')) {
-                $customization['boxShadow'] = $request->query->get('boxShadow');
-            }
-
-            $embedData = $this->formEmbedService->generateEmbedCode($form, $user, $customization);
-
-            return $this->json([
-                'success' => true,
-                'data' => $embedData,
-            ], Response::HTTP_OK);
-        } catch (\InvalidArgumentException $e) {
-            return $this->json([
-                'success' => false,
-                'message' => $e->getMessage(),
-            ], Response::HTTP_BAD_REQUEST);
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de la génération du code d\'intégration', [
-                'error' => $e->getMessage(),
-                'form_id' => $id,
-                'user_id' => $user->getId(),
-            ]);
-
-            return $this->json([
-                'success' => false,
-                'message' => 'Erreur lors de la génération du code d\'intégration',
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
