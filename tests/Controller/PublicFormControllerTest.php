@@ -15,11 +15,19 @@ class PublicFormControllerTest extends WebTestCase
 {
     private KernelBrowser $client;
     private EntityManagerInterface $em;
+    private array $createdEntities = [];
 
     protected function setUp(): void
     {
+        // S'assurer qu'on démarre avec un kernel propre
+        if (static::$kernel) {
+            static::$kernel->shutdown();
+            static::$kernel = null;
+        }
+        
         $this->client = static::createClient();
         $this->em = static::getContainer()->get(EntityManagerInterface::class);
+        $this->createdEntities = [];
     }
 
     public function testGenerateEmbedCodeForPublishedForm(): void
@@ -173,6 +181,9 @@ class PublicFormControllerTest extends WebTestCase
         $this->em->persist($user);
         $this->em->flush();
 
+        // Suivre les entités créées pour le nettoyage
+        $this->createdEntities['users'][] = $user->getId();
+
         return $user;
     }
 
@@ -192,6 +203,9 @@ class PublicFormControllerTest extends WebTestCase
         $this->em->persist($form);
         $this->em->flush();
 
+        // Suivre les entités créées pour le nettoyage
+        $this->createdEntities['forms'][] = $form->getId();
+
         return $form;
     }
 
@@ -199,6 +213,14 @@ class PublicFormControllerTest extends WebTestCase
     {
         $existingUser = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
         if ($existingUser) {
+            // Supprimer d'abord tous les formulaires associés
+            $forms = $this->em->getRepository(Form::class)->findBy(['user' => $existingUser]);
+            foreach ($forms as $form) {
+                $this->em->remove($form);
+            }
+            $this->em->flush();
+            
+            // Maintenant on peut supprimer l'utilisateur
             $this->em->remove($existingUser);
             $this->em->flush();
         }
@@ -206,7 +228,37 @@ class PublicFormControllerTest extends WebTestCase
 
     protected function tearDown(): void
     {
+        // Nettoyer toutes les entités créées dans l'ordre inverse des dépendances
+        $this->cleanupCreatedEntities();
+        
+        // Nettoyage de sécurité pour l'utilisateur de test par défaut
         $this->removeUserIfExists('test@example.com');
+        
         parent::tearDown();
+    }
+
+    private function cleanupCreatedEntities(): void
+    {
+        // Supprimer les formulaires en premier (dépendants)
+        if (isset($this->createdEntities['forms'])) {
+            foreach ($this->createdEntities['forms'] as $formId) {
+                $form = $this->em->getRepository(Form::class)->find($formId);
+                if ($form) {
+                    $this->em->remove($form);
+                }
+            }
+            $this->em->flush();
+        }
+
+        // Supprimer les utilisateurs ensuite
+        if (isset($this->createdEntities['users'])) {
+            foreach ($this->createdEntities['users'] as $userId) {
+                $user = $this->em->getRepository(User::class)->find($userId);
+                if ($user) {
+                    $this->em->remove($user);
+                }
+            }
+            $this->em->flush();
+        }
     }
 }
