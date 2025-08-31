@@ -83,4 +83,18 @@ class FormRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function getRecentFormsByUser(string $userId, int $limit = 3): array
+    {
+        $qb = $this->createQueryBuilder('f')
+            ->select('f.id, f.title, f.status, f.createdAt')
+            ->where('f.user = :userId')
+            ->setParameter('userId', $userId)
+            ->orderBy('f.createdAt', 'DESC')
+            ->setMaxResults($limit);
+
+        return $qb->getQuery()->getArrayResult();
+    }
 }
