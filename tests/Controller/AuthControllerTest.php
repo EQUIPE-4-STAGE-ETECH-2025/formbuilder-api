@@ -287,13 +287,14 @@ class AuthControllerTest extends WebTestCase
 
         $response = $this->client->getResponse();
 
-        $this->assertResponseIsSuccessful();
+        $this->assertResponseStatusCodeSame(400);
 
         $data = json_decode($response->getContent(), true);
 
-        // On vérifie juste qu'il y a un message, sans attendre un mot clé "token"
-        $this->assertArrayHasKey('message', $data);
-        $this->assertNotEmpty($data['message']);
+        $this->assertArrayHasKey('success', $data);
+        $this->assertFalse($data['success']);
+        $this->assertArrayHasKey('error', $data);
+        $this->assertEquals('Lien invalide ou expiré.', $data['error']);
     }
 
     public function testForgotPasswordSuccess(): void

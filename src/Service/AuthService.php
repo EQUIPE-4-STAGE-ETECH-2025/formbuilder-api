@@ -54,15 +54,20 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail())
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail() ?? '',
+            $userEmail,
             $user->getFirstName() ?? '',
             $verificationUrl
         );
@@ -83,7 +88,7 @@ class AuthService
             throw new UnauthorizedHttpException('', 'Identifiants invalides.');
         }
 
-        if (! $user->isEmailVerified()){
+        if (! $user->isEmailVerified()) {
             throw new UnauthorizedHttpException('', 'Email non vérifié.');
         }
 
@@ -154,6 +159,10 @@ class AuthService
                 $this->userRepository->save($user, true);
             }
 
+            if (! isset($payload->exp)) {
+                throw new RuntimeException('Token invalide : propriété exp manquante');
+            }
+
             $this->jwtService->blacklistToken(new BlackListedTokenDto(
                 token: $token,
                 expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
@@ -184,15 +193,20 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail())
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail(),
+            $userEmail,
             $user->getFirstName() ?? '',
             $verificationUrl
         );
@@ -216,15 +230,20 @@ class AuthService
             'type' => 'password_reset',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $resetUrl = sprintf(
             '%s/reset-password?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $resetToken,
-            urlencode($user->getEmail())
+            urlencode($userEmail)
         );
 
         $this->emailService->sendPasswordResetEmail(
-            $user->getEmail() ?? '',
+            $userEmail,
             $user->getFirstName() ?? '',
             $resetUrl
         );
@@ -267,22 +286,22 @@ class AuthService
         $this->userRepository->save($user, true);
 
         if (isset($payload->exp)) {
-        $this->jwtService->blacklistToken(new BlackListedTokenDto(
-            token: $token,
-            expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
-        ));
-    }
+            $this->jwtService->blacklistToken(new BlackListedTokenDto(
+                token: $token,
+                expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+            ));
+        }
     }
 
     public function changePassword(string $token, ChangePasswordDto $dto): void
     {
         $payload = $this->jwtService->validateToken($token);
         $user = $this->userRepository->find($payload->id ?? null);
-        if (!$user) {
+        if (! $user) {
             throw new RuntimeException('Utilisateur inexistant.');
         }
 
-        if (!$this->passwordHasher->isPasswordValid($user, $dto->getCurrentPassword() ?? '')) {
+        if (! $this->passwordHasher->isPasswordValid($user, $dto->getCurrentPassword() ?? '')) {
             throw new RuntimeException('Mot de passe actuel invalide.');
         }
 
