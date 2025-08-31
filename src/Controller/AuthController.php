@@ -142,7 +142,16 @@ class AuthController extends AbstractController
 
             return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
+            // Codes HTTP plus spécifiques selon le type d'erreur
+            $statusCode = match ($e->getMessage()) {
+                'Token révoqué.' => 410, // Gone - Token déjà utilisé
+                'Email déjà vérifié.' => 409, // Conflict - Email déjà vérifié
+                'Type de token invalide.' => 422, // Unprocessable Entity
+                'Utilisateur introuvable.' => 404, // Not Found
+                default => 400 // Bad Request pour les autres erreurs
+            };
+
+            return $this->json(['success' => false, 'error' => $e->getMessage()], $statusCode);
         }
     }
 

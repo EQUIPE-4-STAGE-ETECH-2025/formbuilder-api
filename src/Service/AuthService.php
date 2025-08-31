@@ -154,19 +154,43 @@ class AuthService
                 throw new RuntimeException('Utilisateur introuvable.');
             }
 
-            if (! $user->isEmailVerified() && ($payload->type ?? null) === 'email_verification') {
-                $user->setIsEmailVerified(true);
-                $this->userRepository->save($user, true);
+            // Vérifier si l'email est déjà vérifié
+            if ($user->isEmailVerified()) {
+                throw new RuntimeException('Email déjà vérifié.');
             }
+
+            // Vérifier le type de token
+            if (($payload->type ?? null) !== 'email_verification') {
+                throw new RuntimeException('Type de token invalide.');
+            }
+
+            // Marquer l'email comme vérifié
+            $user->setIsEmailVerified(true);
+            $this->userRepository->save($user, true);
 
             if (! isset($payload->exp)) {
                 throw new RuntimeException('Token invalide : propriété exp manquante');
             }
 
+            // Blacklister le token pour éviter sa réutilisation
             $this->jwtService->blacklistToken(new BlackListedTokenDto(
                 token: $token,
                 expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
             ));
+        } catch (RuntimeException $e) {
+            // Si c'est une RuntimeException avec un message spécifique, on la propage
+            if (in_array($e->getMessage(), [
+                'Token révoqué.',
+                'Email déjà vérifié.',
+                'Type de token invalide.',
+                'Utilisateur introuvable.',
+                'Token invalide : propriété exp manquante'
+            ])) {
+                throw $e;
+            }
+            
+            // Pour toute autre exception, message générique
+            throw new RuntimeException('Lien invalide ou expiré.');
         } catch (\Exception $e) {
             throw new RuntimeException('Lien invalide ou expiré.');
         }
