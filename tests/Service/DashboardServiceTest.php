@@ -66,25 +66,13 @@ class DashboardServiceTest extends TestCase
             ->with('user-123')
             ->willReturn(['PUBLISHED' => 3, 'DRAFT' => 2]);
 
-        $recentSubmission1 = new Submission();
-        $recentSubmission1->setSubmittedAt(new DateTimeImmutable('2025-03-10 12:00:00'));
-        $recentSubmission1->setForm((new Form())->setTitle('Form A'));
-
-        $recentSubmission2 = new Submission();
-        $recentSubmission2->setSubmittedAt(new DateTimeImmutable('2025-03-09 15:00:00'));
-        $recentSubmission2->setForm((new Form())->setTitle('Form B'));
-
-        $recentSubmission3 = new Submission();
-        $recentSubmission3->setSubmittedAt(new DateTimeImmutable('2025-03-08 09:30:00'));
-        $recentSubmission3->setForm((new Form())->setTitle('Form C'));
-
-        $this->submissionRepository
-            ->method('getRecentSubmissionsByUser')
+        $this->formRepository
+            ->method('getRecentFormsByUser')
             ->with('user-123')
             ->willReturn([
-                ['formTitle' => 'Form A', 'submittedAt' => '2025-03-10 12:00:00'],
-                ['formTitle' => 'Form B', 'submittedAt' => '2025-03-09 15:00:00'],
-                ['formTitle' => 'Form C', 'submittedAt' => '2025-03-08 09:30:00'],
+                ['id' => 1, 'title' => 'Form A', 'status' => 'DRAFT', 'createdAt' => '2025-03-10 12:00:00'],
+                ['id' => 2, 'title' => 'Form B', 'status' => 'PUBLISHED', 'createdAt' => '2025-03-09 15:00:00'],
+                ['id' => 3, 'title' => 'Form C', 'status' => 'PUBLISHED', 'createdAt' => '2025-03-08 09:30:00'],
             ]);
 
         $dto = $this->dashboardService->getUserStats($user);
@@ -98,8 +86,8 @@ class DashboardServiceTest extends TestCase
         $this->assertEquals(['Form A' => 20, 'Form B' => 22], $data['submissionsPerForm']);
         $this->assertEquals(['PUBLISHED' => 3, 'DRAFT' => 2], $data['formsStatusCount']);
 
-        $this->assertCount(3, $data['recentSubmissions']);
-        $this->assertEquals('Form A', $data['recentSubmissions'][0]['formTitle']);
-        $this->assertEquals('2025-03-10 12:00:00', $data['recentSubmissions'][0]['submittedAt']);
+        $this->assertCount(3, $data['recentForms']);
+        $this->assertEquals('Form A', $data['recentForms'][0]['title']);
+        $this->assertEquals('2025-03-10 12:00:00', $data['recentForms'][0]['createdAt']);
     }
 }
