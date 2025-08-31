@@ -29,7 +29,7 @@ class PublicFormController extends AbstractController
         try {
             $form = $this->formRepository->find($id);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
                     'message' => 'Formulaire non trouvé',
@@ -47,7 +47,7 @@ class PublicFormController extends AbstractController
             // Récupérer les données du formulaire via le service FormService
             // mais filtrer les données sensibles pour l'accès public
             $formData = $this->formService->formatFormResponse($form);
-            
+
             // Supprimer les informations sensibles pour l'accès public
             $publicFormData = $this->filterSensitiveData($formData);
 
@@ -98,7 +98,7 @@ class PublicFormController extends AbstractController
         try {
             $form = $this->formRepository->find($id);
 
-            if (!$form) {
+            if (! $form) {
                 return $this->json([
                     'success' => false,
                     'message' => 'Formulaire non trouvé',

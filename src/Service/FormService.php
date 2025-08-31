@@ -257,7 +257,7 @@ class FormService
     public function formatFormResponse(Form $form): array
     {
         $dto = $this->mapToDto($form, true);
-        
+
         // Convertir le DTO en tableau associatif
         return [
             'id' => $dto->id,
@@ -274,15 +274,15 @@ class FormService
                 'versionNumber' => $dto->currentVersion->versionNumber,
                 'schema' => $dto->currentVersion->schema,
                 'createdAt' => $dto->currentVersion->createdAt->format('c'),
-                'fields' => $dto->currentVersion->fields
+                'fields' => $dto->currentVersion->fields,
             ] : null,
-            'versions' => array_map(fn($version) => [
+            'versions' => array_map(fn ($version) => [
                 'id' => $version->id,
                 'versionNumber' => $version->versionNumber,
                 'schema' => $version->schema,
                 'createdAt' => $version->createdAt->format('c'),
-                'fields' => $version->fields
-            ], $dto->versions)
+                'fields' => $version->fields,
+            ], $dto->versions),
         ];
     }
 

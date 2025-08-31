@@ -223,7 +223,7 @@ class FormVersionService
 
         if ($versionCount > self::MAX_VERSIONS) {
             $versionsToDelete = array_slice($versions, self::MAX_VERSIONS);
-            
+
             $this->logger->info('Nettoyage automatique des anciennes versions', [
                 'form_id' => $form->getId(),
                 'total_versions' => $versionCount,

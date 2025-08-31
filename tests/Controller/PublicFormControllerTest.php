@@ -110,13 +110,13 @@ class PublicFormControllerTest extends WebTestCase
         $this->assertEquals($form->getId(), $responseData['data']['id']);
         $this->assertEquals('Formulaire de test', $responseData['data']['title']);
         $this->assertEquals('PUBLISHED', $responseData['data']['status']);
-        
+
         // Vérifier que les données sensibles sont filtrées
         $this->assertArrayNotHasKey('user', $responseData['data']);
         $this->assertArrayNotHasKey('submissionsCount', $responseData['data']);
         $this->assertArrayNotHasKey('versions', $responseData['data']);
         $this->assertArrayNotHasKey('currentVersion', $responseData['data']);
-        
+
         // Vérifier que les données essentielles sont présentes
         $this->assertArrayHasKey('schema', $responseData['data']);
         $this->assertArrayHasKey('publishedAt', $responseData['data']);

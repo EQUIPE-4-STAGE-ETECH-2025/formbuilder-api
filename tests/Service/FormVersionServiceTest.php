@@ -143,7 +143,7 @@ class FormVersionServiceTest extends TestCase
         $formVersionRepository->method('findOneBy')
             ->with(['form' => $form], ['versionNumber' => 'DESC'])
             ->willReturn($latestVersion);
-        
+
         // Simuler que après création, nous avons 12 versions (11 + 1 nouvelle)
         $allVersionsAfterCreation = $oldVersionsDesc;
         // Ajouter la nouvelle version au début (ordre DESC)
@@ -164,7 +164,7 @@ class FormVersionServiceTest extends TestCase
 
         $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
         $schemaValidator->expects($this->once())->method('validateSchema');
-        
+
         $logger = $this->createMock(LoggerInterface::class);
 
         $formVersionService = new FormVersionService(
@@ -495,16 +495,16 @@ class FormVersionServiceTest extends TestCase
             ->willReturn($versionsDesc);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        
+
         // Vérifier la gestion de transaction
         $entityManager->expects($this->once())->method('beginTransaction');
         $entityManager->expects($this->once())->method('commit');
-        
+
         // Vérifier que la version la plus ancienne (version 1) est supprimée
         $entityManager->expects($this->once())
             ->method('remove')
             ->with($versions[0]); // Version 1
-        
+
         $entityManager->expects($this->once())
             ->method('flush'); // Une seule fois dans la transaction
 
@@ -512,7 +512,7 @@ class FormVersionServiceTest extends TestCase
         $schemaValidator->expects($this->once())->method('validateSchema');
 
         $logger = $this->createMock(LoggerInterface::class);
-        
+
         // Vérifier que les logs de nettoyage sont appelés
         $logger->expects($this->atLeastOnce())
             ->method('info');
@@ -571,21 +571,21 @@ class FormVersionServiceTest extends TestCase
             ->willReturn($versionsDesc);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        
+
         // Vérifier la gestion de transaction
         $entityManager->expects($this->once())->method('beginTransaction');
         $entityManager->expects($this->once())->method('commit');
-        
+
         // Vérifier qu'aucune version n'est supprimée lors du cleanup
         $entityManager->expects($this->never())->method('remove');
-        
+
         $entityManager->expects($this->once())->method('flush'); // Une fois dans la transaction
 
         $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
         $schemaValidator->expects($this->once())->method('validateSchema');
 
         $logger = $this->createMock(LoggerInterface::class);
-        
+
         // Vérifier que les logs sont appelés
         $logger->expects($this->atLeastOnce())
             ->method('info');

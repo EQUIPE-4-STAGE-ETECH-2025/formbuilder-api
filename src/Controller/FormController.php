@@ -5,8 +5,6 @@ namespace App\Controller;
 use App\Dto\CreateFormDto;
 use App\Dto\UpdateFormDto;
 use App\Entity\User;
-use App\Repository\FormRepository;
-use App\Service\FormEmbedService;
 use App\Service\FormService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,8 +21,6 @@ class FormController extends AbstractController
 {
     public function __construct(
         private FormService $formService,
-        private FormEmbedService $formEmbedService,
-        private FormRepository $formRepository,
         private ValidatorInterface $validator,
         private LoggerInterface $logger
     ) {

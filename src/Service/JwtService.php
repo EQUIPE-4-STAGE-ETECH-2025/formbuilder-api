@@ -28,9 +28,9 @@ class JwtService
     public function generateToken(array $payload): string
     {
         $issuedAt = new \DateTimeImmutable();
-        
+
         // Si une expiration personnalisée est fournie, l'utiliser, sinon utiliser la TTL par défaut
-        if (!isset($payload['exp'])) {
+        if (! isset($payload['exp'])) {
             $expire = $issuedAt->modify("+{$this->tokenTtl} seconds");
             $payload['exp'] = $expire->getTimestamp();
         }
