@@ -333,8 +333,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Email déjà vérifié.');
+
         $authService->verifyEmail('token');
-        $this->assertTrue($user->isEmailVerified());
     }
 
     /**

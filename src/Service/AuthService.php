@@ -151,7 +151,7 @@ class AuthService
 
             $user = $this->userRepository->find($payload->id ?? null);
             if (! $user) {
-                throw new RuntimeException('Utilisateur introuvable.');
+                throw new RuntimeException('Lien invalide ou expiré.');
             }
 
             // Vérifier si l'email est déjà vérifié
@@ -183,12 +183,12 @@ class AuthService
                 'Token révoqué.',
                 'Email déjà vérifié.',
                 'Type de token invalide.',
-                'Utilisateur introuvable.',
-                'Token invalide : propriété exp manquante'
+                'Lien invalide ou expiré.',
+                'Token invalide : propriété exp manquante',
             ])) {
                 throw $e;
             }
-            
+
             // Pour toute autre exception, message générique
             throw new RuntimeException('Lien invalide ou expiré.');
         } catch (\Exception $e) {
