@@ -33,7 +33,7 @@ class DashboardControllerTest extends WebTestCase
         $user = new User();
         $user->setFirstName('John');
         $user->setLastName('Doe');
-        $user->setEmail('user@example.com');
+        $user->setEmail('user'.uniqid().'@example.com');
         $user->setPasswordHash(password_hash('secret', PASSWORD_BCRYPT));
         $user->setRole('USER');
 
@@ -43,7 +43,13 @@ class DashboardControllerTest extends WebTestCase
         $statsDto = new DashboardStatsDto(
             totalForms: 5,
             publishedForms: 3,
-            totalSubmissions: 10
+            totalSubmissions: 10,
+            submissionsPerMonth: [],
+            submissionsPerForm: [],
+            formsStatusCount: [],
+            recentForms: [
+                 ['id' => 1, 'title' => 'Form A', 'status' => 'DRAFT', 'createdAt' => '2025-03-10 12:00:00'],
+            ]
         );
 
         $this->dashboardService
