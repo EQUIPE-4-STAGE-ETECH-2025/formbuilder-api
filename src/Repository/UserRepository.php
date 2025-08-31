@@ -108,16 +108,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $dql = "
         SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
         FROM App\Entity\User u
-        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.isActive = true
+        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.status = 'ACTIVE'
         LEFT JOIN App\Entity\Plan p WITH s.plan = p
         WHERE u.role != 'ADMIN'
         GROUP BY plan
-    ";
+        ";
 
         return $this->getEntityManager()
             ->createQuery($dql)
             ->getArrayResult();
     }
+
 
     /**
      * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
