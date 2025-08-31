@@ -120,6 +120,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getArrayResult();
     }
 
+
     /**
      * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
      * pour éviter le problème N+1
