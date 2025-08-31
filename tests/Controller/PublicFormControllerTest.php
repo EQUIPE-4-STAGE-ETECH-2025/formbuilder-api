@@ -217,13 +217,13 @@ class PublicFormControllerTest extends WebTestCase
                 }
             }
             $this->em->flush();
-            
+
             // Supprimer ensuite tous les formulaires associés
             foreach ($forms as $form) {
                 $this->em->remove($form);
             }
             $this->em->flush();
-            
+
             // Maintenant on peut supprimer l'utilisateur
             $this->em->remove($existingUser);
             $this->em->flush();
