@@ -184,11 +184,11 @@ class AuthService
                 'Email déjà vérifié.',
                 'Type de token invalide.',
                 'Utilisateur introuvable.',
-                'Token invalide : propriété exp manquante'
+                'Token invalide : propriété exp manquante',
             ])) {
                 throw $e;
             }
-            
+
             // Pour toute autre exception, message générique
             throw new RuntimeException('Lien invalide ou expiré.');
         } catch (\Exception $e) {
