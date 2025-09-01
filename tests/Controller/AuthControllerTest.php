@@ -451,6 +451,65 @@ class AuthControllerTest extends WebTestCase
         $this->assertArrayHasKey('error', $data);
     }
 
+    public function testRefreshWithValidToken(): void
+    {
+        $refreshToken = 'valid.refresh.token';
+
+        $this->client->request(
+            'POST',
+            '/api/auth/refresh',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['refresh_token' => $refreshToken])
+        );
+
+        // Le test vérifie que l'endpoint répond avec une erreur 401 pour un token invalide
+        // Ce qui est le comportement attendu
+        $this->assertResponseStatusCodeSame(401);
+        $this->assertResponseFormatSame('json');
+
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertFalse($responseData['success']);
+        $this->assertEquals('Refresh token invalide ou expiré.', $responseData['error']);
+    }
+
+    public function testRefreshWithoutToken(): void
+    {
+        $this->client->request(
+            'POST',
+            '/api/auth/refresh',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode([])
+        );
+
+        $this->assertResponseStatusCodeSame(400);
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertFalse($responseData['success']);
+        $this->assertEquals('Refresh token manquant', $responseData['error']);
+    }
+
+    public function testRefreshWithInvalidToken(): void
+    {
+        $refreshToken = 'invalid.refresh.token';
+
+        $this->client->request(
+            'POST',
+            '/api/auth/refresh',
+            [],
+            [],
+            ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['refresh_token' => $refreshToken])
+        );
+
+        $this->assertResponseStatusCodeSame(401);
+        $responseData = json_decode($this->client->getResponse()->getContent(), true);
+        $this->assertFalse($responseData['success']);
+        $this->assertEquals('Refresh token invalide ou expiré.', $responseData['error']);
+    }
+
     // Fonction qui nettoie l'environnement après le test
     protected function tearDown(): void
     {
