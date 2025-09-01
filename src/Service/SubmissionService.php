@@ -17,13 +17,17 @@ class SubmissionService
         private readonly QuotaService $quotaService,
         private readonly FormSchemaValidatorService $formSchemaValidatorService,
         private readonly EmailService $emailService,
-    ) {}
+    ) {
+    }
 
     public function getFormById(string $id): ?Form
     {
         return $this->entityManager->getRepository(Form::class)->find($id);
     }
 
+    /**
+     * @param array<string, mixed> $submissionData
+     */
     public function submitForm(Form $form, array $submissionData, ?User $user = null, ?string $ipAddress = null): Submission
     {
         // Vérification du quota
@@ -38,6 +42,9 @@ class SubmissionService
         }
 
         $latestVersion = $formVersions->last();
+        if ($latestVersion === false) {
+            throw new BadRequestHttpException('Impossible de récupérer la dernière version du formulaire.');
+        }
         $schema = $latestVersion->getSchema();
 
         // Mapping labels → IDs
@@ -94,6 +101,9 @@ class SubmissionService
         return $submission;
     }
 
+    /**
+     * @return array<int, Submission>
+     */
     public function getFormSubmissions(Form $form): array
     {
         return $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC']);
@@ -107,6 +117,9 @@ class SubmissionService
         }
 
         $csv = fopen('php://temp', 'r+');
+        if ($csv === false) {
+            throw new \RuntimeException('Impossible de créer le fichier temporaire CSV.');
+        }
 
         // Entêtes CSV (IDs des champs)
         $first = $submissions[0]->getData();
@@ -119,6 +132,10 @@ class SubmissionService
         rewind($csv);
         $output = stream_get_contents($csv);
         fclose($csv);
+
+        if ($output === false) {
+            throw new \RuntimeException('Erreur lors de la lecture du contenu CSV.');
+        }
 
         return $output;
     }

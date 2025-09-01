@@ -2,23 +2,26 @@
 
 namespace App\Service;
 
-use App\Repository\SubmissionRepository;
 use App\Repository\FormRepository;
+use App\Repository\SubmissionRepository;
 
 class SubmissionAnalyticsService
 {
     public function __construct(
         private SubmissionRepository $submissionRepository,
         private FormRepository $formRepository,
-    ) {}
+    ) {
+    }
 
     /**
-     * Retourne les statistiques d’un formulaire.
+     * Retourne les statistiques d'un formulaire.
+     *
+     * @return array<string, mixed>
      */
     public function getFormAnalytics(string $formId): array
     {
         $form = $this->formRepository->find($formId);
-        if (!$form) {
+        if (! $form) {
             throw new \InvalidArgumentException('Formulaire introuvable.');
         }
 
@@ -34,9 +37,12 @@ class SubmissionAnalyticsService
         }
 
         foreach ($submissions as $submission) {
-            $day = $submission->getSubmittedAt()->format('Y-m-d');
-            if (isset($dailyCounts[$day])) {
-                $dailyCounts[$day]++;
+            $submittedAt = $submission->getSubmittedAt();
+            if ($submittedAt !== null) {
+                $day = $submittedAt->format('Y-m-d');
+                if (isset($dailyCounts[$day])) {
+                    $dailyCounts[$day]++;
+                }
             }
         }
 
@@ -79,6 +85,8 @@ class SubmissionAnalyticsService
 
     /**
      * Calcule le temps moyen de soumission (en secondes).
+     *
+     * @param array<int, \App\Entity\Submission> $submissions
      */
     private function calculateAverageSubmissionTime(array $submissions): ?float
     {
@@ -90,7 +98,11 @@ class SubmissionAnalyticsService
         $count = 0;
 
         foreach ($submissions as $submission) {
-            $createdAt = $submission->getForm()->getCreatedAt(); // Assurez-vous que `getCreatedAt` existe
+            $form = $submission->getForm();
+            if ($form === null) {
+                continue;
+            }
+            $createdAt = $form->getCreatedAt(); // Assurez-vous que `getCreatedAt` existe
             $submittedAt = $submission->getSubmittedAt();
 
             if ($createdAt && $submittedAt) {
