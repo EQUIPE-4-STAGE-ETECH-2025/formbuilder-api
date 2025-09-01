@@ -95,7 +95,6 @@ class SubmissionController extends AbstractController
         }
 
         $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $user);
-
         return new Response(
             $csvContent,
             200,

@@ -30,22 +30,25 @@ class AdminService
             throw new AccessDeniedHttpException('Accès refusé.');
         }
 
-        $users = $this->userRepository->findAll();
+        // Utilisation de la méthode optimisée pour éviter le problème N+1
+        $usersWithStats = $this->userRepository->findAllWithStats();
 
         $result = [];
 
-        foreach ($users as $user) {
-            if ($user->getRole() === 'ADMIN') {
-                continue;
+        foreach ($usersWithStats as $userData) {
+            $user = $this->userRepository->find($userData['id']);
+
+            // Vérifier que l'utilisateur existe avant de créer le DTO
+            if ($user === null) {
+                continue; // Ignorer cet utilisateur s'il n'existe pas
             }
 
-            $formsCount = $this->formRepository->count(['user' => $user->getId()]);
-
-            $submissionsCount = $this->submissionRepository->countByUserForms($user->getId() ?? '');
-
-            $planName = $this->userRepository->getPlanNameForUser($user);
-
-            $result[] = new UserListDto($user, $planName, $formsCount, $submissionsCount);
+            $result[] = new UserListDto(
+                $user,
+                $userData['plan_name'] ?? 'Free',
+                (int) $userData['forms_count'],
+                (int) $userData['submissions_count']
+            );
         }
 
         return $result;

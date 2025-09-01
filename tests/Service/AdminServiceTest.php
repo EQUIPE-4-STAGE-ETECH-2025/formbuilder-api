@@ -62,27 +62,39 @@ class AdminServiceTest extends TestCase
             ->method('isGranted')
             ->willReturn(true);
 
-        $user1 = (new User())->setId(1)->setRole('USER')->setEmail('user1@test.com');
-        $user2 = (new User())->setId(2)->setRole('ADMIN')->setEmail('admin@test.com'); // doit être exclu
+        $userId = '550e8400-e29b-41d4-a716-446655440000';
+
+        // Mock de findAllWithStats qui retourne des données d'utilisateur avec statistiques
+        $usersWithStatsData = [
+            [
+                'id' => $userId,
+                'first_name' => 'John',
+                'last_name' => 'Doe',
+                'email' => 'user1@test.com',
+                'role' => 'USER',
+                'created_at' => '2025-01-01 00:00:00',
+                'plan_name' => 'Pro',
+                'forms_count' => '5',
+                'submissions_count' => '10',
+            ],
+        ];
 
         $this->userRepository
-            ->method('findAll')
-            ->willReturn([$user1, $user2]);
+            ->method('findAllWithStats')
+            ->willReturn($usersWithStatsData);
 
-        $this->formRepository
-            ->method('count')
-            ->with(['user' => 1])
-            ->willReturn(5);
-
-        $this->submissionRepository
-            ->method('countByUserForms')
-            ->with(1)
-            ->willReturn(10);
+        // Créer un utilisateur mock pour la méthode find()
+        $user1 = (new User())
+            ->setId($userId)
+            ->setRole('USER')
+            ->setEmail('user1@test.com')
+            ->setFirstName('John')
+            ->setLastName('Doe');
 
         $this->userRepository
-            ->method('getPlanNameForUser')
-            ->with($user1)
-            ->willReturn('Pro');
+            ->method('find')
+            ->with($userId)
+            ->willReturn($user1);
 
         $result = $this->adminService->listUsers();
 

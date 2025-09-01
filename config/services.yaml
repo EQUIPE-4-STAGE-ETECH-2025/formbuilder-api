@@ -7,6 +7,7 @@ parameters:
     env(FRONTEND_URL): 'http://localhost:3000'
     app.base_url: '%env(APP_URL)%'
 
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -23,6 +24,7 @@ services:
             $secretKey: "%env(JWT_SECRET)%"
             $tokenTtl: 3600 # 1 heure
             $algorithm: "HS256"
+            $blacklistService: '@App\Service\BlackListedTokenService'
 
     App\Security\JwtAuthenticator:
         arguments:

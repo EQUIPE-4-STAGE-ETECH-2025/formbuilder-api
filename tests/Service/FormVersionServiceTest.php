@@ -124,30 +124,47 @@ class FormVersionServiceTest extends TestCase
         $form = new Form();
         $form->setId(Uuid::v4());
 
+        // Créer 11 versions existantes (pour que avec la nouvelle ça fasse 12 > 10)
         $oldVersions = [];
-        for ($i = 1; $i <= 12; $i++) {
+        for ($i = 1; $i <= 11; $i++) {
             $version = new FormVersion();
+            $version->setId(Uuid::v4());
             $version->setVersionNumber($i);
+            $version->setForm($form);
             $oldVersions[] = $version;
         }
 
-        $latestVersion = $oldVersions[11]; // Version 12
+        // Inverser pour simuler l'ordre DESC
+        $oldVersionsDesc = array_reverse($oldVersions);
+
+        $latestVersion = $oldVersions[10]; // Version 11
 
         $formVersionRepository = $this->createMock(FormVersionRepository::class);
         $formVersionRepository->method('findOneBy')
             ->with(['form' => $form], ['versionNumber' => 'DESC'])
             ->willReturn($latestVersion);
+
+        // Simuler que après création, nous avons 12 versions (11 + 1 nouvelle)
+        $allVersionsAfterCreation = $oldVersionsDesc;
+        // Ajouter la nouvelle version au début (ordre DESC)
+        $newVersion = new FormVersion();
+        $newVersion->setVersionNumber(12);
+        array_unshift($allVersionsAfterCreation, $newVersion);
+
         $formVersionRepository->method('findBy')
             ->with(['form' => $form], ['versionNumber' => 'DESC'])
-            ->willReturn($oldVersions);
-        $formVersionRepository->method('count')->willReturn(12);
+            ->willReturn($allVersionsAfterCreation);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $entityManager->expects($this->atLeast(3))->method('remove'); // Supprimer au moins 3 anciennes versions
+        $entityManager->expects($this->once())->method('beginTransaction');
+        $entityManager->expects($this->once())->method('commit');
+        $entityManager->expects($this->exactly(2))->method('remove'); // Supprimer 2 anciennes versions (12 - 10 = 2)
         $entityManager->expects($this->atLeastOnce())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
         $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
+        $schemaValidator->expects($this->once())->method('validateSchema');
+
         $logger = $this->createMock(LoggerInterface::class);
 
         $formVersionService = new FormVersionService(
@@ -159,7 +176,7 @@ class FormVersionServiceTest extends TestCase
 
         $result = $formVersionService->createVersion($form, ['fields' => []]);
 
-        $this->assertEquals(13, $result->versionNumber);
+        $this->assertEquals(12, $result->versionNumber);
     }
 
     /**
@@ -278,8 +295,11 @@ class FormVersionServiceTest extends TestCase
         $formVersionRepository->method('count')->willReturn(1);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
+        $entityManager->expects($this->once())->method('beginTransaction');
         $entityManager->expects($this->atLeastOnce())->method('persist');
-        $entityManager->expects($this->once())->method('flush');
+        $entityManager->expects($this->once())->method('remove')->with($versionToRestore);
+        $entityManager->expects($this->exactly(2))->method('flush'); // Une fois dans createVersion, une fois dans restoreVersion
+        $entityManager->expects($this->once())->method('commit');
 
         $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
         $schemaValidator->expects($this->once())->method('validateSchema');
@@ -442,5 +462,155 @@ class FormVersionServiceTest extends TestCase
         $this->expectExceptionMessage('Impossible de supprimer la version la plus récente');
 
         $formVersionService->deleteVersion($form, 2);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testCleanupOldVersionsWhenMaxReached(): void
+    {
+        $form = new Form();
+        $form->setId(Uuid::v4());
+
+        // Créer 11 versions existantes (dépasse la limite de 10)
+        $versions = [];
+        for ($i = 1; $i <= 11; $i++) {
+            $version = new FormVersion();
+            $version->setId(Uuid::v4());
+            $version->setVersionNumber($i);
+            $version->setForm($form);
+            $versions[] = $version;
+        }
+
+        // Inverser l'ordre pour simuler le tri DESC
+        $versionsDesc = array_reverse($versions);
+
+        $formVersionRepository = $this->createMock(FormVersionRepository::class);
+        $formVersionRepository->method('findOneBy')
+            ->willReturnMap([
+                [['form' => $form], ['versionNumber' => 'DESC'], $versions[10]], // Version 11
+            ]);
+        $formVersionRepository->method('findBy')
+            ->with(['form' => $form], ['versionNumber' => 'DESC'])
+            ->willReturn($versionsDesc);
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        // Vérifier la gestion de transaction
+        $entityManager->expects($this->once())->method('beginTransaction');
+        $entityManager->expects($this->once())->method('commit');
+
+        // Vérifier que la version la plus ancienne (version 1) est supprimée
+        $entityManager->expects($this->once())
+            ->method('remove')
+            ->with($versions[0]); // Version 1
+
+        $entityManager->expects($this->once())
+            ->method('flush'); // Une seule fois dans la transaction
+
+        $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
+        $schemaValidator->expects($this->once())->method('validateSchema');
+
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // Vérifier que les logs de nettoyage sont appelés
+        $logger->expects($this->atLeastOnce())
+            ->method('info');
+
+        $formVersionService = new FormVersionService(
+            $formVersionRepository,
+            $entityManager,
+            $schemaValidator,
+            $logger
+        );
+
+        $schema = [
+            'fields' => [
+                [
+                    'id' => 'field1',
+                    'type' => 'text',
+                    'label' => 'Test Field',
+                    'required' => true,
+                ],
+            ],
+        ];
+
+        $result = $formVersionService->createVersion($form, $schema);
+
+        $this->assertEquals(12, $result->versionNumber); // Nouvelle version créée
+        $this->assertEquals($schema, $result->schema);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function testNoCleanupWhenUnderMaxVersions(): void
+    {
+        $form = new Form();
+        $form->setId(Uuid::v4());
+
+        // Créer seulement 5 versions existantes (sous la limite de 10)
+        $versions = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $version = new FormVersion();
+            $version->setId(Uuid::v4());
+            $version->setVersionNumber($i);
+            $version->setForm($form);
+            $versions[] = $version;
+        }
+
+        $versionsDesc = array_reverse($versions);
+
+        $formVersionRepository = $this->createMock(FormVersionRepository::class);
+        $formVersionRepository->method('findOneBy')
+            ->willReturnMap([
+                [['form' => $form], ['versionNumber' => 'DESC'], $versions[4]], // Version 5
+            ]);
+        $formVersionRepository->method('findBy')
+            ->with(['form' => $form], ['versionNumber' => 'DESC'])
+            ->willReturn($versionsDesc);
+
+        $entityManager = $this->createMock(EntityManagerInterface::class);
+
+        // Vérifier la gestion de transaction
+        $entityManager->expects($this->once())->method('beginTransaction');
+        $entityManager->expects($this->once())->method('commit');
+
+        // Vérifier qu'aucune version n'est supprimée lors du cleanup
+        $entityManager->expects($this->never())->method('remove');
+
+        $entityManager->expects($this->once())->method('flush'); // Une fois dans la transaction
+
+        $schemaValidator = $this->createMock(FormSchemaValidatorService::class);
+        $schemaValidator->expects($this->once())->method('validateSchema');
+
+        $logger = $this->createMock(LoggerInterface::class);
+
+        // Vérifier que les logs sont appelés
+        $logger->expects($this->atLeastOnce())
+            ->method('info');
+
+        $formVersionService = new FormVersionService(
+            $formVersionRepository,
+            $entityManager,
+            $schemaValidator,
+            $logger
+        );
+
+        $schema = [
+            'fields' => [
+                [
+                    'id' => 'field1',
+                    'type' => 'text',
+                    'label' => 'Test Field',
+                    'required' => true,
+                ],
+            ],
+        ];
+
+        $result = $formVersionService->createVersion($form, $schema);
+
+        $this->assertEquals(6, $result->versionNumber); // Nouvelle version créée
+        $this->assertEquals($schema, $result->schema);
     }
 }

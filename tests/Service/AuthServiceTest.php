@@ -274,9 +274,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Lien invalide ou expiré.');
 
         $authService->verifyEmail('invalid-token');
-        $this->assertTrue(true);
     }
 
     /**
@@ -301,8 +302,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Lien invalide ou expiré.');
+
         $authService->verifyEmail('token-user-not-found');
-        $this->assertTrue(true);
     }
 
     /**
@@ -330,8 +333,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Email déjà vérifié.');
+
         $authService->verifyEmail('token');
-        $this->assertTrue($user->isEmailVerified());
     }
 
     /**

@@ -4,8 +4,8 @@ namespace App\Entity;
 
 use App\Repository\SubscriptionRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints as Assert;
 
 
 #[ORM\Entity(repositoryClass: SubscriptionRepository::class)]

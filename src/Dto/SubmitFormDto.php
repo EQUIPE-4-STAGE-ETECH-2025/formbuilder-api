@@ -12,7 +12,6 @@ class SubmitFormDto
     #[Assert\NotBlank(message: 'Les données du formulaire sont obligatoires')]
     #[Assert\Type(type: 'array', message: 'Les données doivent être un tableau')]
     private array $data = [];
-
     public function __construct(array $data = [])
     {
         $this->data = $data;

@@ -63,7 +63,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getPlanNameForUser(User $user): string
     {
         $activeSubscription = $user->getSubscriptions()
-            ->filter(fn (Subscription $s): bool => $s->isActive() ?? false)
+            ->filter(fn (Subscription $s): bool => $s->isActive() === true)
             ->last();
 
         return $activeSubscription && $activeSubscription->getPlan()
@@ -117,6 +117,40 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         return $this->getEntityManager()
             ->createQuery($dql)
             ->getArrayResult();
+    }
+
+    /**
+     * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
+     * pour éviter le problème N+1
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function findAllWithStats(): array
+    {
+        $sql = "
+            SELECT 
+                u.id,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.role,
+                u.created_at,
+                COALESCE(p.name, 'Free') as plan_name,
+                COUNT(DISTINCT f.id) as forms_count,
+                COUNT(DISTINCT s.id) as submissions_count
+            FROM users u
+            LEFT JOIN subscription sub ON u.id = sub.user_id AND sub.status = 'ACTIVE'
+            LEFT JOIN plan p ON sub.plan_id = p.id
+            LEFT JOIN form f ON u.id = f.user_id
+            LEFT JOIN submission s ON f.id = s.form_id
+            WHERE u.role != 'ADMIN'
+            GROUP BY u.id, u.first_name, u.last_name, u.email, u.role, u.created_at, p.name
+            ORDER BY u.created_at DESC
+        ";
+
+        $conn = $this->getEntityManager()->getConnection();
+
+        return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 
 }

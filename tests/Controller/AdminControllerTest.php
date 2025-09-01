@@ -8,13 +8,14 @@ use App\Entity\User;
 use App\Service\AdminService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class AdminControllerTest extends WebTestCase
 {
     private $client;
     private EntityManagerInterface $em;
-    private AdminService $adminService;
+    private MockObject $adminService;
 
     /**
      * @throws Exception

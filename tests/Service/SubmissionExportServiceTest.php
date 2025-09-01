@@ -59,7 +59,6 @@ class SubmissionExportServiceTest extends TestCase
         $this->assertSame('ID;Form ID;Submitted At;IP Address', $csv);
     }
 
-
     public function testExportThrowsExceptionWhenUnauthorized(): void
     {
         $owner = $this->createConfiguredMock(User::class, ['getId' => 'user-owner']);

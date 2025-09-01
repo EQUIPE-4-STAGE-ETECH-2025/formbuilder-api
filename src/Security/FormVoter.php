@@ -25,7 +25,6 @@ class FormVoter extends Voter
     protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
-
         if (!$user instanceof User) {
             return false;
         }
