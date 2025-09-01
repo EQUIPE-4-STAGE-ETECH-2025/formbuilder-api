@@ -46,11 +46,11 @@ class FormEmbedService
             $token = $this->getOrCreateFormToken($form);
 
             // URL de base pour l'iframe
-            $baseUrl = $this->parameterBag->get('app.base_url');
+            $baseUrl = $_ENV['FRONTEND_URL'] ?? $this->parameterBag->get('frontend_url');
             if (! is_string($baseUrl)) {
-                $baseUrl = 'http://localhost:8000';
+                $baseUrl = 'http://localhost:3000';
             }
-            $embedUrl = $baseUrl . '/embed/form/' . $formId . '?token=' . $token;
+            $embedUrl = $baseUrl . '/embed/' . $formId . '?token=' . $token;
 
             // Générer le code HTML d'intégration
             $embedCode = $this->generateHtmlEmbedCode($embedUrl, $customization);
