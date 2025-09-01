@@ -93,7 +93,7 @@ class SubmissionControllerTest extends WebTestCase
         // Vérifie que la première ligne contient les en-têtes de base
         $headerLine = $lines[0];
         $this->assertStringStartsWith('ID;Form ID;Submitted At;IP Address', $headerLine);
-        
+
         // Les colonnes dynamiques sont ajoutées après les colonnes de base
         // Pour le formulaire d'Anna, on s'attend aux IDs des champs du formulaire
         $expectedHeaders = ['ID', 'Form ID', 'Submitted At', 'IP Address', '550e8400-e29b-41d4-a716-446655441006', '550e8400-e29b-41d4-a716-446655441007'];
