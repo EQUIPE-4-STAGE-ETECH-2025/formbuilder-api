@@ -38,7 +38,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -87,7 +87,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -130,7 +130,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->never())->method('persist'); // Pas de nouveau token créé
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
