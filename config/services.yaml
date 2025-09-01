@@ -22,6 +22,7 @@ services:
         arguments:
             $secretKey: "%env(JWT_SECRET)%"
             $tokenTtl: 3600 # 1 heure
+            $refreshTokenTtl: 604800 # 7 jours
             $algorithm: "HS256"
             $blacklistService: '@App\Service\BlackListedTokenService'
 

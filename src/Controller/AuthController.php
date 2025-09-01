@@ -108,6 +108,25 @@ class AuthController extends AbstractController
         }
     }
 
+    #[Route('/api/auth/refresh', name: 'auth_refresh', methods: ['POST'])]
+    public function refresh(Request $request, AuthService $authService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data['refresh_token'] ?? '';
+
+        if (! $refreshToken) {
+            return $this->json(['success' => false, 'error' => 'Refresh token manquant'], 400);
+        }
+
+        try {
+            $authData = $authService->refreshAccessToken($refreshToken);
+
+            return $this->json(['success' => true, 'data' => $authData]);
+        } catch (UnauthorizedHttpException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
+        }
+    }
+
     #[Route('/api/auth/logout', name: 'auth_logout', methods: ['POST'])]
     public function logout(Request $request, AuthService $authService): JsonResponse
     {
@@ -118,9 +137,11 @@ class AuthController extends AbstractController
         }
 
         $token = substr($authHeader, 7);
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data['refresh_token'] ?? null;
 
         try {
-            $authService->logout($token);
+            $authService->logout($token, $refreshToken);
 
             return $this->json(['message' => 'Déconnexion réussie']);
         } catch (RuntimeException $e) {

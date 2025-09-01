@@ -61,6 +61,8 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des credentials
     -   Utilisation du JwtService pour les tokens
     -   Gestion des sessions
+    -   Gestion des refresh tokens
+    -   Endpoint de refresh automatique
 
 -   [x] **AUTH-008** `(Dépendances -> Aucune)` : Créer `EmailService`
 
@@ -76,6 +78,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des tokens
     -   Gestion de l'expiration
     -   Refresh tokens
+    -   Gestion des refresh tokens avec durée de vie étendue
 
 ### 1.3 DTOs d'authentification
 
