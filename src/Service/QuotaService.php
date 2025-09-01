@@ -133,5 +133,4 @@ class QuotaService
             'status' => Subscription::STATUS_ACTIVE,
         ]);
     }
-
 }

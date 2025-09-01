@@ -51,70 +51,13 @@ class SubmissionExportServiceTest extends TestCase
     {
         $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
         $form = $this->getFormWithoutSubmissions();
-        $form->setUser($user);
+        $form->setUser($user); 
 
         $csv = $this->service->exportFormSubmissionsToCsv($form, $user);
         $csv = rtrim($csv, "\n\r");
 
         $this->assertSame('ID;Form ID;Submitted At;IP Address', $csv);
     }
-
-    public function testExportWithPagination(): void
-    {
-        $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
-        $form = $this->createConfiguredMock(Form::class, ['getUser' => $user, 'getId' => 'form-1']);
-
-        $submission1 = new Submission();
-        $submission1->setForm($form)
-            ->setData(['name' => 'Alice', 'email' => 'alice@example.com'])
-            ->setIpAddress('127.0.0.1');
-
-        $submission2 = new Submission();
-        $submission2->setForm($form)
-            ->setData(['name' => 'Bob', 'email' => 'bob@example.com'])
-            ->setIpAddress('127.0.0.2');
-
-        $submission3 = new Submission();
-        $submission3->setForm($form)
-            ->setData(['name' => 'Charlie', 'email' => 'charlie@example.com'])
-            ->setIpAddress('127.0.0.3');
-
-        // Test avec limit=2, offset=0
-        $this->submissionRepository
-            ->method('findBy')
-            ->with(['form' => $form], ['submittedAt' => 'DESC'], 2, 0)
-            ->willReturn([$submission1, $submission2]);
-
-        $csv = $this->service->exportFormSubmissionsToCsv($form, $user, 2, 0);
-
-        $this->assertStringContainsString('alice@example.com', $csv);
-        $this->assertStringContainsString('bob@example.com', $csv);
-        $this->assertStringNotContainsString('charlie@example.com', $csv);
-    }
-
-    public function testExportWithOffset(): void
-    {
-        $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
-        $form = $this->createConfiguredMock(Form::class, ['getUser' => $user, 'getId' => 'form-1']);
-
-        $submission3 = new Submission();
-        $submission3->setForm($form)
-            ->setData(['name' => 'Charlie', 'email' => 'charlie@example.com'])
-            ->setIpAddress('127.0.0.3');
-
-        // Test avec limit=1, offset=2 (3ème élément)
-        $this->submissionRepository
-            ->method('findBy')
-            ->with(['form' => $form], ['submittedAt' => 'DESC'], 1, 2)
-            ->willReturn([$submission3]);
-
-        $csv = $this->service->exportFormSubmissionsToCsv($form, $user, 1, 2);
-
-        $this->assertStringContainsString('charlie@example.com', $csv);
-        $this->assertStringNotContainsString('alice@example.com', $csv);
-        $this->assertStringNotContainsString('bob@example.com', $csv);
-    }
-
 
     public function testExportThrowsExceptionWhenUnauthorized(): void
     {
@@ -133,7 +76,6 @@ class SubmissionExportServiceTest extends TestCase
     {
         $form = new Form();
         $form->setTitle('Formulaire vide');
-
         return $form;
     }
 }

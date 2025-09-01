@@ -7,9 +7,6 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\DBAL\Exception;
 use Doctrine\Persistence\ManagerRegistry;
-
-use function get_class;
-
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
@@ -60,10 +57,13 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->save($user, true);
     }
 
+    /**
+     * Récupère le nom du plan actif pour un utilisateur
+     */
     public function getPlanNameForUser(User $user): string
     {
         $activeSubscription = $user->getSubscriptions()
-            ->filter(fn (Subscription $s): bool => $s->isActive() === true)
+            ->filter(fn (Subscription $s): bool => $s->getStatus() === Subscription::STATUS_ACTIVE)
             ->last();
 
         return $activeSubscription && $activeSubscription->getPlan()
@@ -88,12 +88,12 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getUsersPerMonth(): array
     {
         $sql = "
-        SELECT to_char(u.created_at, 'YYYY-MM') AS month, COUNT(u.id) AS count
-        FROM users u
-        WHERE u.role != :admin
-        GROUP BY month
-        ORDER BY month ASC
-    ";
+            SELECT to_char(u.created_at, 'YYYY-MM') AS month, COUNT(u.id) AS count
+            FROM users u
+            WHERE u.role != :admin
+            GROUP BY month
+            ORDER BY month ASC
+        ";
 
         $conn = $this->getEntityManager()->getConnection();
 
@@ -106,16 +106,17 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getUsersByPlan(): array
     {
         $dql = "
-        SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
-        FROM App\Entity\User u
-        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.isActive = true
-        LEFT JOIN App\Entity\Plan p WITH s.plan = p
-        WHERE u.role != 'ADMIN'
-        GROUP BY plan
-    ";
+            SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
+            FROM App\Entity\User u
+            LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.status = :active
+            LEFT JOIN App\Entity\Plan p WITH s.plan = p
+            WHERE u.role != 'ADMIN'
+            GROUP BY plan
+        ";
 
         return $this->getEntityManager()
             ->createQuery($dql)
+            ->setParameter('active', Subscription::STATUS_ACTIVE)
             ->getArrayResult();
     }
 
@@ -152,5 +153,4 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
-
 }
