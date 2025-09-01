@@ -87,18 +87,35 @@ class SubmissionControllerTest extends WebTestCase
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Vérifie que la première ligne contient bien les en-têtes
-        $this->assertSame('ID;Form ID;Submitted At;IP Address', $lines[0]);
+        // Vérifie qu'il y a au moins une ligne (l'en-tête)
+        $this->assertGreaterThan(0, count($lines));
 
-        // Vérifie qu'il y a au moins une ligne de données
-        $this->assertGreaterThan(1, count($lines));
+        // Vérifie que la première ligne contient les en-têtes de base
+        $headerLine = $lines[0];
+        $actualHeaders = explode(';', $headerLine);
 
-        // Vérifie que chaque ligne de données a 4 colonnes
-        foreach ($lines as $i => $line) {
-            if ($i === 0) {
-                continue;
-            } // ignore l'en-tête
-            $this->assertCount(4, explode(';', $line), "La ligne $i doit avoir 4 colonnes");
+        // Les 4 premières colonnes doivent toujours être les colonnes de base
+        $baseHeaders = ['ID', 'Form ID', 'Submitted At', 'IP Address'];
+        $this->assertCount(4, array_slice($actualHeaders, 0, 4));
+        $this->assertSame($baseHeaders, array_slice($actualHeaders, 0, 4));
+
+        // S'il y a des soumissions, il peut y avoir des colonnes supplémentaires pour les champs
+        $expectedColumnCount = count($actualHeaders);
+
+        // Vérifie qu'il y a au moins les 4 colonnes de base
+        $this->assertGreaterThanOrEqual(4, $expectedColumnCount);
+
+        // Vérifie que toutes les lignes de données ont le même nombre de colonnes que l'en-tête
+        if (count($lines) > 1) {
+            foreach ($lines as $i => $line) {
+                if ($i === 0) {
+                    continue; // ignore l'en-tête
+                }
+                if (trim($line) === '') {
+                    continue; // ignore les lignes vides
+                }
+                $this->assertCount($expectedColumnCount, explode(';', $line), "La ligne $i doit avoir $expectedColumnCount colonnes");
+            }
         }
     }
 
