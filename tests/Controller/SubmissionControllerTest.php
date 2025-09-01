@@ -100,7 +100,7 @@ class SubmissionControllerTest extends WebTestCase
         // Vérifie que la première ligne contient les en-têtes de base
         $headerLine = $lines[0];
         $actualHeaders = explode(';', $headerLine);
-        
+
         // Les 4 premières colonnes doivent toujours être les colonnes de base
         $baseHeaders = ['ID', 'Form ID', 'Submitted At', 'IP Address'];
         $this->assertCount(4, array_slice($actualHeaders, 0, 4));
@@ -108,7 +108,7 @@ class SubmissionControllerTest extends WebTestCase
 
         // S'il y a des soumissions, il peut y avoir des colonnes supplémentaires pour les champs
         $expectedColumnCount = count($actualHeaders);
-        
+
         // Vérifie qu'il y a au moins les 4 colonnes de base
         $this->assertGreaterThanOrEqual(4, $expectedColumnCount);
 
