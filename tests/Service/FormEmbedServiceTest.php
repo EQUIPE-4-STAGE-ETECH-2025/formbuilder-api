@@ -16,11 +16,13 @@ use Symfony\Component\Uid\Uuid;
 
 class FormEmbedServiceTest extends TestCase
 {
+
     /**
      * @throws Exception
      */
     public function testGenerateEmbedCodeSuccess(): void
     {
+        
         $form = new Form();
         $form->setId(Uuid::v4());
         $form->setTitle('Test Form');
@@ -37,7 +39,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->with('app.base_url')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -54,7 +56,9 @@ class FormEmbedServiceTest extends TestCase
         $this->assertEquals($form->getId(), $result->formId);
         $this->assertEquals('test-jwt-token', $result->token);
         $this->assertStringContainsString('<iframe', $result->embedCode);
-        $this->assertStringContainsString('http://localhost:8000/embed/form/', $result->embedUrl);
+        $this->assertStringContainsString('http://localhost:3000/embed/', $result->embedUrl);
+        $this->assertStringContainsString($form->getId(), $result->embedUrl);
+        $this->assertStringContainsString('token=test-jwt-token', $result->embedUrl);
     }
 
     /**
@@ -84,7 +88,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('flush');
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -127,7 +131,7 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->never())->method('persist'); // Pas de nouveau token créé
 
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn(null);
 
         $logger = $this->createMock(LoggerInterface::class);
 
