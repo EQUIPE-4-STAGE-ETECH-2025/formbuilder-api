@@ -87,13 +87,6 @@ class SubmissionControllerTest extends WebTestCase
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Debug: affichage du contenu CSV pour comprendre la structure
-        // echo "\n=== DEBUG CSV CONTENT ===\n";
-        // echo "CSV Lines count: " . count($lines) . "\n";
-        // echo "First line (header): " . $lines[0] . "\n";
-        // echo "Full CSV:\n" . $csv . "\n";
-        // echo "=========================\n";
-
         // Vérifie qu'il y a au moins une ligne (l'en-tête)
         $this->assertGreaterThan(0, count($lines));
 
