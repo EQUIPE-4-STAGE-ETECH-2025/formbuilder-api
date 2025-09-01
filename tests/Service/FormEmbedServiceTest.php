@@ -16,13 +16,12 @@ use Symfony\Component\Uid\Uuid;
 
 class FormEmbedServiceTest extends TestCase
 {
-
     /**
      * @throws Exception
      */
     public function testGenerateEmbedCodeSuccess(): void
     {
-        
+
         $form = new Form();
         $form->setId(Uuid::v4());
         $form->setTitle('Test Form');
