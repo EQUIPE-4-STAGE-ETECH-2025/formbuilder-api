@@ -51,7 +51,7 @@ class SubmissionExportServiceTest extends TestCase
     {
         $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
         $form = $this->getFormWithoutSubmissions();
-        $form->setUser($user); 
+        $form->setUser($user);
 
         $csv = $this->service->exportFormSubmissionsToCsv($form, $user);
         $csv = rtrim($csv, "\n\r");
@@ -76,6 +76,7 @@ class SubmissionExportServiceTest extends TestCase
     {
         $form = new Form();
         $form->setTitle('Formulaire vide');
+
         return $form;
     }
 }

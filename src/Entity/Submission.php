@@ -3,8 +3,6 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Form;
-use App\Entity\User;
 use Symfony\Component\Uid\Uuid;
 
 #[ORM\Entity]
@@ -22,6 +20,9 @@ class Submission
     #[ORM\JoinColumn(nullable: true)]
     private ?User $submitter = null;
 
+    /**
+     * @var array<string, mixed>
+     */
     #[ORM\Column(type: 'json')]
     private array $data = [];
 
@@ -47,9 +48,10 @@ class Submission
         return $this->form;
     }
 
-    public function setForm(Form $form): self
+    public function setForm(?Form $form): self
     {
         $this->form = $form;
+
         return $this;
     }
 
@@ -61,17 +63,25 @@ class Submission
     public function setSubmitter(?User $user): self
     {
         $this->submitter = $user;
+
         return $this;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function getData(): array
     {
         return $this->data;
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function setData(array $data): self
     {
         $this->data = $data;
+
         return $this;
     }
 
@@ -83,6 +93,7 @@ class Submission
     public function setSubmittedAt(\DateTimeImmutable $submittedAt): self
     {
         $this->submittedAt = $submittedAt;
+
         return $this;
     }
 
@@ -94,6 +105,7 @@ class Submission
     public function setIpAddress(?string $ipAddress): self
     {
         $this->ipAddress = $ipAddress;
+
         return $this;
     }
 }

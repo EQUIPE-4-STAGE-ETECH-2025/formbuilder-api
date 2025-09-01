@@ -2,10 +2,10 @@
 
 namespace App\Tests\Controller;
 
-use App\Entity\User;
 use App\Entity\Form;
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class SubmissionControllerTest extends WebTestCase
 {
@@ -22,10 +22,10 @@ class SubmissionControllerTest extends WebTestCase
         $this->client = static::createClient();
         $this->entityManager = static::getContainer()->get(EntityManagerInterface::class);
 
-        $this->userAnna   = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
+        $this->userAnna = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
         $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
-        $this->adminUser  = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
-        $this->formAnna   = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
+        $this->adminUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
+        $this->formAnna = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
     }
 
     public function testSubmitFormSuccessfully(): void
@@ -95,7 +95,9 @@ class SubmissionControllerTest extends WebTestCase
 
         // Vérifie que chaque ligne de données a 4 colonnes
         foreach ($lines as $i => $line) {
-            if ($i === 0) continue; // ignore l'en-tête
+            if ($i === 0) {
+                continue;
+            } // ignore l'en-tête
             $this->assertCount(4, explode(';', $line), "La ligne $i doit avoir 4 colonnes");
         }
     }

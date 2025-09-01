@@ -6,13 +6,13 @@ use App\Entity\Form;
 use App\Entity\FormVersion;
 use App\Entity\Submission;
 use App\Entity\User;
+use App\Repository\SubmissionRepository;
 use App\Service\EmailService;
 use App\Service\FormSchemaValidatorService;
 use App\Service\QuotaService;
 use App\Service\SubmissionService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
-use App\Repository\SubmissionRepository;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SubmissionServiceTest extends TestCase
@@ -53,7 +53,7 @@ class SubmissionServiceTest extends TestCase
                 ['id' => 'field1', 'label' => 'Nom complet', 'type' => 'text'],
                 ['id' => 'field2', 'label' => 'Email', 'type' => 'email'],
                 ['id' => 'field3', 'label' => 'Message', 'type' => 'textarea'],
-            ]
+            ],
         ]);
 
         $form = new Form();
@@ -62,14 +62,14 @@ class SubmissionServiceTest extends TestCase
         $submissionData = [
             'Nom complet' => 'Alice Dupont',
             'Email' => 'alice@example.com',
-            'Message' => 'Bonjour'
+            'Message' => 'Bonjour',
         ];
 
         // Transformation labels → ids pour matcher SubmissionService
         $expectedData = [
             'field1' => 'Alice Dupont',
             'field2' => 'alice@example.com',
-            'field3' => 'Bonjour'
+            'field3' => 'Bonjour',
         ];
 
         $this->validatorService->expects($this->once())
