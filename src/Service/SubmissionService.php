@@ -41,7 +41,6 @@ class SubmissionService
         if ($formVersions->isEmpty()) {
             throw new BadRequestHttpException('Le formulaire n’a pas de version valide.');
         }
-
         $latestVersion = $formVersions->last();
         if ($latestVersion === false) {
             throw new BadRequestHttpException('Impossible de récupérer la dernière version du formulaire.');
@@ -80,6 +79,12 @@ class SubmissionService
                    ->setIpAddress($ipAddress);
 
         $this->entityManager->persist($submission);
+
+        // **Mise à jour du QuotaStatus**
+        if ($user) {
+            $this->quotaService->updateQuotaStatus($user, 'submit_form');
+        }
+
         $this->entityManager->flush();
 
         // Mettre à jour les quotas (on sait que $user n'est pas null grâce à la vérification précédente)
