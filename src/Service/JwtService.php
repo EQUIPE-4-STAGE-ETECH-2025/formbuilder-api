@@ -156,4 +156,22 @@ class JwtService
 
         $this->blacklistService->blacklist($token);
     }
+
+    public function blacklistRefreshToken(string $refreshToken): void
+    {
+        $decoded = $this->validateRefreshToken($refreshToken);
+
+        if (! isset($decoded->exp)) {
+            throw new \RuntimeException('Refresh token invalide : propriété exp manquante');
+        }
+
+        $dto = new BlackListedTokenDto(
+            token: $refreshToken,
+            expiresAt: (new \DateTimeImmutable())->setTimestamp($decoded->exp)
+        );
+
+        $this->blacklistToken($dto);
+    }
+
+
 }
