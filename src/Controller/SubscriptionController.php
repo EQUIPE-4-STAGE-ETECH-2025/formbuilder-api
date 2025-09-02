@@ -46,17 +46,22 @@ class SubscriptionController extends AbstractController
             return $this->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
-        $plan = $this->planRepository->find($dto->planId);
+        if ($dto->planId) {
+            $plan = $this->planRepository->find($dto->planId);
+        } else {
+            $plan = $this->planRepository->find('550e8400-e29b-41d4-a716-446655440201');
+        }
+
         if (!$plan) {
             return $this->json(['error' => 'Plan introuvable'], 404);
         }
 
         $subscription = new Subscription();
         $subscription->setUser($user)
-                     ->setPlan($plan)
-                     ->setStripeSubscriptionId('MOCK-' . uniqid())
-                     ->setStartDate(new \DateTime())
-                     ->setEndDate((new \DateTime())->modify('+1 month'));
+                    ->setPlan($plan)
+                    ->setStripeSubscriptionId('MOCK-' . uniqid())
+                    ->setStartDate(new \DateTime())
+                    ->setEndDate((new \DateTime())->modify('+1 month'));
 
         $this->subscriptionRepository->save($subscription, true);
 
