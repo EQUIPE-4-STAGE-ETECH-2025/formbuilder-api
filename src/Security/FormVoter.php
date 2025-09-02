@@ -16,7 +16,7 @@ class FormVoter extends Voter
     public const VIEW_SUBMISSIONS = 'VIEW_SUBMISSIONS';
     public const EXPORT_SUBMISSIONS = 'EXPORT_SUBMISSIONS';
 
-    protected function supports(string $attribute, $subject): bool
+    protected function supports(string $attribute, mixed $subject): bool
     {
         return in_array($attribute, [
             self::OWNER,
@@ -25,14 +25,14 @@ class FormVoter extends Voter
         ]) && $subject instanceof Form;
     }
 
-    protected function voteOnAttribute(string $attribute, $subject, TokenInterface $token): bool
+    protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
     {
         $user = $token->getUser();
-
         if (! $user instanceof User) {
             return false;
         }
 
+        /** @var Form $subject */
         return $user === $subject->getUser();
     }
 }

@@ -13,7 +13,6 @@ class SubmissionAnalyticsController extends AbstractController
     public function __construct(private SubmissionAnalyticsService $analyticsService)
     {
     }
-
     /**
      * Endpoint : GET /api/forms/{id}/submissions/analytics
      * Retourne les statistiques des soumissions d’un formulaire.

@@ -38,16 +38,16 @@ class SubmissionService
         // Récupération de la dernière version
         $formVersions = $form->getFormVersions();
         if ($formVersions->isEmpty()) {
-            throw new BadRequestHttpException('Le formulaire n\'a pas de version valide.');
+            throw new BadRequestHttpException('Le formulaire n’a pas de version valide.');
         }
 
         $latestVersion = $formVersions->last();
         if ($latestVersion === false) {
-            throw new BadRequestHttpException('Le formulaire n\'a pas de version valide.');
+            throw new BadRequestHttpException('Impossible de récupérer la dernière version du formulaire.');
         }
         $schema = $latestVersion->getSchema();
 
-        // Mapping labels -> IDs
+        // Mapping labels → IDs
         $fieldMap = [];
         if (isset($schema['fields']) && is_array($schema['fields'])) {
             foreach ($schema['fields'] as $field) {
@@ -75,8 +75,9 @@ class SubmissionService
         $submission = new Submission();
         $submission->setForm($form)
                    ->setData($filteredData)
+                   ->setSubmitter($user)
                    ->setSubmittedAt(new \DateTimeImmutable())
-                   ->setIpAddress($ipAddress ?? '127.0.0.1');
+                   ->setIpAddress($ipAddress);
 
         $this->entityManager->persist($submission);
         $this->entityManager->flush();
@@ -85,7 +86,7 @@ class SubmissionService
         if ($form->getUser()?->getEmail()) {
             $subject = sprintf("Nouvelle soumission pour votre formulaire '%s'", $form->getTitle());
             $content = sprintf(
-                "Bonjour %s, <br><br>Une nouvelle soumission a ete effectuee sur votre formulaire <strong>%s</strong>.",
+                "Bonjour %s, <br><br>Une nouvelle soumission a été effectuée sur votre formulaire <strong>%s</strong>.",
                 $form->getUser()->getFirstName(),
                 $form->getTitle()
             );
@@ -103,21 +104,37 @@ class SubmissionService
     /**
      * @return array<int, Submission>
      */
-    public function getFormSubmissions(Form $form): array
+    public function getFormSubmissions(Form $form, int $page = 1, int $limit = 20): array
     {
-        return $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC']);
+        $offset = ($page - 1) * $limit;
+
+        return $this->submissionRepository->findBy(
+            ['form' => $form],
+            ['submittedAt' => 'DESC'],
+            $limit,
+            $offset
+        );
+    }
+
+    /**
+     * Compte le nombre total de soumissions pour un formulaire
+     */
+    public function countFormSubmissions(Form $form): int
+    {
+        return $this->submissionRepository->count(['form' => $form]);
     }
 
     public function exportSubmissionsToCsv(Form $form): string
     {
-        $submissions = $this->getFormSubmissions($form);
+        // Pour l'export, on récupère toutes les soumissions sans pagination
+        $submissions = $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC']);
         if (empty($submissions)) {
             return '';
         }
 
         $csv = fopen('php://temp', 'r+');
         if ($csv === false) {
-            throw new \RuntimeException('Impossible d\'ouvrir le flux temporaire');
+            throw new \RuntimeException('Impossible de créer le fichier temporaire CSV.');
         }
 
         // Entêtes CSV (IDs des champs)
@@ -130,10 +147,11 @@ class SubmissionService
 
         rewind($csv);
         $output = stream_get_contents($csv);
-        if ($output === false) {
-            throw new \RuntimeException('Impossible de lire le contenu du flux');
-        }
         fclose($csv);
+
+        if ($output === false) {
+            throw new \RuntimeException('Erreur lors de la lecture du contenu CSV.');
+        }
 
         return $output;
     }

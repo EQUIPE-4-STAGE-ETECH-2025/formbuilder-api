@@ -99,7 +99,10 @@ class SubmissionAnalyticsService
 
         foreach ($submissions as $submission) {
             $form = $submission->getForm();
-            $createdAt = $form?->getCreatedAt(); // Assurez-vous que `getCreatedAt` existe
+            if ($form === null) {
+                continue;
+            }
+            $createdAt = $form->getCreatedAt(); // Assurez-vous que `getCreatedAt` existe
             $submittedAt = $submission->getSubmittedAt();
 
             if ($createdAt && $submittedAt) {

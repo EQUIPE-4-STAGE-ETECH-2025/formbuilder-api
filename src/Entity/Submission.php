@@ -2,52 +2,45 @@
 
 namespace App\Entity;
 
-use App\Repository\SubmissionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
-use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity(repositoryClass: SubmissionRepository::class)]
+#[ORM\Entity]
 class Submission
 {
     #[ORM\Id]
-    #[ORM\Column(type: 'uuid')]
-    private ?string $id = null;
+    #[ORM\Column(type: 'uuid', unique: true)]
+    private ?Uuid $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'submissions')]
+    #[ORM\ManyToOne(targetEntity: Form::class)]
     #[ORM\JoinColumn(nullable: false)]
-    #[Assert\NotNull(message: 'Le formulaire est obligatoire')]
     private ?Form $form = null;
 
-    /** @var array<string, mixed> */
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $submitter = null;
+
+    /**
+     * @var array<string, mixed>
+     */
     #[ORM\Column(type: 'json')]
     private array $data = [];
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $submittedAt = null;
 
-    #[ORM\Column(length: 45)]
-    #[Assert\NotBlank(message: 'L\'adresse IP est obligatoire')]
-    #[Assert\Length(max: 45, maxMessage: 'L\'adresse IP ne peut pas dépasser {{ limit }} caractères')]
-    #[Assert\Ip(message: 'L\'adresse IP n\'est pas valide')]
+    #[ORM\Column(type: 'string', nullable: true)]
     private ?string $ipAddress = null;
 
     public function __construct()
     {
+        // Génère un UUID automatiquement à la création
         $this->id = Uuid::v4();
-        $this->submittedAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?string
+    public function getId(): ?Uuid
     {
         return $this->id;
-    }
-
-    public function setId(string $id): static
-    {
-        $this->id = $id;
-
-        return $this;
     }
 
     public function getForm(): ?Form
@@ -55,9 +48,21 @@ class Submission
         return $this->form;
     }
 
-    public function setForm(?Form $form): static
+    public function setForm(?Form $form): self
     {
         $this->form = $form;
+
+        return $this;
+    }
+
+    public function getSubmitter(): ?User
+    {
+        return $this->submitter;
+    }
+
+    public function setSubmitter(?User $user): self
+    {
+        $this->submitter = $user;
 
         return $this;
     }
@@ -73,7 +78,7 @@ class Submission
     /**
      * @param array<string, mixed> $data
      */
-    public function setData(array $data): static
+    public function setData(array $data): self
     {
         $this->data = $data;
 
@@ -85,7 +90,7 @@ class Submission
         return $this->submittedAt;
     }
 
-    public function setSubmittedAt(\DateTimeImmutable $submittedAt): static
+    public function setSubmittedAt(\DateTimeImmutable $submittedAt): self
     {
         $this->submittedAt = $submittedAt;
 
@@ -97,7 +102,7 @@ class Submission
         return $this->ipAddress;
     }
 
-    public function setIpAddress(string $ipAddress): static
+    public function setIpAddress(?string $ipAddress): self
     {
         $this->ipAddress = $ipAddress;
 

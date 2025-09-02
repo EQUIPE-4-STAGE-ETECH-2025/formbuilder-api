@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Dto\BlackListedTokenDto;
+use App\Dto\ChangePasswordDto;
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
 use App\Dto\ResetPasswordDto;
@@ -53,15 +54,20 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail() ?? '')
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail() ?? '',
+            $userEmail,
             $user->getFirstName() ?? '',
             $verificationUrl
         );
@@ -93,11 +99,13 @@ class AuthService
         ];
 
         $token = $this->jwtService->generateToken($payload);
+        $refreshToken = $this->jwtService->generateRefreshToken($payload);
 
         $createdAt = $user->getCreatedAt();
 
         return [
             'token' => $token,
+            'refresh_token' => $refreshToken,
             'user' => [
                 'id' => $user->getId(),
                 'firstName' => $user->getFirstName(),
@@ -122,20 +130,65 @@ class AuthService
         return new UserResponseDto($user);
     }
 
-    public function logout(string $jwt): void
+    /**
+     * Rafraîchit un token d'accès en utilisant un refresh token valide
+     * @return array<string, mixed>
+     */
+    public function refreshAccessToken(string $refreshToken): array
+    {
+        try {
+            $newToken = $this->jwtService->refreshAccessToken($refreshToken);
+
+            // Décoder le nouveau token pour récupérer les informations utilisateur
+            $payload = $this->jwtService->validateToken($newToken);
+
+            $user = $this->userRepository->find($payload->id ?? null);
+            if (! $user) {
+                throw new UnauthorizedHttpException('', 'Utilisateur introuvable.');
+            }
+
+            return [
+                'token' => $newToken,
+                'user' => [
+                    'id' => $user->getId(),
+                    'firstName' => $user->getFirstName(),
+                    'lastName' => $user->getLastName(),
+                    'email' => $user->getEmail(),
+                    'isEmailVerified' => $user->isEmailVerified(),
+                    'role' => $user->getRole(),
+                    'createdAt' => $user->getCreatedAt()?->format('Y-m-d H:i:s'),
+                ],
+            ];
+        } catch (\RuntimeException $e) {
+            throw new UnauthorizedHttpException('', 'Refresh token invalide ou expiré.');
+        }
+    }
+
+    /**
+     * Déconnecte un utilisateur en révoquant ses tokens
+     * @param string $jwt Token d'accès
+     * @param string|null $refreshToken Refresh token optionnel
+     */
+    public function logout(string $jwt, ?string $refreshToken = null): void
     {
         $payload = $this->jwtService->validateToken($jwt);
 
-        if (! isset($payload->exp) || ! is_int($payload->exp)) {
+        if (! isset($payload->exp)) {
             throw new RuntimeException('Token invalide : propriété exp manquante');
         }
 
+        // Révoquer le token d'accès
         $dto = new BlackListedTokenDto(
             token: $jwt,
             expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
         );
 
         $this->jwtService->blacklistToken($dto);
+
+        // Révoquer le refresh token si fourni
+        if ($refreshToken) {
+            $this->jwtService->blacklistRefreshToken($refreshToken);
+        }
     }
 
     public function verifyEmail(string $token): void
@@ -145,22 +198,48 @@ class AuthService
 
             $user = $this->userRepository->find($payload->id ?? null);
             if (! $user) {
-                throw new RuntimeException('Utilisateur introuvable.');
+                throw new RuntimeException('Lien invalide ou expiré.');
             }
 
-            if (! $user->isEmailVerified() && ($payload->type ?? null) === 'email_verification') {
-                $user->setIsEmailVerified(true);
-                $this->userRepository->save($user, true);
+            // Vérifier si l'email est déjà vérifié
+            if ($user->isEmailVerified()) {
+                throw new RuntimeException('Email déjà vérifié.');
             }
 
-            if (isset($payload->exp) && is_int($payload->exp)) {
-                $this->jwtService->blacklistToken(new BlackListedTokenDto(
-                    token: $token,
-                    expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
-                ));
+            // Vérifier le type de token
+            if (($payload->type ?? null) !== 'email_verification') {
+                throw new RuntimeException('Type de token invalide.');
             }
+
+            // Marquer l'email comme vérifié
+            $user->setIsEmailVerified(true);
+            $this->userRepository->save($user, true);
+
+            if (! isset($payload->exp)) {
+                throw new RuntimeException('Token invalide : propriété exp manquante');
+            }
+
+            // Blacklister le token pour éviter sa réutilisation
+            $this->jwtService->blacklistToken(new BlackListedTokenDto(
+                token: $token,
+                expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)
+            ));
+        } catch (RuntimeException $e) {
+            // Si c'est une RuntimeException avec un message spécifique, on la propage
+            if (in_array($e->getMessage(), [
+                'Token révoqué.',
+                'Email déjà vérifié.',
+                'Type de token invalide.',
+                'Lien invalide ou expiré.',
+                'Token invalide : propriété exp manquante',
+            ])) {
+                throw $e;
+            }
+
+            // Pour toute autre exception, message générique
+            throw new RuntimeException('Lien invalide ou expiré.');
         } catch (\Exception $e) {
-            return;
+            throw new RuntimeException('Lien invalide ou expiré.');
         }
     }
 
@@ -185,15 +264,20 @@ class AuthService
             'type' => 'email_verification',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $verificationUrl = sprintf(
             '%s/verify-email?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $verificationToken,
-            urlencode($user->getEmail() ?? '')
+            urlencode($userEmail)
         );
 
         $this->emailService->sendEmailVerification(
-            $user->getEmail() ?? '',
+            $userEmail,
             $user->getFirstName() ?? '',
             $verificationUrl
         );
@@ -217,15 +301,20 @@ class AuthService
             'type' => 'password_reset',
         ]);
 
+        $userEmail = $user->getEmail();
+        if ($userEmail === null) {
+            throw new RuntimeException('Email utilisateur manquant.');
+        }
+
         $resetUrl = sprintf(
             '%s/reset-password?token=%s&email=%s',
             $_ENV['FRONTEND_URL'],
             $resetToken,
-            urlencode($user->getEmail() ?? '')
+            urlencode($userEmail)
         );
 
         $this->emailService->sendPasswordResetEmail(
-            $user->getEmail() ?? '',
+            $userEmail,
             $user->getFirstName() ?? '',
             $resetUrl
         );
@@ -267,7 +356,7 @@ class AuthService
 
         $this->userRepository->save($user, true);
 
-        if (isset($payload->exp) && is_int($payload->exp)) {
+        if (isset($payload->exp)) {
             $this->jwtService->blacklistToken(new BlackListedTokenDto(
                 token: $token,
                 expiresAt: (new DateTimeImmutable())->setTimestamp($payload->exp)

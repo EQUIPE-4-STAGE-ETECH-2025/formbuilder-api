@@ -36,9 +36,7 @@ class SubmissionExportService
         $fieldOrder = [];
         if (! empty($submissions)) {
             $firstData = $submissions[0]->getData();
-            if ($firstData !== null) {
-                $fieldOrder = array_keys($firstData);
-            }
+            $fieldOrder = array_keys($firstData);
         }
 
         // En-têtes CSV : champs fixes + dynamiques

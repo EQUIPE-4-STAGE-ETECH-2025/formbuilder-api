@@ -5,12 +5,10 @@ namespace App\Service;
 use App\Dto\FormEmbedDto;
 use App\Entity\Form;
 use App\Entity\FormToken;
-use App\Entity\User;
 use App\Repository\FormTokenRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Uid\Uuid;
 
 class FormEmbedService
@@ -19,21 +17,17 @@ class FormEmbedService
         private JwtService $jwtService,
         private FormTokenRepository $formTokenRepository,
         private EntityManagerInterface $entityManager,
-        private AuthorizationService $authorizationService,
         private ParameterBagInterface $parameterBag,
         private LoggerInterface $logger
     ) {
     }
 
     /**
+     * Générer le code d'intégration pour un formulaire publié
      * @param array<string, mixed> $customization
      */
-    public function generateEmbedCode(Form $form, User $user, array $customization = []): FormEmbedDto
+    public function generateEmbedCode(Form $form, array $customization = []): FormEmbedDto
     {
-        if (! $this->authorizationService->canAccessForm($user, $form)) {
-            throw new AccessDeniedException('Accès refusé à ce formulaire');
-        }
-
         if ($form->getStatus() !== 'PUBLISHED') {
             throw new \InvalidArgumentException('Le formulaire doit être publié pour générer un code d\'intégration');
         }
@@ -46,25 +40,23 @@ class FormEmbedService
         try {
             $this->logger->info('Génération du code d\'intégration', [
                 'form_id' => $formId,
-                'user_id' => $user->getId(),
             ]);
 
             // Générer ou récupérer un token pour ce formulaire
             $token = $this->getOrCreateFormToken($form);
 
             // URL de base pour l'iframe
-            $baseUrl = $this->parameterBag->get('app.base_url');
+            $baseUrl = $_ENV['FRONTEND_URL'] ?? $this->parameterBag->get('frontend_url');
             if (! is_string($baseUrl)) {
-                $baseUrl = 'http://localhost:8000';
+                $baseUrl = 'http://localhost:3000';
             }
-            $embedUrl = $baseUrl . '/embed/form/' . $formId . '?token=' . $token;
+            $embedUrl = $baseUrl . '/embed/' . $formId . '?token=' . $token;
 
             // Générer le code HTML d'intégration
             $embedCode = $this->generateHtmlEmbedCode($embedUrl, $customization);
 
             $this->logger->info('Code d\'intégration généré avec succès', [
                 'form_id' => $formId,
-                'user_id' => $user->getId(),
             ]);
 
             return new FormEmbedDto(
@@ -78,7 +70,6 @@ class FormEmbedService
             $this->logger->error('Erreur lors de la génération du code d\'intégration', [
                 'error' => $e->getMessage(),
                 'form_id' => $formId,
-                'user_id' => $user->getId(),
             ]);
 
             throw $e;

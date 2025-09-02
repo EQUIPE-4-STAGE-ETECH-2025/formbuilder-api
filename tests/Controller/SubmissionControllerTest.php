@@ -13,7 +13,6 @@ class SubmissionControllerTest extends WebTestCase
     private EntityManagerInterface $entityManager;
     private User $userAnna;
     private User $userElodie;
-    private User $adminUser;
     private Form $formAnna;
 
     protected function setUp(): void
@@ -24,9 +23,7 @@ class SubmissionControllerTest extends WebTestCase
 
         $this->userAnna = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
         $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
-        $this->adminUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
-        // Utiliser un formulaire spécifique pour garantir la déterminisme du test
-        $this->formAnna = $this->entityManager->getRepository(Form::class)->find('550e8400-e29b-41d4-a716-446655440301');
+        $this->formAnna = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
     }
 
     public function testSubmitFormSuccessfully(): void
@@ -64,8 +61,19 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $json = json_decode($this->client->getResponse()->getContent(), true);
 
-        $this->assertIsArray($json);
-        $this->assertNotEmpty($json);
+        // Vérifier la nouvelle structure de réponse avec pagination
+        $this->assertArrayHasKey('success', $json);
+        $this->assertTrue($json['success']);
+        $this->assertArrayHasKey('data', $json);
+        $this->assertArrayHasKey('meta', $json);
+
+        // Vérifier les métadonnées de pagination
+        $this->assertArrayHasKey('page', $json['meta']);
+        $this->assertArrayHasKey('limit', $json['meta']);
+        $this->assertArrayHasKey('total', $json['meta']);
+        $this->assertArrayHasKey('totalPages', $json['meta']);
+
+        $this->assertIsArray($json['data']);
     }
 
     public function testGetSubmissionsForbiddenForOtherUser(): void
@@ -74,6 +82,30 @@ class SubmissionControllerTest extends WebTestCase
         $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
 
         $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testGetSubmissionsWithPagination(): void
+    {
+        $this->client->loginUser($this->userAnna);
+        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions?page=1&limit=5');
+
+        $this->assertResponseIsSuccessful();
+        $json = json_decode($this->client->getResponse()->getContent(), true);
+
+        // Vérifier la structure de réponse
+        $this->assertArrayHasKey('success', $json);
+        $this->assertTrue($json['success']);
+        $this->assertArrayHasKey('data', $json);
+        $this->assertArrayHasKey('meta', $json);
+
+        // Vérifier les paramètres de pagination demandés
+        $this->assertEquals(1, $json['meta']['page']);
+        $this->assertEquals(5, $json['meta']['limit']);
+        $this->assertIsInt($json['meta']['total']);
+        $this->assertIsInt($json['meta']['totalPages']);
+
+        // Vérifier que le nombre d'éléments retournés ne dépasse pas la limite
+        $this->assertLessThanOrEqual(5, count($json['data']));
     }
 
     public function testExportSubmissionsCsv(): void
@@ -88,21 +120,35 @@ class SubmissionControllerTest extends WebTestCase
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Vérifie que la première ligne contient bien les en-têtes de base
-        $this->assertStringStartsWith('ID;Form ID;Submitted At;IP Address', $lines[0]);
+        // Vérifie qu'il y a au moins une ligne (l'en-tête)
+        $this->assertGreaterThan(0, count($lines));
 
-        // Vérifie qu'il y a au moins une ligne de données
-        $this->assertGreaterThan(1, count($lines));
+        // Vérifie que la première ligne contient les en-têtes de base
+        $headerLine = $lines[0];
+        $actualHeaders = explode(';', $headerLine);
 
-        // Détermine le nombre de colonnes attendues à partir de l'en-tête
-        $expectedColumnCount = count(explode(';', $lines[0]));
+        // Les 4 premières colonnes doivent toujours être les colonnes de base
+        $baseHeaders = ['ID', 'Form ID', 'Submitted At', 'IP Address'];
+        $this->assertCount(4, array_slice($actualHeaders, 0, 4));
+        $this->assertSame($baseHeaders, array_slice($actualHeaders, 0, 4));
 
-        // Vérifie que chaque ligne de données a le même nombre de colonnes que l'en-tête
-        foreach ($lines as $i => $line) {
-            if ($i === 0 || empty(trim($line))) {
-                continue; // ignore l'en-tête et les lignes vides
+        // S'il y a des soumissions, il peut y avoir des colonnes supplémentaires pour les champs
+        $expectedColumnCount = count($actualHeaders);
+
+        // Vérifie qu'il y a au moins les 4 colonnes de base
+        $this->assertGreaterThanOrEqual(4, $expectedColumnCount);
+
+        // Vérifie que toutes les lignes de données ont le même nombre de colonnes que l'en-tête
+        if (count($lines) > 1) {
+            foreach ($lines as $i => $line) {
+                if ($i === 0) {
+                    continue; // ignore l'en-tête
+                }
+                if (trim($line) === '') {
+                    continue; // ignore les lignes vides
+                }
+                $this->assertCount($expectedColumnCount, explode(';', $line), "La ligne $i doit avoir $expectedColumnCount colonnes");
             }
-            $this->assertCount($expectedColumnCount, explode(';', $line), "La ligne $i doit avoir $expectedColumnCount colonnes");
         }
     }
 

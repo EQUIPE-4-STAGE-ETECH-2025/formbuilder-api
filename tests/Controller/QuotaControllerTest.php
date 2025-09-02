@@ -5,7 +5,6 @@ namespace App\Tests\Controller;
 use App\Entity\Plan;
 use App\Entity\Subscription;
 use App\Entity\User;
-use App\Service\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -15,13 +14,11 @@ class QuotaControllerTest extends WebTestCase
 {
     private ?EntityManagerInterface $em = null;
     private $client;
-    private ?JwtService $jwtService = null;
 
     protected function setUp(): void
     {
         $this->client = static::createClient();
         $this->em = static::getContainer()->get('doctrine')->getManager();
-        $this->jwtService = static::getContainer()->get(JwtService::class);
     }
 
     public function testGetQuotasSuccess(): void

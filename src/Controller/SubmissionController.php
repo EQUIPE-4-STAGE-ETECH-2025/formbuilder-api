@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Dto\SubmitFormDto;
-use App\Entity\User;
 use App\Service\AuthorizationService;
 use App\Service\SubmissionExportService;
 use App\Service\SubmissionService;
@@ -38,8 +37,13 @@ class SubmissionController extends AbstractController
         }
 
         $dto = new SubmitFormDto($data);
-        $user = $this->getUser(); // null si non authentifié
-        $userEntity = $user instanceof User ? $user : null;
+        $user = $this->getUser();
+
+        // Conversion du UserInterface vers User
+        $userEntity = null;
+        if ($user instanceof \App\Entity\User) {
+            $userEntity = $user;
+        }
 
         $submission = $this->submissionService->submitForm(
             $form,
@@ -58,7 +62,7 @@ class SubmissionController extends AbstractController
     }
 
     #[Route('/{id}/submissions', name: 'list_submissions', methods: ['GET'])]
-    public function listSubmissions(string $id): JsonResponse
+    public function listSubmissions(string $id, Request $request): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
         if (! $form) {
@@ -66,12 +70,16 @@ class SubmissionController extends AbstractController
         }
 
         $user = $this->getUser();
-        $userEntity = $user instanceof User ? $user : null;
-        if (! $userEntity || ! $this->authorizationService->canAccessForm($userEntity, $form)) {
+        if (! $user instanceof \App\Entity\User || ! $this->authorizationService->canAccessForm($user, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        $submissions = $this->submissionService->getFormSubmissions($form);
+        // Paramètres de pagination
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
+        $submissions = $this->submissionService->getFormSubmissions($form, $page, $limit);
+        $totalSubmissions = $this->submissionService->countFormSubmissions($form);
 
         $result = array_map(fn ($s) => [
             'id' => $s->getId(),
@@ -81,11 +89,20 @@ class SubmissionController extends AbstractController
             'ipAddress' => $s->getIpAddress(),
         ], $submissions);
 
-        return $this->json($result);
+        return $this->json([
+            'success' => true,
+            'data' => $result,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $totalSubmissions,
+                'totalPages' => ceil($totalSubmissions / $limit),
+            ],
+        ]);
     }
 
     #[Route('/{id}/submissions/export', name: 'export_submissions', methods: ['GET'])]
-    public function exportSubmissions(Request $request, string $id): Response
+    public function exportSubmissions(string $id): Response
     {
         $form = $this->submissionService->getFormById($id);
         if (! $form) {
@@ -93,35 +110,18 @@ class SubmissionController extends AbstractController
         }
 
         $user = $this->getUser();
-        $userEntity = $user instanceof User ? $user : null;
-        if (! $userEntity || ! $this->authorizationService->canAccessForm($userEntity, $form)) {
+        if (! $user instanceof \App\Entity\User || ! $this->authorizationService->canAccessForm($user, $form)) {
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        // Récupération des paramètres de pagination
-        $limit = $request->query->has('limit') ? $request->query->getInt('limit') : null;
-        $offset = $request->query->getInt('offset', 0);
-
-        // Validation des paramètres
-        if ($limit !== null && $limit <= 0) {
-            return $this->json(['error' => 'Le paramètre limit doit être un entier positif'], 400);
-        }
-
-        if ($offset < 0) {
-            return $this->json(['error' => 'Le paramètre offset doit être un entier positif ou nul'], 400);
-        }
-
-        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $userEntity, $limit, $offset);
-
-        $filename = sprintf('submissions_%s_%s.csv', $form->getTitle(), date('Y-m-d_H-i-s'));
-        $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $filename);
+        $csvContent = $this->submissionExportService->exportFormSubmissionsToCsv($form, $user);
 
         return new Response(
             $csvContent,
             200,
             [
                 'Content-Type' => 'text/csv',
-                'Content-Disposition' => sprintf('attachment; filename="%s"', $filename),
+                'Content-Disposition' => 'attachment; filename="submissions.csv"',
             ]
         );
     }

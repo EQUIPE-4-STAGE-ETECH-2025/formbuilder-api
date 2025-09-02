@@ -274,9 +274,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Lien invalide ou expiré.');
 
         $authService->verifyEmail('invalid-token');
-        $this->assertTrue(true);
     }
 
     /**
@@ -301,8 +302,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Lien invalide ou expiré.');
+
         $authService->verifyEmail('token-user-not-found');
-        $this->assertTrue(true);
     }
 
     /**
@@ -330,8 +333,10 @@ class AuthServiceTest extends TestCase
 
         $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
 
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Email déjà vérifié.');
+
         $authService->verifyEmail('token');
-        $this->assertTrue($user->isEmailVerified());
     }
 
     /**
@@ -340,8 +345,6 @@ class AuthServiceTest extends TestCase
      */
     public function testResendEmailVerificationSuccess(): void
     {
-        $_ENV['FRONTEND_URL'] = 'http://frontend.test';
-
         $user = new User();
         $user->setId(Uuid::v4());
         $user->setEmail('user@example.com');
@@ -357,7 +360,7 @@ class AuthServiceTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $emailService->expects($this->once())
             ->method('sendEmailVerification')
-            ->with('user@example.com', 'Alice', 'http://frontend.test/verify-email?token=resend-token&email=user%40example.com');
+            ->with('user@example.com', 'Alice', 'http://localhost:3000/verify-email?token=resend-token&email=user%40example.com');
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
@@ -417,12 +420,10 @@ class AuthServiceTest extends TestCase
      */
     public function testForgotPasswordSendsEmail(): void
     {
-        $_ENV['FRONTEND_URL'] = 'http://frontend.test';
-
         $email = 'user@example.com';
         $firstName = 'Jane';
         $token = 'reset-token';
-        $expectedUrl = 'http://frontend.test/reset-password?token=reset-token&email=user%40example.com';
+        $expectedUrl = 'http://localhost:3000/reset-password?token=reset-token&email=user%40example.com';
 
         $user = new User();
         $user->setId(Uuid::v4());

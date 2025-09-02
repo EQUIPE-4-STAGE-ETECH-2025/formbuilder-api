@@ -20,7 +20,6 @@
         <env name="KERNEL_CLASS" value="App\Kernel"/>
         <env name="APP_ENV" value="test"/>
         <env name="APP_DEBUG" value="1"/>
-
     </php>
     
     <testsuites>

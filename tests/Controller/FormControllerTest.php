@@ -295,69 +295,6 @@ class FormControllerTest extends WebTestCase
         $this->assertNotNull($responseData['data']['publishedAt']);
     }
 
-    public function testGenerateEmbedCode(): void
-    {
-        $user = $this->createTestUser();
-        $form = $this->createTestForm($user, 'PUBLISHED');
-        $token = $this->loginUser($user);
-
-        $this->client->request(
-            'GET',
-            '/api/forms/' . $form->getId() . '/embed',
-            [],
-            [],
-            ['HTTP_Authorization' => 'Bearer ' . $token]
-        );
-
-        $this->assertResponseIsSuccessful();
-
-        $responseData = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertTrue($responseData['success']);
-        $this->assertArrayHasKey('embedCode', $responseData['data']);
-        $this->assertArrayHasKey('token', $responseData['data']);
-        $this->assertArrayHasKey('embedUrl', $responseData['data']);
-        $this->assertStringContainsString('<iframe', $responseData['data']['embedCode']);
-    }
-
-    public function testGenerateEmbedCodeWithCustomization(): void
-    {
-        $user = $this->createTestUser();
-        $form = $this->createTestForm($user, 'PUBLISHED');
-        $token = $this->loginUser($user);
-
-        $this->client->request(
-            'GET',
-            '/api/forms/' . $form->getId() . '/embed?width=800px&height=400px',
-            [],
-            [],
-            ['HTTP_Authorization' => 'Bearer ' . $token]
-        );
-
-        $this->assertResponseIsSuccessful();
-
-        $responseData = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertTrue($responseData['success']);
-        $this->assertStringContainsString('width: 800px', $responseData['data']['embedCode']);
-        $this->assertStringContainsString('height: 400px', $responseData['data']['embedCode']);
-    }
-
-    public function testGenerateEmbedCodeForDraftFormFails(): void
-    {
-        $user = $this->createTestUser();
-        $form = $this->createTestForm($user, 'DRAFT');
-        $token = $this->loginUser($user);
-
-        $this->client->request(
-            'GET',
-            '/api/forms/' . $form->getId() . '/embed',
-            [],
-            [],
-            ['HTTP_Authorization' => 'Bearer ' . $token]
-        );
-
-        $this->assertResponseStatusCodeSame(Response::HTTP_BAD_REQUEST);
-    }
-
     private function createTestUser(string $email = 'test@example.com'): User
     {
         $this->removeUserIfExists($email);

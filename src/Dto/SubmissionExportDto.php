@@ -18,7 +18,7 @@ class SubmissionExportDto
     {
         $this->id = (string) $submission->getId();
         $this->formId = (string) ($submission->getForm()?->getId() ?? '');
-        $this->submittedAt = $submission->getSubmittedAt() !== null ? $submission->getSubmittedAt()->format('Y-m-d H:i:s') : '';
+        $this->submittedAt = $submission->getSubmittedAt()?->format('Y-m-d H:i:s') ?? '';
         $this->ipAddress = $submission->getIpAddress() ?? '';
         $this->data = $submission->getData();
     }

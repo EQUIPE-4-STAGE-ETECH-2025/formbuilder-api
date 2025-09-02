@@ -4,9 +4,7 @@ namespace App\Tests\Service;
 
 use App\Entity\Form;
 use App\Entity\FormToken;
-use App\Entity\User;
 use App\Repository\FormTokenRepository;
-use App\Service\AuthorizationService;
 use App\Service\FormEmbedService;
 use App\Service\JwtService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,7 +12,6 @@ use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Uid\Uuid;
 
 class FormEmbedServiceTest extends TestCase
@@ -24,9 +21,6 @@ class FormEmbedServiceTest extends TestCase
      */
     public function testGenerateEmbedCodeSuccess(): void
     {
-        $user = new User();
-        $user->setId(Uuid::v4());
-        $user->setEmail('test@example.com');
 
         $form = new Form();
         $form->setId(Uuid::v4());
@@ -43,11 +37,8 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $authorizationService->method('canAccessForm')->willReturn(true);
-
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->with('app.base_url')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -55,17 +46,18 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
 
-        $result = $formEmbedService->generateEmbedCode($form, $user);
+        $result = $formEmbedService->generateEmbedCode($form);
 
         $this->assertEquals($form->getId(), $result->formId);
         $this->assertEquals('test-jwt-token', $result->token);
         $this->assertStringContainsString('<iframe', $result->embedCode);
-        $this->assertStringContainsString('http://localhost:8000/embed/form/', $result->embedUrl);
+        $this->assertStringContainsString('http://localhost:3000/embed/', $result->embedUrl);
+        $this->assertStringContainsString($form->getId(), $result->embedUrl);
+        $this->assertStringContainsString('token=test-jwt-token', $result->embedUrl);
     }
 
     /**
@@ -73,9 +65,6 @@ class FormEmbedServiceTest extends TestCase
      */
     public function testGenerateEmbedCodeWithCustomization(): void
     {
-        $user = new User();
-        $user->setId(Uuid::v4());
-
         $form = new Form();
         $form->setId(Uuid::v4());
         $form->setStatus('PUBLISHED');
@@ -97,11 +86,8 @@ class FormEmbedServiceTest extends TestCase
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
 
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $authorizationService->method('canAccessForm')->willReturn(true);
-
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -109,12 +95,11 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
 
-        $result = $formEmbedService->generateEmbedCode($form, $user, $customization);
+        $result = $formEmbedService->generateEmbedCode($form, $customization);
 
         $this->assertEquals($customization, $result->customization);
         $this->assertStringContainsString('width: 800px', $result->embedCode);
@@ -128,9 +113,6 @@ class FormEmbedServiceTest extends TestCase
      */
     public function testGenerateEmbedCodeWithExistingToken(): void
     {
-        $user = new User();
-        $user->setId(Uuid::v4());
-
         $form = new Form();
         $form->setId(Uuid::v4());
         $form->setStatus('PUBLISHED');
@@ -147,11 +129,8 @@ class FormEmbedServiceTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->never())->method('persist'); // Pas de nouveau token créé
 
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $authorizationService->method('canAccessForm')->willReturn(true);
-
         $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $parameterBag->method('get')->willReturn('http://localhost:8000');
+        $parameterBag->method('get')->with('frontend_url')->willReturn('http://localhost:3000');
 
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -159,12 +138,11 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
 
-        $result = $formEmbedService->generateEmbedCode($form, $user);
+        $result = $formEmbedService->generateEmbedCode($form);
 
         $this->assertEquals('existing-jwt-token', $result->token);
     }
@@ -172,48 +150,8 @@ class FormEmbedServiceTest extends TestCase
     /**
      * @throws Exception
      */
-    public function testGenerateEmbedCodeAccessDenied(): void
-    {
-        $user = new User();
-        $user->setId(Uuid::v4());
-
-        $form = new Form();
-        $form->setId(Uuid::v4());
-        $form->setStatus('PUBLISHED');
-
-        $jwtService = $this->createMock(JwtService::class);
-        $formTokenRepository = $this->createMock(FormTokenRepository::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $authorizationService->method('canAccessForm')->willReturn(false);
-
-        $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $logger = $this->createMock(LoggerInterface::class);
-
-        $formEmbedService = new FormEmbedService(
-            $jwtService,
-            $formTokenRepository,
-            $entityManager,
-            $authorizationService,
-            $parameterBag,
-            $logger
-        );
-
-        $this->expectException(AccessDeniedException::class);
-        $this->expectExceptionMessage('Accès refusé à ce formulaire');
-
-        $formEmbedService->generateEmbedCode($form, $user);
-    }
-
-    /**
-     * @throws Exception
-     */
     public function testGenerateEmbedCodeFormNotPublished(): void
     {
-        $user = new User();
-        $user->setId(Uuid::v4());
-
         $form = new Form();
         $form->setId(Uuid::v4());
         $form->setStatus('DRAFT'); // Pas publié
@@ -221,10 +159,6 @@ class FormEmbedServiceTest extends TestCase
         $jwtService = $this->createMock(JwtService::class);
         $formTokenRepository = $this->createMock(FormTokenRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
-
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $authorizationService->method('canAccessForm')->willReturn(true);
-
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -232,7 +166,6 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
@@ -240,7 +173,7 @@ class FormEmbedServiceTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le formulaire doit être publié pour générer un code d\'intégration');
 
-        $formEmbedService->generateEmbedCode($form, $user);
+        $formEmbedService->generateEmbedCode($form);
     }
 
     /**
@@ -269,7 +202,6 @@ class FormEmbedServiceTest extends TestCase
         $formTokenRepository->method('findOneBy')->willReturn($formToken);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $authorizationService = $this->createMock(AuthorizationService::class);
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -277,7 +209,6 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
@@ -298,7 +229,6 @@ class FormEmbedServiceTest extends TestCase
 
         $formTokenRepository = $this->createMock(FormTokenRepository::class);
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $authorizationService = $this->createMock(AuthorizationService::class);
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -306,45 +236,11 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
 
         $result = $formEmbedService->validateEmbedToken('invalid-token');
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function testValidateEmbedTokenWrongType(): void
-    {
-        $payload = (object) [
-            'form_id' => Uuid::v4(),
-            'type' => 'email_verification', // Mauvais type
-        ];
-
-        $jwtService = $this->createMock(JwtService::class);
-        $jwtService->method('validateToken')->willReturn($payload);
-
-        $formTokenRepository = $this->createMock(FormTokenRepository::class);
-        $entityManager = $this->createMock(EntityManagerInterface::class);
-        $authorizationService = $this->createMock(AuthorizationService::class);
-        $parameterBag = $this->createMock(ParameterBagInterface::class);
-        $logger = $this->createMock(LoggerInterface::class);
-
-        $formEmbedService = new FormEmbedService(
-            $jwtService,
-            $formTokenRepository,
-            $entityManager,
-            $authorizationService,
-            $parameterBag,
-            $logger
-        );
-
-        $result = $formEmbedService->validateEmbedToken('token-with-wrong-type');
 
         $this->assertNull($result);
     }
@@ -373,7 +269,6 @@ class FormEmbedServiceTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $entityManager->expects($this->once())->method('flush');
 
-        $authorizationService = $this->createMock(AuthorizationService::class);
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -381,7 +276,6 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );
@@ -417,7 +311,6 @@ class FormEmbedServiceTest extends TestCase
         $formTokenRepository->method('findOneBy')->willReturn($expiredFormToken);
 
         $entityManager = $this->createMock(EntityManagerInterface::class);
-        $authorizationService = $this->createMock(AuthorizationService::class);
         $parameterBag = $this->createMock(ParameterBagInterface::class);
         $logger = $this->createMock(LoggerInterface::class);
 
@@ -425,7 +318,6 @@ class FormEmbedServiceTest extends TestCase
             $jwtService,
             $formTokenRepository,
             $entityManager,
-            $authorizationService,
             $parameterBag,
             $logger
         );

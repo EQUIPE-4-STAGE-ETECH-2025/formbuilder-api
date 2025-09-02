@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Dto\ChangePasswordDto;
 use App\Dto\LoginDto;
 use App\Dto\RegisterDto;
 use App\Dto\ResetPasswordDto;
@@ -107,6 +108,25 @@ class AuthController extends AbstractController
         }
     }
 
+    #[Route('/api/auth/refresh', name: 'auth_refresh', methods: ['POST'])]
+    public function refresh(Request $request, AuthService $authService): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data['refresh_token'] ?? '';
+
+        if (! $refreshToken) {
+            return $this->json(['success' => false, 'error' => 'Refresh token manquant'], 400);
+        }
+
+        try {
+            $authData = $authService->refreshAccessToken($refreshToken);
+
+            return $this->json(['success' => true, 'data' => $authData]);
+        } catch (UnauthorizedHttpException $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], 401);
+        }
+    }
+
     #[Route('/api/auth/logout', name: 'auth_logout', methods: ['POST'])]
     public function logout(Request $request, AuthService $authService): JsonResponse
     {
@@ -117,9 +137,11 @@ class AuthController extends AbstractController
         }
 
         $token = substr($authHeader, 7);
+        $data = json_decode($request->getContent(), true);
+        $refreshToken = $data['refresh_token'] ?? null;
 
         try {
-            $authService->logout($token);
+            $authService->logout($token, $refreshToken);
 
             return $this->json(['message' => 'Déconnexion réussie']);
         } catch (RuntimeException $e) {
@@ -141,7 +163,16 @@ class AuthController extends AbstractController
 
             return $this->json(['success' => true, 'message' => 'Email vérifié avec succès']);
         } catch (RuntimeException $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], 400);
+            // Codes HTTP plus spécifiques selon le type d'erreur
+            $statusCode = match ($e->getMessage()) {
+                'Token révoqué.' => 410, // Gone - Token déjà utilisé
+                'Email déjà vérifié.' => 409, // Conflict - Email déjà vérifié
+                'Type de token invalide.' => 422, // Unprocessable Entity
+                'Utilisateur introuvable.' => 404, // Not Found
+                default => 400 // Bad Request pour les autres erreurs
+            };
+
+            return $this->json(['success' => false, 'error' => $e->getMessage()], $statusCode);
         }
     }
 

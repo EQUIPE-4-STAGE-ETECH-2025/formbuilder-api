@@ -2,6 +2,7 @@
 
 namespace App\Tests\Service;
 
+use App\Dto\BlackListedTokenDto;
 use App\Service\BlackListedTokenService;
 use App\Service\JwtService;
 use Firebase\JWT\JWT;
@@ -18,7 +19,7 @@ class JwtServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->jwtService = new JwtService($this->secretKey, $this->tokenTtl, 'HS256');
+        $this->jwtService = new JwtService($this->secretKey, $this->tokenTtl, 604800, 'HS256');
     }
 
     public function testGenerateToken(): void
@@ -102,6 +103,7 @@ class JwtServiceTest extends TestCase
         $jwtService = new JwtService(
             $this->secretKey,
             $this->tokenTtl,
+            604800,
             'HS256',
             $mockBlacklistService
         );
@@ -111,5 +113,80 @@ class JwtServiceTest extends TestCase
 
         $jwtService->validateToken('blacklisted.token');
         $this->jwtService->refreshToken($token, 300);
+    }
+
+    public function testGenerateRefreshToken(): void
+    {
+        $payload = ['id' => 123, 'email' => 'test@example.com'];
+        $refreshToken = $this->jwtService->generateRefreshToken($payload);
+
+        $this->assertIsString($refreshToken);
+        $decoded = JWT::decode($refreshToken, new Key($this->secretKey, 'HS256'));
+
+        $this->assertEquals(123, $decoded->id);
+        $this->assertEquals('test@example.com', $decoded->email);
+        $this->assertTrue(isset($decoded->iat), 'Le champ "iat" est manquant.');
+        $this->assertTrue(isset($decoded->exp), 'Le champ "exp" est manquant.');
+        $this->assertEquals('refresh', $decoded->type, 'Le type de token doit être "refresh"');
+    }
+
+    public function testValidateRefreshToken(): void
+    {
+        $payload = ['id' => 1, 'email' => 'user@example.com'];
+        $refreshToken = $this->jwtService->generateRefreshToken($payload);
+
+        $decoded = $this->jwtService->validateRefreshToken($refreshToken);
+
+        $this->assertEquals(1, $decoded->id);
+        $this->assertEquals('user@example.com', $decoded->email);
+        $this->assertEquals('refresh', $decoded->type);
+    }
+
+    public function testValidateRefreshTokenThrowsExceptionForAccessToken(): void
+    {
+        $payload = ['id' => 1, 'email' => 'user@example.com'];
+        $accessToken = $this->jwtService->generateToken($payload);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Refresh token invalide ou expiré.');
+
+        $this->jwtService->validateRefreshToken($accessToken);
+    }
+
+    public function testRefreshAccessToken(): void
+    {
+        $payload = ['id' => 10, 'email' => 'user@example.com'];
+        $refreshToken = $this->jwtService->generateRefreshToken($payload);
+
+        $newAccessToken = $this->jwtService->refreshAccessToken($refreshToken);
+        $this->assertIsString($newAccessToken);
+
+        $decoded = $this->jwtService->validateToken($newAccessToken);
+        $this->assertEquals(10, $decoded->id);
+        $this->assertEquals('user@example.com', $decoded->email);
+        $this->assertEquals('access', $decoded->type);
+    }
+
+    public function testBlacklistRefreshToken(): void
+    {
+        $mockBlacklistService = $this->createMock(BlackListedTokenService::class);
+        $mockBlacklistService->expects($this->once())
+            ->method('blacklist')
+            ->with($this->callback(function ($dto) {
+                return $dto instanceof BlackListedTokenDto;
+            }));
+
+        $jwtService = new JwtService(
+            $this->secretKey,
+            $this->tokenTtl,
+            604800,
+            'HS256',
+            $mockBlacklistService
+        );
+
+        $payload = ['id' => 1, 'email' => 'user@example.com'];
+        $refreshToken = $jwtService->generateRefreshToken($payload);
+
+        $jwtService->blacklistRefreshToken($refreshToken);
     }
 }
