@@ -62,7 +62,7 @@ class SubmissionController extends AbstractController
     }
 
     #[Route('/{id}/submissions', name: 'list_submissions', methods: ['GET'])]
-    public function listSubmissions(string $id): JsonResponse
+    public function listSubmissions(string $id, Request $request): JsonResponse
     {
         $form = $this->submissionService->getFormById($id);
         if (! $form) {
@@ -74,7 +74,12 @@ class SubmissionController extends AbstractController
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        $submissions = $this->submissionService->getFormSubmissions($form);
+        // Paramètres de pagination
+        $page = max(1, (int) $request->query->get('page', 1));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
+        $submissions = $this->submissionService->getFormSubmissions($form, $page, $limit);
+        $totalSubmissions = $this->submissionService->countFormSubmissions($form);
 
         $result = array_map(fn ($s) => [
             'id' => $s->getId(),
@@ -84,7 +89,16 @@ class SubmissionController extends AbstractController
             'ipAddress' => $s->getIpAddress(),
         ], $submissions);
 
-        return $this->json($result);
+        return $this->json([
+            'success' => true,
+            'data' => $result,
+            'meta' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $totalSubmissions,
+                'totalPages' => ceil($totalSubmissions / $limit),
+            ],
+        ]);
     }
 
     #[Route('/{id}/submissions/export', name: 'export_submissions', methods: ['GET'])]

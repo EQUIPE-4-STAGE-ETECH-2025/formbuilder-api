@@ -104,14 +104,30 @@ class SubmissionService
     /**
      * @return array<int, Submission>
      */
-    public function getFormSubmissions(Form $form): array
+    public function getFormSubmissions(Form $form, int $page = 1, int $limit = 20): array
     {
-        return $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC']);
+        $offset = ($page - 1) * $limit;
+
+        return $this->submissionRepository->findBy(
+            ['form' => $form],
+            ['submittedAt' => 'DESC'],
+            $limit,
+            $offset
+        );
+    }
+
+    /**
+     * Compte le nombre total de soumissions pour un formulaire
+     */
+    public function countFormSubmissions(Form $form): int
+    {
+        return $this->submissionRepository->count(['form' => $form]);
     }
 
     public function exportSubmissionsToCsv(Form $form): string
     {
-        $submissions = $this->getFormSubmissions($form);
+        // Pour l'export, on récupère toutes les soumissions sans pagination
+        $submissions = $this->submissionRepository->findBy(['form' => $form], ['submittedAt' => 'DESC']);
         if (empty($submissions)) {
             return '';
         }

@@ -13,7 +13,6 @@ class SubmissionControllerTest extends WebTestCase
     private EntityManagerInterface $entityManager;
     private User $userAnna;
     private User $userElodie;
-    private User $adminUser;
     private Form $formAnna;
 
     protected function setUp(): void
@@ -24,7 +23,6 @@ class SubmissionControllerTest extends WebTestCase
 
         $this->userAnna = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'anna@example.com']);
         $this->userElodie = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'elodie@example.com']);
-        $this->adminUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'admin@formbuilder.com']);
         $this->formAnna = $this->entityManager->getRepository(Form::class)->findOneBy(['user' => $this->userAnna]);
     }
 
@@ -63,8 +61,19 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $json = json_decode($this->client->getResponse()->getContent(), true);
 
-        $this->assertIsArray($json);
-        $this->assertNotEmpty($json);
+        // Vérifier la nouvelle structure de réponse avec pagination
+        $this->assertArrayHasKey('success', $json);
+        $this->assertTrue($json['success']);
+        $this->assertArrayHasKey('data', $json);
+        $this->assertArrayHasKey('meta', $json);
+
+        // Vérifier les métadonnées de pagination
+        $this->assertArrayHasKey('page', $json['meta']);
+        $this->assertArrayHasKey('limit', $json['meta']);
+        $this->assertArrayHasKey('total', $json['meta']);
+        $this->assertArrayHasKey('totalPages', $json['meta']);
+
+        $this->assertIsArray($json['data']);
     }
 
     public function testGetSubmissionsForbiddenForOtherUser(): void
@@ -73,6 +82,30 @@ class SubmissionControllerTest extends WebTestCase
         $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions');
 
         $this->assertResponseStatusCodeSame(403);
+    }
+
+    public function testGetSubmissionsWithPagination(): void
+    {
+        $this->client->loginUser($this->userAnna);
+        $this->client->request('GET', '/api/forms/' . $this->formAnna->getId() . '/submissions?page=1&limit=5');
+
+        $this->assertResponseIsSuccessful();
+        $json = json_decode($this->client->getResponse()->getContent(), true);
+
+        // Vérifier la structure de réponse
+        $this->assertArrayHasKey('success', $json);
+        $this->assertTrue($json['success']);
+        $this->assertArrayHasKey('data', $json);
+        $this->assertArrayHasKey('meta', $json);
+
+        // Vérifier les paramètres de pagination demandés
+        $this->assertEquals(1, $json['meta']['page']);
+        $this->assertEquals(5, $json['meta']['limit']);
+        $this->assertIsInt($json['meta']['total']);
+        $this->assertIsInt($json['meta']['totalPages']);
+
+        // Vérifier que le nombre d'éléments retournés ne dépasse pas la limite
+        $this->assertLessThanOrEqual(5, count($json['data']));
     }
 
     public function testExportSubmissionsCsv(): void

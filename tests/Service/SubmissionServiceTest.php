@@ -166,4 +166,73 @@ class SubmissionServiceTest extends TestCase
         $this->assertStringContainsString('a@example.com', $csv);
         $this->assertStringContainsString('b@example.com', $csv);
     }
+
+    public function testGetFormSubmissionsWithPagination(): void
+    {
+        $form = new Form();
+        $form->setTitle('Test Form');
+
+        $submission1 = new Submission();
+        $submission1->setData(['field1' => 'test1@example.com']);
+
+        $submission2 = new Submission();
+        $submission2->setData(['field1' => 'test2@example.com']);
+
+        // Test pagination page 1, limit 5
+        $this->submissionRepository->expects($this->once())
+            ->method('findBy')
+            ->with(
+                ['form' => $form],
+                ['submittedAt' => 'DESC'],
+                5,
+                0
+            )
+            ->willReturn([$submission1, $submission2]);
+
+        $submissions = $this->submissionService->getFormSubmissions($form, 1, 5);
+
+        $this->assertCount(2, $submissions);
+        $this->assertSame($submission1, $submissions[0]);
+        $this->assertSame($submission2, $submissions[1]);
+    }
+
+    public function testGetFormSubmissionsWithDefaultPagination(): void
+    {
+        $form = new Form();
+        $form->setTitle('Test Form');
+
+        $submission = new Submission();
+        $submission->setData(['field1' => 'test@example.com']);
+
+        // Test pagination par défaut (page 1, limit 20)
+        $this->submissionRepository->expects($this->once())
+            ->method('findBy')
+            ->with(
+                ['form' => $form],
+                ['submittedAt' => 'DESC'],
+                20,
+                0
+            )
+            ->willReturn([$submission]);
+
+        $submissions = $this->submissionService->getFormSubmissions($form);
+
+        $this->assertCount(1, $submissions);
+        $this->assertSame($submission, $submissions[0]);
+    }
+
+    public function testCountFormSubmissions(): void
+    {
+        $form = new Form();
+        $form->setTitle('Test Form');
+
+        $this->submissionRepository->expects($this->once())
+            ->method('count')
+            ->with(['form' => $form])
+            ->willReturn(42);
+
+        $count = $this->submissionService->countFormSubmissions($form);
+
+        $this->assertEquals(42, $count);
+    }
 }
