@@ -37,18 +37,10 @@ class SubmissionController extends AbstractController
         }
 
         $dto = new SubmitFormDto($data);
-        $user = $this->getUser();
-
-        // Conversion du UserInterface vers User
-        $userEntity = null;
-        if ($user instanceof \App\Entity\User) {
-            $userEntity = $user;
-        }
 
         $submission = $this->submissionService->submitForm(
             $form,
             $dto->getData(),
-            $userEntity,
             $request->getClientIp()
         );
 
