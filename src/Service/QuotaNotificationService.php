@@ -11,8 +11,7 @@ class QuotaNotificationService
 {
     public function __construct(
         private EmailService $emailService,
-        private QuotaStatusRepository $quotaStatusRepository,
-        private EntityManagerInterface $entityManager,
+        private QuotaStatusService $quotaStatusService,
         private LoggerInterface $logger
     ) {
     }
@@ -24,14 +23,16 @@ class QuotaNotificationService
     public function checkAndSendNotifications(User $user, array $quotaData): void
     {
         $currentMonth = new \DateTime('first day of this month');
-        $quotaStatus = $this->quotaStatusRepository->findOneBy([
-            'user' => $user,
-            'month' => $currentMonth,
-        ]);
 
-        if (! $quotaStatus) {
-            return;
-        }
+        $quotaStatus = $this->quotaStatusService->getOrCreateQuotaStatus($user, $currentMonth);
+
+        $usage = $quotaData['usage'];
+        $this->quotaStatusService->updateUsageData(
+            $quotaStatus,
+            $usage['form_count'],
+            $usage['submission_count'],
+            $usage['storage_used_mb']
+        );
 
         // Vérifier notification à 80%
         if ($this->shouldNotify($quotaData, 80) && ! $quotaStatus->isNotified80()) {
@@ -47,8 +48,7 @@ class QuotaNotificationService
             }
         }
 
-        $this->entityManager->persist($quotaStatus);
-        $this->entityManager->flush();
+        $this->quotaStatusService->flush();
     }
 
     /**
