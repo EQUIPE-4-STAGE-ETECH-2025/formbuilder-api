@@ -26,6 +26,7 @@ class FormService
         private EntityManagerInterface $entityManager,
         private FormVersionService $formVersionService,
         private AuthorizationService $authorizationService,
+        private readonly QuotaService $quotaService,
         private LoggerInterface $logger
     ) {
     }
@@ -33,6 +34,8 @@ class FormService
     public function createForm(CreateFormDto $dto, User $user): FormResponseDto
     {
         try {
+            $this->quotaService->enforceQuotaLimit($user, 'create_form');
+
             $this->logger->info('Création d\'un nouveau formulaire', [
                 'user_id' => $user->getId(),
                 'title' => $dto->title,
@@ -57,6 +60,8 @@ class FormService
                 'form_id' => $form->getId(),
                 'user_id' => $user->getId(),
             ]);
+
+            $this->quotaService->calculateCurrentQuotas($user);
 
             return $this->mapToDto($form);
         } catch (\Exception $e) {
