@@ -38,4 +38,12 @@ class SubscriptionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Flush les changements en attente vers la base de données
+     */
+    public function flush(): void
+    {
+        $this->getEntityManager()->flush();
+    }
 }

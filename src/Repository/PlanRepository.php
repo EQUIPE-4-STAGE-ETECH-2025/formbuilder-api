@@ -38,4 +38,20 @@ class PlanRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Récupère le plan Free par défaut
+     */
+    public function findDefaultFreePlan(): ?Plan
+    {
+        return $this->findOneBy(['name' => 'Free']);
+    }
+
+    /**
+     * Récupère le plan Free par son prix (0 centimes)
+     */
+    public function findFreePlan(): ?Plan
+    {
+        return $this->findOneBy(['priceCents' => 0]);
+    }
 }
