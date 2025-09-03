@@ -10,11 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-<<<<<<<< HEAD:migrations/Version20250824121735.php
 final class Version20250824121735 extends AbstractMigration
-========
-final class Version20250825132106 extends AbstractMigration
->>>>>>>> 6a3abf907c2547435676761e140856c1d41ee1f2:migrations/Version20250825132106.php
 {
     public function getDescription(): string
     {
@@ -109,19 +105,7 @@ final class Version20250825132106 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-<<<<<<<< HEAD:migrations/Version20250824121735.php
         $this->addSql('CREATE SCHEMA public');
-========
-        $this->addSql('CREATE SCHEMA realtime');
-        $this->addSql('CREATE SCHEMA pgbouncer');
-        $this->addSql('CREATE SCHEMA public');
-        $this->addSql('CREATE SCHEMA extensions');
-        $this->addSql('CREATE SCHEMA vault');
-        $this->addSql('CREATE SCHEMA graphql_public');
-        $this->addSql('CREATE SCHEMA graphql');
-        $this->addSql('CREATE SCHEMA auth');
-        $this->addSql('CREATE SCHEMA storage');
->>>>>>>> 6a3abf907c2547435676761e140856c1d41ee1f2:migrations/Version20250825132106.php
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F5642B8210');
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F56C066AFE');
         $this->addSql('ALTER TABLE form DROP CONSTRAINT FK_5288FD4FA76ED395');
