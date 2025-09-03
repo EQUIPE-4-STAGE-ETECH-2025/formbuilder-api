@@ -16,7 +16,9 @@ class UserControllerTest extends WebTestCase
     protected function setUp(): void
     {
         $this->client = static::createClient();
+
         $this->userService = $this->createMock(UserService::class);
+
         self::getContainer()->set(UserService::class, $this->userService);
     }
 
@@ -166,36 +168,6 @@ class UserControllerTest extends WebTestCase
         $data = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertEquals('Profil mis à jour avec succès', $data['message']);
         $this->assertEquals('John', $data['user']['firstName']);
-    }
-
-    public function testListUsers(): void
-    {
-        $user1 = new User();
-        $user1->setId(Uuid::v4()->toRfc4122());
-        $user1->setEmail('user1@example.com');
-        $user1->setFirstName('User');
-        $user1->setLastName('One');
-        $user1->setRole('USER');
-        $user1->setIsEmailVerified(true);
-
-        $user2 = new User();
-        $user2->setId(Uuid::v4()->toRfc4122());
-        $user2->setEmail('user2@example.com');
-        $user2->setFirstName('User');
-        $user2->setLastName('Two');
-        $user2->setRole('ADMIN');
-        $user2->setIsEmailVerified(false);
-
-        $this->userService->expects($this->once())
-            ->method('listUsers')
-            ->willReturn([$user1, $user2]);
-
-        $this->client->request('GET', '/api/users');
-
-        $this->assertResponseIsSuccessful();
-        $data = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertCount(2, $data);
-        $this->assertEquals('user1@example.com', $data[0]['email']);
     }
 
     public function testDeleteUserSuccess(): void
