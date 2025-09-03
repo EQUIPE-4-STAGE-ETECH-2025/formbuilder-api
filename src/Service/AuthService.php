@@ -22,7 +22,8 @@ class AuthService
         private readonly UserRepository $userRepository,
         private readonly UserPasswordHasherInterface $passwordHasher,
         private readonly JwtService $jwtService,
-        private readonly EmailService $emailService
+        private readonly EmailService $emailService,
+        private readonly SubscriptionService $subscriptionService
     ) {
     }
 
@@ -47,6 +48,14 @@ class AuthService
         $user->setPasswordHash($hashedPassword);
 
         $this->userRepository->save($user, true);
+
+        // Assigner un plan Free par défaut au nouvel utilisateur
+        try {
+            $this->subscriptionService->assignDefaultFreePlan($user);
+        } catch (RuntimeException $e) {
+            // Log l'erreur mais ne pas faire échouer l'inscription
+            error_log('Erreur lors de l\'assignation du plan par défaut : ' . $e->getMessage());
+        }
 
         $verificationToken = $this->jwtService->generateToken([
             'id' => $user->getId(),

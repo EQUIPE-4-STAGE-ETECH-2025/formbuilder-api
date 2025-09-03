@@ -11,6 +11,7 @@ use App\Repository\UserRepository;
 use App\Service\AuthService;
 use App\Service\EmailService;
 use App\Service\JwtService;
+use App\Service\SubscriptionService;
 use DateTimeImmutable;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
@@ -50,8 +51,9 @@ class AuthServiceTest extends TestCase
         $jwtService->method('generateToken')->willReturn('fake-jwt-token');
 
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $result = $authService->login($dto);
 
@@ -74,8 +76,9 @@ class AuthServiceTest extends TestCase
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $jwtService = $this->createMock(JwtService::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(UnauthorizedHttpException::class);
         $authService->login($dto);
@@ -103,8 +106,9 @@ class AuthServiceTest extends TestCase
 
         $jwtService = $this->createMock(JwtService::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(UnauthorizedHttpException::class);
         $this->expectExceptionMessage('Email non vérifié.');
@@ -128,8 +132,9 @@ class AuthServiceTest extends TestCase
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $result = $service->getCurrentUser('valid-token');
 
@@ -152,8 +157,9 @@ class AuthServiceTest extends TestCase
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $service->getCurrentUser('valid-token');
     }
@@ -173,8 +179,9 @@ class AuthServiceTest extends TestCase
         $userRepo = $this->createMock(UserRepository::class);
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
         $service->logout($token);
     }
 
@@ -215,7 +222,10 @@ class AuthServiceTest extends TestCase
         $emailService = $this->createMock(EmailService::class);
         $emailService->expects($this->once())->method('sendEmailVerification');
 
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
+        $subscriptionService->expects($this->once())->method('assignDefaultFreePlan');
+
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $result = $authService->register($dto);
 
@@ -249,8 +259,9 @@ class AuthServiceTest extends TestCase
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $authService->verifyEmail('some-token');
 
@@ -271,8 +282,9 @@ class AuthServiceTest extends TestCase
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Lien invalide ou expiré.');
@@ -299,8 +311,9 @@ class AuthServiceTest extends TestCase
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Lien invalide ou expiré.');
@@ -330,8 +343,9 @@ class AuthServiceTest extends TestCase
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepository, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Email déjà vérifié.');
@@ -358,13 +372,14 @@ class AuthServiceTest extends TestCase
         $jwtService->method('generateToken')->willReturn('resend-token');
 
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
         $emailService->expects($this->once())
             ->method('sendEmailVerification')
             ->with('user@example.com', 'Alice', 'http://localhost:3000/verify-email?token=resend-token&email=user%40example.com');
 
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
         $service->resendEmailVerification('user@example.com');
     }
 
@@ -379,9 +394,10 @@ class AuthServiceTest extends TestCase
 
         $jwtService = $this->createMock(JwtService::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Utilisateur inexistant.');
@@ -404,9 +420,10 @@ class AuthServiceTest extends TestCase
 
         $jwtService = $this->createMock(JwtService::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
         $hasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Email déjà vérifié.');
@@ -440,13 +457,14 @@ class AuthServiceTest extends TestCase
         $jwtService->method('generateToken')->willReturn($token);
 
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
         $emailService->expects($this->once())
             ->method('sendPasswordResetEmail')
             ->with($email, $firstName, $expectedUrl);
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $authService = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $authService->forgotPassword($email);
     }
@@ -464,9 +482,10 @@ class AuthServiceTest extends TestCase
 
         $jwtService = $this->createMock(JwtService::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Utilisateur inexistant.');
@@ -505,8 +524,9 @@ class AuthServiceTest extends TestCase
         $passwordHasher->method('hashPassword')->with($user, $newPassword)->willReturn('hashedNewPassword');
 
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $service->resetPassword($dto);
 
@@ -535,8 +555,9 @@ class AuthServiceTest extends TestCase
         $userRepo = $this->createMock(UserRepository::class);
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Token de réinitialisation invalide.');
@@ -568,8 +589,9 @@ class AuthServiceTest extends TestCase
 
         $passwordHasher = $this->createMock(UserPasswordHasherInterface::class);
         $emailService = $this->createMock(EmailService::class);
+        $subscriptionService = $this->createMock(SubscriptionService::class);
 
-        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService);
+        $service = new AuthService($userRepo, $passwordHasher, $jwtService, $emailService, $subscriptionService);
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Utilisateur inexistant.');
