@@ -30,7 +30,7 @@ class SubmissionService
      */
     public function submitForm(Form $form, array $submissionData, ?User $user = null, ?string $ipAddress = null): Submission
     {
-        // Vérification du quota avant soumission
+        // Vérification du quota
         if ($user) {
             $this->quotaService->enforceQuotaLimit($user, 'submit_form');
         }
@@ -40,6 +40,7 @@ class SubmissionService
         if ($formVersions->isEmpty()) {
             throw new BadRequestHttpException('Le formulaire n’a pas de version valide.');
         }
+
         $latestVersion = $formVersions->last();
         if ($latestVersion === false) {
             throw new BadRequestHttpException('Impossible de récupérer la dernière version du formulaire.');
@@ -73,18 +74,12 @@ class SubmissionService
         // Création de la soumission
         $submission = new Submission();
         $submission->setForm($form)
-                ->setData($filteredData)
-                ->setSubmitter($user)
-                ->setSubmittedAt(new \DateTimeImmutable())
-                ->setIpAddress($ipAddress);
+                   ->setData($filteredData)
+                   ->setSubmitter($user)
+                   ->setSubmittedAt(new \DateTimeImmutable())
+                   ->setIpAddress($ipAddress);
 
         $this->entityManager->persist($submission);
-
-        // **Mise à jour du QuotaStatus**
-        if ($user) {
-            $this->quotaService->updateQuotaStatus($user, 'submit_form');
-        }
-
         $this->entityManager->flush();
 
         // Notification email au propriétaire du formulaire
