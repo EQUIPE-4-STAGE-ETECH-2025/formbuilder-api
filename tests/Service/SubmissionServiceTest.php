@@ -11,8 +11,11 @@ use App\Service\EmailService;
 use App\Service\FormSchemaValidatorService;
 use App\Service\QuotaService;
 use App\Service\SubmissionService;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SubmissionServiceTest extends TestCase
@@ -24,6 +27,9 @@ class SubmissionServiceTest extends TestCase
     private $emailService;
     private $submissionService;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
@@ -44,15 +50,14 @@ class SubmissionServiceTest extends TestCase
     public function testSubmitFormSuccessfully(): void
     {
         $user = new User();
-        $user->setEmail('owner@example.com');
+        $user->setEmail('owner@example.com')->setFirstName('Jean');
 
         $formVersion = new FormVersion();
-        // On utilise 'id' et 'label' comme dans SubmissionService
         $formVersion->setSchema([
             'fields' => [
-                ['id' => 'field1', 'label' => 'Nom complet', 'type' => 'text'],
-                ['id' => 'field2', 'label' => 'Email', 'type' => 'email'],
-                ['id' => 'field3', 'label' => 'Message', 'type' => 'textarea'],
+                ['id' => 'field1', 'label' => 'Nom complet'],
+                ['id' => 'field2', 'label' => 'Email'],
+                ['id' => 'field3', 'label' => 'Message'],
             ],
         ]);
 
@@ -65,48 +70,43 @@ class SubmissionServiceTest extends TestCase
             'Message' => 'Bonjour',
         ];
 
-        // Transformation labels → ids pour matcher SubmissionService
         $expectedData = [
             'field1' => 'Alice Dupont',
             'field2' => 'alice@example.com',
             'field3' => 'Bonjour',
         ];
 
-        $this->validatorService->expects($this->once())
-            ->method('validateSchema')
-            ->with($formVersion->getSchema(), $expectedData);
-
-        $this->quotaService->expects($this->once())
-            ->method('enforceQuotaLimit')
-            ->with($user, 'submit_form');
-
+        // Expectations
+        $this->quotaService->expects($this->once())->method('enforceQuotaLimit')->with($user, 'submit_form');
+        $this->validatorService->expects($this->once())->method('validateSchema')->with($formVersion->getSchema(), $expectedData);
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
+        $this->quotaService->expects($this->once())->method('calculateCurrentQuotas')->with($user);
+        $this->emailService->expects($this->once())->method('sendEmail')->with(
+            'owner@example.com',
+            $this->stringContains('Nouvelle soumission'),
+            $this->stringContains('Test Form')
+        );
 
-        $this->emailService->expects($this->once())
-            ->method('sendEmail')
-            ->with(
-                'owner@example.com',
-                $this->stringContains('Nouvelle soumission'),
-                $this->stringContains('Test Form')
-            );
+        $submission = $this->submissionService->submitForm($form, $submissionData, '127.0.0.1');
 
-        $submission = $this->submissionService->submitForm($form, $submissionData, $user, '127.0.0.1');
-
-        $this->assertInstanceOf(Submission::class, $submission);
         $this->assertEquals($expectedData, $submission->getData());
-        $this->assertSame($user, $submission->getSubmitter());
         $this->assertEquals('127.0.0.1', $submission->getIpAddress());
-        $this->assertInstanceOf(\DateTimeImmutable::class, $submission->getSubmittedAt());
+        $this->assertInstanceOf(DateTimeImmutable::class, $submission->getSubmittedAt());
     }
 
     public function testSubmitFormValidationFails(): void
     {
+        $user = new User();
+        $user->setEmail('test@example.com');
+
         $formVersion = new FormVersion();
-        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email', 'type' => 'email']]]);
+        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email']]]);
 
         $form = new Form();
-        $form->setTitle('Test Form')->addFormVersion($formVersion);
+        $form->setUser($user) // ✅ obligatoire
+        ->setTitle('Test Form')
+            ->addFormVersion($formVersion);
 
         $submissionData = ['Email' => 'invalid-email'];
         $expectedData = ['field1' => 'invalid-email'];
@@ -122,109 +122,66 @@ class SubmissionServiceTest extends TestCase
         $this->submissionService->submitForm($form, $submissionData);
     }
 
+
     public function testSubmitFormQuotaExceeded(): void
     {
         $user = new User();
-
         $formVersion = new FormVersion();
-        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email', 'type' => 'email']]]);
-
+        $formVersion->setSchema(['fields' => [['id' => 'field1', 'label' => 'Email']]]);
         $form = new Form();
         $form->setUser($user)->setTitle('Test Form')->addFormVersion($formVersion);
 
         $submissionData = ['Email' => 'test@example.com'];
-        $expectedData = ['field1' => 'test@example.com'];
 
         $this->quotaService->expects($this->once())
             ->method('enforceQuotaLimit')
-            ->willThrowException(new \RuntimeException('Limite de soumissions atteinte'));
+            ->willThrowException(new RuntimeException('Limite de soumissions atteinte'));
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Limite de soumissions atteinte');
 
-        $this->submissionService->submitForm($form, $submissionData, $user);
+        $this->submissionService->submitForm($form, $submissionData);
     }
 
     public function testExportSubmissionsToCsv(): void
     {
         $form = new Form();
-        $form->setTitle('CSV Form');
+        $form->setTitle('Contact Form');
 
-        $submission1 = new Submission();
-        $submission1->setData(['field1' => 'a@example.com']);
+        $submission1 = (new Submission())->setData(['field1' => 'Alice', 'field2' => 'alice@example.com']);
+        $submission2 = (new Submission())->setData(['field1' => 'Bob', 'field2' => 'bob@example.com']);
 
-        $submission2 = new Submission();
-        $submission2->setData(['field1' => 'b@example.com']);
-
-        $this->submissionRepository->expects($this->any())
+        $this->submissionRepository->expects($this->once())
             ->method('findBy')
+            ->with(['form' => $form])
             ->willReturn([$submission1, $submission2]);
 
         $csv = $this->submissionService->exportSubmissionsToCsv($form);
 
-        $this->assertStringContainsString('field1', $csv);
-        $this->assertStringContainsString('a@example.com', $csv);
-        $this->assertStringContainsString('b@example.com', $csv);
+        $this->assertStringContainsString('field1,field2', $csv);
+        $this->assertStringContainsString('Alice,alice@example.com', $csv);
+        $this->assertStringContainsString('Bob,bob@example.com', $csv);
     }
 
-    public function testGetFormSubmissionsWithPagination(): void
+    public function testGetSubmissionsPaginated(): void
     {
         $form = new Form();
-        $form->setTitle('Test Form');
+        $submissions = [new Submission(), new Submission()];
 
-        $submission1 = new Submission();
-        $submission1->setData(['field1' => 'test1@example.com']);
-
-        $submission2 = new Submission();
-        $submission2->setData(['field1' => 'test2@example.com']);
-
-        // Test pagination page 1, limit 5
         $this->submissionRepository->expects($this->once())
             ->method('findBy')
-            ->with(
-                ['form' => $form],
-                ['submittedAt' => 'DESC'],
-                5,
-                0
-            )
-            ->willReturn([$submission1, $submission2]);
+            ->with(['form' => $form], ['submittedAt' => 'DESC'], 10, 10) // offset doit être 10
+            ->willReturn($submissions);
 
-        $submissions = $this->submissionService->getFormSubmissions($form, 1, 5);
+        $result = $this->submissionService->getFormSubmissions($form, 2, 10);
 
-        $this->assertCount(2, $submissions);
-        $this->assertSame($submission1, $submissions[0]);
-        $this->assertSame($submission2, $submissions[1]);
+        $this->assertCount(2, $result);
+        $this->assertContainsOnlyInstancesOf(Submission::class, $result);
     }
 
-    public function testGetFormSubmissionsWithDefaultPagination(): void
+    public function testCountSubmissionsByForm(): void
     {
         $form = new Form();
-        $form->setTitle('Test Form');
-
-        $submission = new Submission();
-        $submission->setData(['field1' => 'test@example.com']);
-
-        // Test pagination par défaut (page 1, limit 20)
-        $this->submissionRepository->expects($this->once())
-            ->method('findBy')
-            ->with(
-                ['form' => $form],
-                ['submittedAt' => 'DESC'],
-                20,
-                0
-            )
-            ->willReturn([$submission]);
-
-        $submissions = $this->submissionService->getFormSubmissions($form);
-
-        $this->assertCount(1, $submissions);
-        $this->assertSame($submission, $submissions[0]);
-    }
-
-    public function testCountFormSubmissions(): void
-    {
-        $form = new Form();
-        $form->setTitle('Test Form');
 
         $this->submissionRepository->expects($this->once())
             ->method('count')

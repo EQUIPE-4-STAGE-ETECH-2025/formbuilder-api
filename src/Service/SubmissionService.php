@@ -6,6 +6,7 @@ use App\Entity\Form;
 use App\Entity\Submission;
 use App\Entity\User;
 use App\Repository\SubmissionRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -28,12 +29,11 @@ class SubmissionService
     /**
      * @param array<string, mixed> $submissionData
      */
-    public function submitForm(Form $form, array $submissionData, ?User $user = null, ?string $ipAddress = null): Submission
+    public function submitForm(Form $form, array $submissionData, ?string $ipAddress = null): Submission
     {
         // Vérification du quota
-        if ($user) {
-            $this->quotaService->enforceQuotaLimit($user, 'submit_form');
-        }
+        $user = $form->getUser();
+        $this->quotaService->enforceQuotaLimit($user, 'submit_form');
 
         // Récupération de la dernière version
         $formVersions = $form->getFormVersions();
@@ -75,12 +75,13 @@ class SubmissionService
         $submission = new Submission();
         $submission->setForm($form)
                    ->setData($filteredData)
-                   ->setSubmitter($user)
                    ->setSubmittedAt(new \DateTimeImmutable())
                    ->setIpAddress($ipAddress);
 
         $this->entityManager->persist($submission);
         $this->entityManager->flush();
+
+        $this->quotaService->calculateCurrentQuotas($user);
 
         // Notification email au propriétaire du formulaire
         if ($form->getUser()?->getEmail()) {
