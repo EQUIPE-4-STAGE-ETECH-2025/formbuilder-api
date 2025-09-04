@@ -16,10 +16,6 @@ class Submission
     #[ORM\JoinColumn(nullable: false)]
     private ?Form $form = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?User $submitter = null;
-
     /**
      * @var array<string, mixed>
      */
@@ -51,18 +47,6 @@ class Submission
     public function setForm(?Form $form): self
     {
         $this->form = $form;
-
-        return $this;
-    }
-
-    public function getSubmitter(): ?User
-    {
-        return $this->submitter;
-    }
-
-    public function setSubmitter(?User $user): self
-    {
-        $this->submitter = $user;
 
         return $this;
     }

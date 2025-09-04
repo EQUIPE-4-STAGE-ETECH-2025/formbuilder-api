@@ -75,7 +75,6 @@ class SubmissionService
         $submission = new Submission();
         $submission->setForm($form)
                    ->setData($filteredData)
-                   ->setSubmitter($user)
                    ->setSubmittedAt(new \DateTimeImmutable())
                    ->setIpAddress($ipAddress);
 
