@@ -7,7 +7,6 @@ use App\Entity\User;
 use App\Service\EmailService;
 use App\Service\QuotaNotificationService;
 use App\Service\QuotaStatusService;
-use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Uid\Uuid;
