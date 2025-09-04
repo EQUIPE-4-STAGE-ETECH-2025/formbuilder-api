@@ -12,6 +12,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 -   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
+
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
     -   Génération et retour du token JWT
@@ -113,12 +114,13 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation côté serveur
 
 -   [x] **AUTH-014** `(Dépendances -> AUTH-012)` : Créer gestion du profil utilisateur
+
     -   Endpoint : `GET /api/users/{id}/profile`
     -   Endpoint : `PUT /api/users/{id}/profile`
     -   Validation des données personnelles
 
 ---
-
+ 
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires
@@ -259,7 +261,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.1 Controllers d'abonnements
 
--   [ ] **SUBSCRIPTIONS-001** `(Dépendances -> Aucune)` : Créer `PlanController`
+-   [x] **SUBSCRIPTIONS-001** `(Dépendances -> Aucune)` : Créer `PlanController`
 
     -   Endpoint : `GET /api/plans`
     -   Récupération depuis la base de données
@@ -317,7 +319,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.5 Gestion des statuts et fonctionnalités
 
--   [ ] **SUBSCRIPTIONS-004** `(Dépendances -> Aucune)` : Implémenter la gestion des statuts d'abonnement
+-   [x] **SUBSCRIPTIONS-004** `(Dépendances -> Aucune)` : Implémenter la gestion des statuts d'abonnement
 
     -   Service de gestion des statuts (ACTIVE, SUSPENDED, CANCELLED)
     -   Logique de rétrogradation automatique
@@ -325,7 +327,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Endpoint : `PUT /api/subscriptions/{id}/status`
     -   Gestion des transitions de statut
 
--   [ ] **SUBSCRIPTIONS-005** `(Dépendances -> Aucune)` : Créer `PlanFeatureService`
+-   [x] **SUBSCRIPTIONS-005** `(Dépendances -> Aucune)` : Créer `PlanFeatureService`
     -   Gestion des fonctionnalités par plan
     -   Validation des accès aux fonctionnalités
     -   Configuration des limites par plan

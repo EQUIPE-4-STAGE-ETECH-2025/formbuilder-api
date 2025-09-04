@@ -1,6 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<!-- https://phpunit.readthedocs.io/en/latest/configuration.html -->
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          colors="true"
@@ -20,7 +17,9 @@
         <env name="MAILER_DSN" value="null://null"/>
         <!-- ###- symfony/mailer ### -->
         <server name="APP_URL" value="http://localhost:8000" force="true" />
-        <env name="FRONTEND_URL" value="http://localhost:3000" force="true" />
+        <env name="KERNEL_CLASS" value="App\Kernel"/>
+        <env name="APP_ENV" value="test"/>
+        <env name="APP_DEBUG" value="1"/>
     </php>
     
     <testsuites>

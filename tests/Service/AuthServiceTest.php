@@ -137,10 +137,8 @@ class AuthServiceTest extends TestCase
         $service = new AuthService($userRepo, $hasher, $jwtService, $emailService, $subscriptionService);
 
         $result = $service->getCurrentUser('valid-token');
-
         $this->assertEquals('me@example.com', $result->getEmail());
     }
-
 
     /**
      * @throws Exception
@@ -598,5 +596,4 @@ class AuthServiceTest extends TestCase
 
         $service->resetPassword($dto);
     }
-
 }
