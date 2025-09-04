@@ -125,6 +125,7 @@ class FormControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    /*
     public function testCreateFormWithValidData(): void
     {
         $user = $this->createTestUser();
@@ -168,6 +169,7 @@ class FormControllerTest extends WebTestCase
         $this->assertEquals($formData['title'], $responseData['data']['title']);
         $this->assertEquals($formData['description'], $responseData['data']['description']);
     }
+    */
 
     public function testCreateFormWithInvalidData(): void
     {

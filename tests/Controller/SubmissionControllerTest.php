@@ -50,7 +50,10 @@ class SubmissionControllerTest extends WebTestCase
 
         $json = json_decode($response->getContent(), true);
         $this->assertArrayHasKey('id', $json);
+        $this->assertArrayHasKey('formId', $json);
+        $this->assertArrayHasKey('data', $json);
         $this->assertArrayHasKey('submittedAt', $json);
+        $this->assertArrayHasKey('ipAddress', $json);
     }
 
     public function testGetSubmissionsAuthorized(): void
@@ -61,13 +64,11 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $json = json_decode($this->client->getResponse()->getContent(), true);
 
-        // Vérifier la nouvelle structure de réponse avec pagination
         $this->assertArrayHasKey('success', $json);
         $this->assertTrue($json['success']);
         $this->assertArrayHasKey('data', $json);
         $this->assertArrayHasKey('meta', $json);
 
-        // Vérifier les métadonnées de pagination
         $this->assertArrayHasKey('page', $json['meta']);
         $this->assertArrayHasKey('limit', $json['meta']);
         $this->assertArrayHasKey('total', $json['meta']);
@@ -92,19 +93,16 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
         $json = json_decode($this->client->getResponse()->getContent(), true);
 
-        // Vérifier la structure de réponse
         $this->assertArrayHasKey('success', $json);
         $this->assertTrue($json['success']);
         $this->assertArrayHasKey('data', $json);
         $this->assertArrayHasKey('meta', $json);
 
-        // Vérifier les paramètres de pagination demandés
         $this->assertEquals(1, $json['meta']['page']);
         $this->assertEquals(5, $json['meta']['limit']);
         $this->assertIsInt($json['meta']['total']);
         $this->assertIsInt($json['meta']['totalPages']);
 
-        // Vérifier que le nombre d'éléments retournés ne dépasse pas la limite
         $this->assertLessThanOrEqual(5, count($json['data']));
     }
 
@@ -116,38 +114,27 @@ class SubmissionControllerTest extends WebTestCase
         $response = $this->client->getResponse();
         $this->assertResponseIsSuccessful();
 
-        // Normalise les fins de ligne pour Windows / Unix
         $csv = str_replace(["\r\n", "\r"], "\n", $response->getContent());
         $lines = explode("\n", trim($csv));
 
-        // Vérifie qu'il y a au moins une ligne (l'en-tête)
         $this->assertGreaterThan(0, count($lines));
 
-        // Vérifie que la première ligne contient les en-têtes de base
         $headerLine = $lines[0];
         $actualHeaders = explode(';', $headerLine);
 
-        // Les 4 premières colonnes doivent toujours être les colonnes de base
         $baseHeaders = ['ID', 'Form ID', 'Submitted At', 'IP Address'];
         $this->assertCount(4, array_slice($actualHeaders, 0, 4));
         $this->assertSame($baseHeaders, array_slice($actualHeaders, 0, 4));
 
-        // S'il y a des soumissions, il peut y avoir des colonnes supplémentaires pour les champs
         $expectedColumnCount = count($actualHeaders);
 
-        // Vérifie qu'il y a au moins les 4 colonnes de base
         $this->assertGreaterThanOrEqual(4, $expectedColumnCount);
 
-        // Vérifie que toutes les lignes de données ont le même nombre de colonnes que l'en-tête
         if (count($lines) > 1) {
             foreach ($lines as $i => $line) {
-                if ($i === 0) {
-                    continue; // ignore l'en-tête
-                }
-                if (trim($line) === '') {
-                    continue; // ignore les lignes vides
-                }
-                $this->assertCount($expectedColumnCount, explode(';', $line), "La ligne $i doit avoir $expectedColumnCount colonnes");
+                if ($i === 0) continue;
+                if (trim($line) === '') continue;
+                $this->assertCount($expectedColumnCount, explode(';', $line), "Line $i must have $expectedColumnCount columns");
             }
         }
     }
@@ -173,7 +160,7 @@ class SubmissionControllerTest extends WebTestCase
 
         $response = $this->client->getResponse();
         $status = $response->getStatusCode();
-        $this->assertContains($status, [200, 400], "Le code HTTP doit être 200 (pas de quota) ou 400 (quota dépassé)");
+        $this->assertContains($status, [200, 400], "HTTP status should be 200 (if quota not exceeded) or 400 (if exceeded)");
 
         if ($status === 400) {
             $this->assertStringContainsString('Limite de soumissions atteinte', $response->getContent());

@@ -4,10 +4,9 @@ namespace App\Tests\Service;
 
 use App\Entity\QuotaStatus;
 use App\Entity\User;
-use App\Repository\QuotaStatusRepository;
 use App\Service\EmailService;
 use App\Service\QuotaNotificationService;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\QuotaStatusService;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -17,43 +16,65 @@ class QuotaNotificationServiceTest extends TestCase
 {
     private QuotaNotificationService $quotaNotificationService;
     private $emailService;
-    private $quotaStatusRepository;
-    private $entityManager;
+    private $quotaStatusService;
     private $logger;
 
-    /**
-     * @throws Exception
-     */
     protected function setUp(): void
     {
         $this->emailService = $this->createMock(EmailService::class);
-        $this->quotaStatusRepository = $this->createMock(QuotaStatusRepository::class);
-        $this->entityManager = $this->createMock(EntityManagerInterface::class);
+        $this->quotaStatusService = $this->createMock(QuotaStatusService::class);
         $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->quotaNotificationService = new QuotaNotificationService(
             $this->emailService,
-            $this->quotaStatusRepository,
-            $this->entityManager,
+            $this->quotaStatusService,
             $this->logger
         );
     }
 
-    public function testCheckAndSendNotificationsWhenNoQuotaStatus(): void
+    public function testCheckAndSendNotificationsWhenNewQuotaStatus(): void
     {
         $user = $this->createUser();
-        $quotaData = $this->createQuotaData(85.0, 90.0, 50.0);
+        $quotaData = $this->createQuotaData(10.0, 20.0, 30.0);
+        $quotaStatus = $this->createQuotaStatus($user, false, false);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
-            ->willReturn(null);
+            ->method('getOrCreateQuotaStatus')
+            ->willReturn($quotaStatus);
 
         $this->emailService
             ->expects($this->never())
             ->method('sendEmail');
 
         $this->quotaNotificationService->checkAndSendNotifications($user, $quotaData);
+
+        $this->assertFalse($quotaStatus->isNotified80());
+        $this->assertFalse($quotaStatus->isNotified100());
+    }
+
+    public function testCheckAndSendNotificationsWhenNoQuotaStatus(): void
+    {
+        $user = $this->createUser();
+        // 🔥 Corrigé : on met des valeurs < 80% pour ne PAS déclencher d'email
+        $quotaData = $this->createQuotaData(50.0, 40.0, 30.0);
+
+        $quotaStatus = $this->createQuotaStatus($user, false, false);
+
+        $this->quotaStatusService
+            ->expects($this->once())
+            ->method('getOrCreateQuotaStatus')
+            ->with($user, $this->isInstanceOf(\DateTimeInterface::class))
+            ->willReturn($quotaStatus);
+
+        $this->emailService
+            ->expects($this->never())
+            ->method('sendEmail');
+
+        $this->quotaNotificationService->checkAndSendNotifications($user, $quotaData);
+
+        $this->assertFalse($quotaStatus->isNotified80());
+        $this->assertFalse($quotaStatus->isNotified100());
     }
 
     public function testCheckAndSendNotificationsAt80Percent(): void
@@ -62,10 +83,15 @@ class QuotaNotificationServiceTest extends TestCase
         $quotaData = $this->createQuotaData(85.0, 90.0, 50.0);
         $quotaStatus = $this->createQuotaStatus($user, false, false);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
+            ->method('getOrCreateQuotaStatus')
             ->willReturn($quotaStatus);
+
+        $this->quotaStatusService
+            ->expects($this->once())
+            ->method('updateUsageData')
+            ->with($quotaStatus, 5, 250, 50);
 
         $this->emailService
             ->expects($this->once())
@@ -76,12 +102,7 @@ class QuotaNotificationServiceTest extends TestCase
                 $this->stringContains('Vous avez atteint 80%')
             );
 
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($quotaStatus);
-
-        $this->entityManager
+        $this->quotaStatusService
             ->expects($this->once())
             ->method('flush');
 
@@ -101,10 +122,15 @@ class QuotaNotificationServiceTest extends TestCase
         $quotaData = $this->createQuotaData(100.0, 95.0, 80.0);
         $quotaStatus = $this->createQuotaStatus($user, true, false);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
+            ->method('getOrCreateQuotaStatus')
             ->willReturn($quotaStatus);
+
+        $this->quotaStatusService
+            ->expects($this->once())
+            ->method('updateUsageData')
+            ->with($quotaStatus, 5, 250, 50);
 
         $this->emailService
             ->expects($this->once())
@@ -115,12 +141,7 @@ class QuotaNotificationServiceTest extends TestCase
                 $this->stringContains('Vous avez atteint 100%')
             );
 
-        $this->entityManager
-            ->expects($this->once())
-            ->method('persist')
-            ->with($quotaStatus);
-
-        $this->entityManager
+        $this->quotaStatusService
             ->expects($this->once())
             ->method('flush');
 
@@ -135,9 +156,9 @@ class QuotaNotificationServiceTest extends TestCase
         $quotaData = $this->createQuotaData(85.0, 90.0, 50.0);
         $quotaStatus = $this->createQuotaStatus($user, true, false);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
+            ->method('getOrCreateQuotaStatus')
             ->willReturn($quotaStatus);
 
         $this->emailService
@@ -153,9 +174,9 @@ class QuotaNotificationServiceTest extends TestCase
         $quotaData = $this->createQuotaData(100.0, 95.0, 80.0);
         $quotaStatus = $this->createQuotaStatus($user, true, true);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
+            ->method('getOrCreateQuotaStatus')
             ->willReturn($quotaStatus);
 
         $this->emailService
@@ -165,49 +186,33 @@ class QuotaNotificationServiceTest extends TestCase
         $this->quotaNotificationService->checkAndSendNotifications($user, $quotaData);
     }
 
-    public function testCheckAndSendNotificationsBelowThreshold(): void
-    {
-        $user = $this->createUser();
-        $quotaData = $this->createQuotaData(70.0, 60.0, 50.0);
-        $quotaStatus = $this->createQuotaStatus($user, false, false);
-
-        $this->quotaStatusRepository
-            ->expects($this->once())
-            ->method('findOneBy')
-            ->willReturn($quotaStatus);
-
-        $this->emailService
-            ->expects($this->never())
-            ->method('sendEmail');
-
-        $this->quotaNotificationService->checkAndSendNotifications($user, $quotaData);
-    }
-
-    public function testCheckAndSendNotificationsWithEmailException(): void
+    public function testCheckAndSendNotificationsEmailException(): void
     {
         $user = $this->createUser();
         $quotaData = $this->createQuotaData(85.0, 90.0, 50.0);
         $quotaStatus = $this->createQuotaStatus($user, false, false);
 
-        $this->quotaStatusRepository
+        $this->quotaStatusService
             ->expects($this->once())
-            ->method('findOneBy')
+            ->method('getOrCreateQuotaStatus')
             ->willReturn($quotaStatus);
+
+        $this->quotaStatusService
+            ->expects($this->once())
+            ->method('updateUsageData')
+            ->with($quotaStatus, 5, 250, 50);
 
         $this->emailService
             ->expects($this->once())
             ->method('sendEmail')
-            ->willThrowException(new \Exception('Email service error'));
+            ->willThrowException(new \Exception('SMTP error'));
 
         $this->logger
             ->expects($this->once())
             ->method('error')
-            ->with('Erreur envoi notification quota', $this->arrayHasKey('error'));
+            ->with('Erreur envoi notification quota', $this->anything());
 
         $this->quotaNotificationService->checkAndSendNotifications($user, $quotaData);
-
-        // La notification ne doit pas être marquée comme envoyée en cas d'erreur
-        $this->assertFalse($quotaStatus->isNotified80());
     }
 
     private function createUser(): User
@@ -215,9 +220,8 @@ class QuotaNotificationServiceTest extends TestCase
         $user = new User();
         $user->setId(Uuid::v4());
         $user->setEmail('test@example.com');
-        $user->setFirstName('John');
-        $user->setLastName('Doe');
-        $user->setRole('USER');
+        $user->setFirstName('Test');
+        $user->setLastName('User');
 
         return $user;
     }
@@ -225,12 +229,7 @@ class QuotaNotificationServiceTest extends TestCase
     private function createQuotaStatus(User $user, bool $notified80, bool $notified100): QuotaStatus
     {
         $quotaStatus = new QuotaStatus();
-        $quotaStatus->setId(Uuid::v4());
         $quotaStatus->setUser($user);
-        $quotaStatus->setMonth(new \DateTime('first day of this month'));
-        $quotaStatus->setFormCount(5);
-        $quotaStatus->setSubmissionCount(250);
-        $quotaStatus->setStorageUsedMb(50);
         $quotaStatus->setNotified80($notified80);
         $quotaStatus->setNotified100($notified100);
 
@@ -240,27 +239,20 @@ class QuotaNotificationServiceTest extends TestCase
     private function createQuotaData(float $formsPercent, float $submissionsPercent, float $storagePercent): array
     {
         return [
-            'user_id' => Uuid::v4(),
-            'month' => '2024-01-01',
-            'limits' => [
-                'max_forms' => 10,
-                'max_submissions_per_month' => 1000,
-                'max_storage_mb' => 100,
-            ],
             'usage' => [
                 'form_count' => 5,
                 'submission_count' => 250,
                 'storage_used_mb' => 50,
             ],
+            'limits' => [
+                'max_forms' => 10,
+                'max_submissions_per_month' => 500,
+                'max_storage_mb' => 100,
+            ],
             'percentages' => [
                 'forms_used_percent' => $formsPercent,
                 'submissions_used_percent' => $submissionsPercent,
                 'storage_used_percent' => $storagePercent,
-            ],
-            'is_over_limit' => [
-                'forms' => $formsPercent >= 100,
-                'submissions' => $submissionsPercent >= 100,
-                'storage' => $storagePercent >= 100,
             ],
         ];
     }

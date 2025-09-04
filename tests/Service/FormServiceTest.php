@@ -11,7 +11,9 @@ use App\Repository\FormVersionRepository;
 use App\Service\AuthorizationService;
 use App\Service\FormService;
 use App\Service\FormVersionService;
+use App\Service\QuotaService;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -22,6 +24,7 @@ class FormServiceTest extends TestCase
 {
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testCreateFormSuccess(): void
     {
@@ -33,7 +36,7 @@ class FormServiceTest extends TestCase
             title: 'Test Form',
             description: 'Test Description for validation',
             status: 'DRAFT',
-            schema: ['fields' => []]
+            schema: []
         );
 
         $formRepository = $this->createMock(FormRepository::class);
@@ -41,12 +44,14 @@ class FormServiceTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
         $authorizationService = $this->createMock(AuthorizationService::class);
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
+
+        $quotaService->expects($this->once())->method('enforceQuotaLimit')->with($user, 'create_form');
+        $quotaService->expects($this->once())->method('calculateCurrentQuotas')->with($user);
 
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
-
-        // Pas de schéma fourni, donc pas de version créée
 
         $formService = new FormService(
             $formRepository,
@@ -54,6 +59,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -66,6 +72,7 @@ class FormServiceTest extends TestCase
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testCreateFormWithSchema(): void
     {
@@ -96,7 +103,11 @@ class FormServiceTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
         $authorizationService = $this->createMock(AuthorizationService::class);
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
+
+        $quotaService->expects($this->once())->method('enforceQuotaLimit')->with($user, 'create_form');
+        $quotaService->expects($this->once())->method('calculateCurrentQuotas')->with($user);
 
         $entityManager->expects($this->once())->method('persist');
         $entityManager->expects($this->once())->method('flush');
@@ -111,6 +122,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -147,6 +159,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canAccessForm')->willReturn(true);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -155,6 +168,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -179,6 +193,7 @@ class FormServiceTest extends TestCase
         $entityManager = $this->createMock(EntityManagerInterface::class);
         $formVersionService = $this->createMock(FormVersionService::class);
         $authorizationService = $this->createMock(AuthorizationService::class);
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -187,10 +202,11 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Formulaire non trouvé');
 
         $formService->getFormById(Uuid::v4(), $user);
@@ -217,6 +233,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canAccessForm')->willReturn(false);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -225,6 +242,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -236,6 +254,7 @@ class FormServiceTest extends TestCase
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testUpdateFormSuccess(): void
     {
@@ -268,6 +287,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -276,6 +296,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -289,6 +310,7 @@ class FormServiceTest extends TestCase
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testUpdateFormWithSchema(): void
     {
@@ -334,6 +356,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -342,6 +365,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -352,6 +376,7 @@ class FormServiceTest extends TestCase
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testDeleteFormSuccess(): void
     {
@@ -372,6 +397,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -380,6 +406,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -388,6 +415,7 @@ class FormServiceTest extends TestCase
 
     /**
      * @throws Exception
+     * @throws \Exception
      */
     public function testPublishFormSuccess(): void
     {
@@ -414,6 +442,7 @@ class FormServiceTest extends TestCase
         $authorizationService = $this->createMock(AuthorizationService::class);
         $authorizationService->method('canModifyForm')->willReturn(true);
 
+        $quotaService = $this->createMock(QuotaService::class);
         $logger = $this->createMock(LoggerInterface::class);
 
         $formService = new FormService(
@@ -422,6 +451,7 @@ class FormServiceTest extends TestCase
             $entityManager,
             $formVersionService,
             $authorizationService,
+            $quotaService,
             $logger
         );
 
@@ -430,6 +460,4 @@ class FormServiceTest extends TestCase
         $this->assertEquals('PUBLISHED', $result->status);
         $this->assertNotNull($result->publishedAt);
     }
-
-
 }
