@@ -155,7 +155,6 @@ class JwtService
         $this->blacklistService->blacklist($token);
     }
 
-    // Révoque un refresh token
     public function blacklistRefreshToken(string $refreshToken): void
     {
         $decoded = $this->validateRefreshToken($refreshToken);
