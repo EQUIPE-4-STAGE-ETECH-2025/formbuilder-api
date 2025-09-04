@@ -4,9 +4,7 @@ namespace App\Service;
 
 use App\Entity\Form;
 use App\Entity\Submission;
-use App\Entity\User;
 use App\Repository\SubmissionRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -33,6 +31,9 @@ class SubmissionService
     {
         // Vérification du quota
         $user = $form->getUser();
+        if (! $user) {
+            throw new BadRequestHttpException('Le formulaire doit être associé à un utilisateur valide.');
+        }
         $this->quotaService->enforceQuotaLimit($user, 'submit_form');
 
         // Récupération de la dernière version
@@ -81,6 +82,7 @@ class SubmissionService
         $this->entityManager->persist($submission);
         $this->entityManager->flush();
 
+        // Mettre à jour les quotas (on sait que $user n'est pas null grâce à la vérification précédente)
         $this->quotaService->calculateCurrentQuotas($user);
 
         // Notification email au propriétaire du formulaire

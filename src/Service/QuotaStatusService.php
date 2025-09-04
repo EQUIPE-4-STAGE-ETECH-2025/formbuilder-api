@@ -23,8 +23,8 @@ class QuotaStatusService
     {
         $normalizedMonth = clone $month;
         $normalizedMonth->setDate(
-            $normalizedMonth->format('Y'),
-            $normalizedMonth->format('n'),
+            (int) $normalizedMonth->format('Y'),
+            (int) $normalizedMonth->format('n'),
             1
         )->setTime(0, 0, 0);
 
@@ -33,7 +33,7 @@ class QuotaStatusService
             'month' => $normalizedMonth,
         ]);
 
-        if (!$quotaStatus) {
+        if (! $quotaStatus) {
             $quotaStatus = new QuotaStatus();
             $quotaStatus->setId(Uuid::v4()->toRfc4122());
             $quotaStatus->setUser($user);

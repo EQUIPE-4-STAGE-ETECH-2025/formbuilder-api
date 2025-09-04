@@ -132,8 +132,12 @@ class SubmissionControllerTest extends WebTestCase
 
         if (count($lines) > 1) {
             foreach ($lines as $i => $line) {
-                if ($i === 0) continue;
-                if (trim($line) === '') continue;
+                if ($i === 0) {
+                    continue;
+                }
+                if (trim($line) === '') {
+                    continue;
+                }
                 $this->assertCount($expectedColumnCount, explode(';', $line), "Line $i must have $expectedColumnCount columns");
             }
         }
