@@ -163,6 +163,7 @@ jobs:
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
                   EOF
+
             # Création du schéma de base de données pour les tests
             - name: Create database schema
               run: php bin/console doctrine:schema:create --env=test
