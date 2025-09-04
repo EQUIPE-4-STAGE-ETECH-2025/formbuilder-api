@@ -372,4 +372,23 @@ class AuthService
             ));
         }
     }
+
+    public function changePassword(string $token, ChangePasswordDto $dto): void
+    {
+        $payload = $this->jwtService->validateToken($token);
+        $user = $this->userRepository->find($payload->id ?? null);
+        if (! $user) {
+            throw new RuntimeException('Utilisateur inexistant.');
+        }
+
+        if (! $this->passwordHasher->isPasswordValid($user, $dto->getCurrentPassword() ?? '')) {
+            throw new RuntimeException('Mot de passe actuel invalide.');
+        }
+
+        $hashedPassword = $this->passwordHasher->hashPassword($user, $dto->getNewPassword() ?? '');
+        $user->setPasswordHash($hashedPassword);
+        $user->setUpdatedAt(new DateTimeImmutable());
+
+        $this->userRepository->save($user, true);
+    }
 }

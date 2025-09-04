@@ -13,6 +13,7 @@ class UserVoter extends Voter
 {
     public const VIEW_ROLE = 'USER_VIEW_ROLE';
     public const EDIT_ROLE = 'USER_EDIT_ROLE';
+
     public const VIEW_PROFILE = 'USER_VIEW_PROFILE';
     public const EDIT_PROFILE = 'USER_EDIT_PROFILE';
     public const DELETE = 'USER_DELETE';
@@ -27,6 +28,7 @@ class UserVoter extends Voter
             self::DELETE,
             self::VIEW_ALL,
         ];
+
         if (! in_array($attribute, $permissions, true)) {
             return false;
         }

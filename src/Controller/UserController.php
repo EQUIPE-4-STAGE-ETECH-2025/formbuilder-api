@@ -87,25 +87,6 @@ class UserController extends AbstractController
         ]);
     }
 
-    #[Route('/api/users', name: 'list_users', methods: ['GET'])]
-    public function listUsers(): JsonResponse
-    {
-        $users = $this->userService->listUsers();
-
-        $result = array_map(fn ($user) => [
-            'id' => (string) $user->getId(),
-            'email' => $user->getEmail(),
-            'firstName' => $user->getFirstName(),
-            'lastName' => $user->getLastName(),
-            'role' => $user->getRole(),
-            'isEmailVerified' => $user->isEmailVerified(),
-            'createdAt' => $user->getCreatedAt(),
-            'updatedAt' => $user->getUpdatedAt(),
-        ], $users);
-
-        return $this->json($result);
-    }
-
     #[Route('/api/users/{id}', name: 'delete_user', methods: ['DELETE'])]
     public function deleteUser(string $id): JsonResponse
     {

@@ -6,7 +6,6 @@ use App\Entity\User;
 use App\Repository\UserRepository;
 use DateTimeImmutable;
 use InvalidArgumentException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
@@ -99,18 +98,6 @@ class UserService
         return $user;
     }
 
-    /**
-     * @return array<int, User>
-     */
-    public function listUsers(): array
-    {
-        if (! $this->authorizationService->isGranted('USER_VIEW_ALL')) {
-            throw new AccessDeniedHttpException('Accès refusé.');
-        }
-
-        return $this->userRepository->findAll();
-    }
-
     public function deleteUser(string $id): void
     {
         $user = $this->userRepository->find($id);
@@ -122,4 +109,5 @@ class UserService
 
         $this->userRepository->remove($user, true);
     }
+
 }

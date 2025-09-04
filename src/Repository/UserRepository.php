@@ -50,7 +50,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (! $user instanceof User) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
         }
 
         $user->setPassword($newHashedPassword);
@@ -106,12 +106,12 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function getUsersByPlan(): array
     {
         $dql = "
-        SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
-        FROM App\Entity\User u
-        LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.status = 'ACTIVE'
-        LEFT JOIN App\Entity\Plan p WITH s.plan = p
-        WHERE u.role != 'ADMIN'
-        GROUP BY plan
+            SELECT COALESCE(p.name, 'Free') AS plan, COUNT(DISTINCT u.id) AS count
+            FROM App\Entity\User u
+            LEFT JOIN App\Entity\Subscription s WITH s.user = u AND s.status = :active
+            LEFT JOIN App\Entity\Plan p WITH s.plan = p
+            WHERE u.role != 'ADMIN'
+            GROUP BY plan
         ";
 
         return $this->getEntityManager()
@@ -119,7 +119,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->setParameter('active', Subscription::STATUS_ACTIVE)
             ->getArrayResult();
     }
-
 
     /**
      * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
