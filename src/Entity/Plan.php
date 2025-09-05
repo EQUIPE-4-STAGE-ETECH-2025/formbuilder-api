@@ -31,6 +31,10 @@ class Plan
     #[Assert\Length(max: 255, maxMessage: 'L\'ID produit Stripe ne peut pas dépasser {{ limit }} caractères')]
     private ?string $stripeProductId = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: 'L\'ID du prix Stripe ne peut pas dépasser {{ limit }} caractères')]
+    private ?string $stripePriceId = null;
+
     #[ORM\Column]
     #[Assert\NotBlank(message: 'Le nombre maximum de formulaires est obligatoire')]
     #[Assert\Positive(message: 'Le nombre maximum de formulaires doit être positif')]
@@ -201,6 +205,18 @@ class Plan
                 $planFeature->setPlan(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getStripePriceId(): ?string
+    {
+        return $this->stripePriceId;
+    }
+
+    public function setStripePriceId(?string $stripePriceId): static
+    {
+        $this->stripePriceId = $stripePriceId;
 
         return $this;
     }

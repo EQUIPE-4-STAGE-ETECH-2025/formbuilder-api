@@ -8,6 +8,7 @@ use App\Entity\User;
 use App\Repository\PlanRepository;
 use App\Repository\SubscriptionRepository;
 use RuntimeException;
+use Stripe\Subscription as StripeSubscription;
 
 class SubscriptionService
 {
@@ -114,5 +115,67 @@ class SubscriptionService
 
         // Créer une nouvelle subscription avec le nouveau plan
         return $this->createSubscription($user, $newPlan);
+    }
+
+    /**
+     * Crée un abonnement local à partir d'un abonnement Stripe
+     */
+    public function createFromStripeSubscription(User $user, StripeSubscription $stripeSubscription): Subscription
+    {
+        // Récupérer le plan correspondant au price_id Stripe
+        $priceId = $stripeSubscription->items->data[0]->price->id;
+        $plan = $this->planRepository->findOneBy(['stripePriceId' => $priceId]);
+
+        if (! $plan) {
+            throw new RuntimeException("Plan introuvable pour le price_id Stripe: {$priceId}");
+        }
+
+        $subscription = new Subscription();
+        $subscription->setUser($user);
+        $subscription->setPlan($plan);
+        $subscription->setStripeSubscriptionId($stripeSubscription->id);
+        $subscription->setStartDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_start));
+        $subscription->setEndDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_end));
+        $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
+
+        $this->subscriptionRepository->save($subscription, true);
+
+        return $subscription;
+    }
+
+    /**
+     * Met à jour un abonnement local à partir d'un abonnement Stripe
+     */
+    public function updateFromStripeSubscription(Subscription $subscription, StripeSubscription $stripeSubscription): Subscription
+    {
+        // Mettre à jour le plan si nécessaire
+        $priceId = $stripeSubscription->items->data[0]->price->id;
+        $plan = $this->planRepository->findOneBy(['stripePriceId' => $priceId]);
+
+        if ($plan && $plan !== $subscription->getPlan()) {
+            $subscription->setPlan($plan);
+        }
+
+        $subscription->setStartDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_start));
+        $subscription->setEndDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_end));
+        $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
+        $subscription->setUpdatedAt(new \DateTimeImmutable());
+
+        $this->subscriptionRepository->save($subscription, true);
+
+        return $subscription;
+    }
+
+    /**
+     * Mappe un statut Stripe vers un statut local
+     */
+    private function mapStripeStatusToLocal(string $stripeStatus): string
+    {
+        return match ($stripeStatus) {
+            'active', 'trialing' => Subscription::STATUS_ACTIVE,
+            'past_due', 'unpaid' => Subscription::STATUS_SUSPENDED,
+            'canceled', 'incomplete_expired' => Subscription::STATUS_CANCELLED,
+            default => Subscription::STATUS_SUSPENDED,
+        };
     }
 }

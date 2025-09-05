@@ -276,14 +276,14 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.2 Services de paiement
 
--   [ ] **STRIPE-001** `(Dépendances -> Aucune)` : Créer `StripeService`
+-   [x] **STRIPE-001** `(Dépendances -> Aucune)` : Créer `StripeService`
 
     -   Intégration avec l'API Stripe
     -   Création de customers
     -   Gestion des subscriptions
     -   Paiements et factures
 
--   [ ] **STRIPE-002** `(Dépendances -> Aucune)` : Créer `WebhookService`
+-   [x] **STRIPE-002** `(Dépendances -> Aucune)` : Créer `StripeWebhookService`
 
     -   Gestion des webhooks Stripe
     -   `customer.subscription.created`
@@ -292,7 +292,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   `invoice.payment_failed`
     -   `invoice.payment_succeeded`
 
--   [ ] **STRIPE-003** `(Dépendances -> AUTH-008)` : Créer `PaymentFailureService`
+-   [x] **STRIPE-003** `(Dépendances -> AUTH-008)` : Créer `StripePaymentFailureService`
     -   Gestion des échecs de paiement
     -   Notifications utilisateur
     -   Rétrogradation automatique
@@ -300,7 +300,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.3 Controllers de webhooks
 
--   [ ] **WEBHOOKS-001** `(Dépendances -> STRIPE-002, STRIPE-003, AUTH-012)` : Créer `WebhookController`
+-   [x] **WEBHOOKS-001** `(Dépendances -> STRIPE-002, STRIPE-003, AUTH-012)` : Créer `StripeWebhookController`
     -   Endpoint : `POST /api/webhooks/stripe`
     -   Validation des signatures Stripe
     -   Gestion des événements de paiement
@@ -310,11 +310,12 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 ### 4.4 DTOs d'abonnements
 
--   [ ] **SUBSCRIPTIONS-003** `(Dépendances -> Aucune)` : Créer les DTOs d'abonnements
-    -   `PlanDto` pour les plans
-    -   `CreateSubscriptionDto` avec validation
-    -   `SubscriptionResponseDto` pour les réponses
-    -   `WebhookDto` pour les webhooks Stripe
+-   [x] **SUBSCRIPTIONS-003** `(Dépendances -> Aucune)` : Créer les DTOs d'abonnements
+    -   `StripeCustomerDto` pour les customers Stripe
+    -   `StripeSubscriptionDto` avec validation
+    -   `CheckoutSessionDto` pour les sessions de paiement
+    -   `StripeWebhookDto` pour les webhooks Stripe
+    -   `StripeInvoiceDto` pour les factures
 
 ### 4.5 Gestion des statuts et fonctionnalités
 
