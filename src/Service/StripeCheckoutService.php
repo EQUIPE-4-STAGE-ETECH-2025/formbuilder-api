@@ -74,7 +74,8 @@ class StripeCheckoutService
             }
 
             // Configuration de la facturation automatique
-            $sessionData['automatic_tax'] = ['enabled' => true];
+            // Commenté pour les tests - décommenter en production
+            // $sessionData['automatic_tax'] = ['enabled' => true];
 
             // Configuration des méthodes de paiement (supprimé car null n'est pas accepté)
 
