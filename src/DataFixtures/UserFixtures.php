@@ -42,6 +42,7 @@ class UserFixtures extends Fixture
         $user1->setEmail('anna@example.com');
         $user1->setRole('USER');
         $user1->setIsEmailVerified(true);
+        $user1->setStripeCustomerId('cus_anna_martin_123'); // Customer Stripe existant
         $user1->setCreatedAt(new \DateTimeImmutable('2024-01-15T10:00:00Z'));
         $user1->setUpdatedAt(new \DateTimeImmutable('2024-01-15T10:00:00Z'));
 
@@ -76,6 +77,7 @@ class UserFixtures extends Fixture
         $user3->setEmail('elodie@example.com');
         $user3->setRole('USER');
         $user3->setIsEmailVerified(true);
+        $user3->setStripeCustomerId('cus_elodie_rousseau_789'); // Customer Stripe existant
         $user3->setCreatedAt(new \DateTimeImmutable('2024-02-10T11:30:00Z'));
         $user3->setUpdatedAt(new \DateTimeImmutable('2024-02-10T11:30:00Z'));
 
