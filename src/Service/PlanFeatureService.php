@@ -10,12 +10,13 @@ class PlanFeatureService
 {
     public function __construct(
         private PlanRepository $planRepository
-    ) {}
+    ) {
+    }
 
     /**
-     * Retourne toutes les fonctionnalités d’un plan.
+     * Retourne toutes les fonctionnalités d'un plan.
      *
-     * @return array
+     * @return array<int, array<string, string|null>>
      */
     public function getFeatures(string $planId): array
     {
@@ -24,11 +25,13 @@ class PlanFeatureService
         $features = [];
         foreach ($plan->getPlanFeatures() as $planFeature) {
             $feature = $planFeature->getFeature();
-            $features[] = [
-                'id' => $feature->getId(),
-                'code' => $feature->getCode(),
-                'label' => $feature->getLabel(),
-            ];
+            if ($feature !== null) {
+                $features[] = [
+                    'id' => $feature->getId(),
+                    'code' => $feature->getCode(),
+                    'label' => $feature->getLabel(),
+                ];
+            }
         }
 
         return $features;
@@ -42,8 +45,11 @@ class PlanFeatureService
         $plan = $this->findPlanOrFail($planId);
 
         foreach ($plan->getPlanFeatures() as $planFeature) {
-            if (strtolower($planFeature->getFeature()->getCode()) === strtolower($featureCode)) {
-                return true;
+            $feature = $planFeature->getFeature();
+            if ($feature !== null && $feature->getCode() !== null) {
+                if (strtolower($feature->getCode()) === strtolower($featureCode)) {
+                    return true;
+                }
             }
         }
 
@@ -58,16 +64,19 @@ class PlanFeatureService
         $plan = $this->findPlanOrFail($planId);
 
         foreach ($plan->getPlanFeatures() as $planFeature) {
-            $featureCodeLower = strtolower($planFeature->getFeature()->getCode());
+            $feature = $planFeature->getFeature();
+            if ($feature !== null && $feature->getCode() !== null) {
+                $featureCodeLower = strtolower($feature->getCode());
 
-            if ($featureCodeLower === strtolower($featureCode)) {
-                // On mappe les codes des features aux champs du plan
-                return match ($featureCodeLower) {
-                    'max_forms' => $plan->getMaxForms(),
-                    'max_submissions_per_month' => $plan->getMaxSubmissionsPerMonth(),
-                    'max_storage_mb' => $plan->getMaxStorageMb(),
-                    default => null,
-                };
+                if ($featureCodeLower === strtolower($featureCode)) {
+                    // On mappe les codes des features aux champs du plan
+                    return match ($featureCodeLower) {
+                        'max_forms' => $plan->getMaxForms(),
+                        'max_submissions_per_month' => $plan->getMaxSubmissionsPerMonth(),
+                        'max_storage_mb' => $plan->getMaxStorageMb(),
+                        default => null,
+                    };
+                }
             }
         }
 
@@ -81,7 +90,7 @@ class PlanFeatureService
     {
         $plan = $this->planRepository->find($planId);
 
-        if (!$plan) {
+        if (! $plan) {
             throw new NotFoundHttpException("Plan introuvable.");
         }
 

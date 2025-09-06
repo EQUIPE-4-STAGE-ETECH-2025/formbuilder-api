@@ -2,14 +2,14 @@
 
 namespace App\Tests\Service;
 
+use App\Entity\Feature;
 use App\Entity\Plan;
 use App\Entity\PlanFeature;
-use App\Entity\Feature;
 use App\Repository\PlanRepository;
 use App\Service\PlanFeatureService;
+use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Doctrine\Common\Collections\ArrayCollection;
 
 class PlanFeatureServiceTest extends TestCase
 {

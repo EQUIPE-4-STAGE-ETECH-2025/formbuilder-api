@@ -14,12 +14,18 @@ class CreateSubscriptionDto
     #[Assert\Email]
     public string $userEmail;
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(array $data)
     {
         $this->planId = $data['planId'] ?? '';
         $this->userEmail = $data['userEmail'] ?? '';
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function toArray(): array
     {
         return [

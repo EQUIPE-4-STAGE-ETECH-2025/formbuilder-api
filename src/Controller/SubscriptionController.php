@@ -20,18 +20,19 @@ class SubscriptionController extends AbstractController
         private SubscriptionRepository $subscriptionRepository,
         private UserRepository $userRepository,
         private PlanRepository $planRepository
-    ) {}
+    ) {
+    }
 
     #[Route('/users/{id}/subscriptions', name: 'get_user_subscriptions', methods: ['GET'])]
     public function getUserSubscriptions(string $id): JsonResponse
     {
         $user = $this->userRepository->find($id);
-        if (!$user) {
+        if (! $user) {
             return $this->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
         $subscriptions = $this->subscriptionRepository->findBy(['user' => $user]);
-        $data = array_map(fn(Subscription $s) => (new SubscriptionResponseDto($s))->toArray(), $subscriptions);
+        $data = array_map(fn (Subscription $s) => (new SubscriptionResponseDto($s))->toArray(), $subscriptions);
 
         return $this->json($data);
     }
@@ -42,7 +43,7 @@ class SubscriptionController extends AbstractController
         $dto = new CreateSubscriptionDto(json_decode($request->getContent(), true));
 
         $user = $this->userRepository->findOneBy(['email' => $dto->userEmail]);
-        if (!$user) {
+        if (! $user) {
             return $this->json(['error' => 'Utilisateur introuvable'], 404);
         }
 
@@ -51,7 +52,7 @@ class SubscriptionController extends AbstractController
         } else {
             $plan = $this->planRepository->find('550e8400-e29b-41d4-a716-446655440201');
         }
-        if (!$plan) {
+        if (! $plan) {
             return $this->json(['error' => 'Plan introuvable'], 404);
         }
 
@@ -71,14 +72,14 @@ class SubscriptionController extends AbstractController
     public function updateSubscription(string $id, Request $request): JsonResponse
     {
         $subscription = $this->subscriptionRepository->find($id);
-        if (!$subscription) {
+        if (! $subscription) {
             return $this->json(['error' => 'Abonnement introuvable'], 404);
         }
 
         $data = json_decode($request->getContent(), true);
         if (isset($data['planId'])) {
             $plan = $this->planRepository->find($data['planId']);
-            if (!$plan) {
+            if (! $plan) {
                 return $this->json(['error' => 'Plan introuvable'], 404);
             }
             $subscription->setPlan($plan);

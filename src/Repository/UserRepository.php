@@ -91,6 +91,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ";
 
         $conn = $this->getEntityManager()->getConnection();
+
         return $conn->executeQuery($sql, ['admin' => 'ADMIN'])->fetchAllAssociative();
     }
 
@@ -153,6 +154,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ";
 
         $conn = $this->getEntityManager()->getConnection();
+
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 }

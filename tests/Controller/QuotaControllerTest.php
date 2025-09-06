@@ -102,7 +102,7 @@ class QuotaControllerTest extends WebTestCase
 
         // On prend le plan "Free" déjà présent en fixtures
         $plan = $this->em->getRepository(Plan::class)->findOneBy(['name' => 'Free']);
-        if (!$plan) {
+        if (! $plan) {
             throw new \RuntimeException("Le plan Free n’existe pas en base.");
         }
 
@@ -181,7 +181,7 @@ class QuotaControllerTest extends WebTestCase
 
         $data = json_decode($response->getContent() ?: '', true);
 
-        if (!isset($data['success']) || !$data['success'] || !isset($data['data']['token'])) {
+        if (! isset($data['success']) || ! $data['success'] || ! isset($data['data']['token'])) {
             throw new \RuntimeException('Échec de la connexion: ' . json_encode($data));
         }
 
@@ -191,7 +191,7 @@ class QuotaControllerTest extends WebTestCase
     private function cleanupUser(User $user): void
     {
         $managedUser = $this->em->find(User::class, $user->getId());
-        if (!$managedUser) {
+        if (! $managedUser) {
             return;
         }
 

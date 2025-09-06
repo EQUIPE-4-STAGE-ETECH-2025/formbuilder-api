@@ -9,7 +9,8 @@ class PlanService
 {
     public function __construct(
         private PlanRepository $planRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Récupère tous les plans triés par prix (croissant).
@@ -20,6 +21,6 @@ class PlanService
     {
         $plans = $this->planRepository->findBy([], ['priceCents' => 'ASC']);
 
-        return array_map(fn($plan) => new PlanDto($plan), $plans);
+        return array_map(fn ($plan) => new PlanDto($plan), $plans);
     }
 }
