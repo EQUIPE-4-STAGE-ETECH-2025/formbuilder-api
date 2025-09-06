@@ -15,14 +15,17 @@ class PlanDto
 
     public function __construct(Plan $plan)
     {
-        $this->id = $plan->getId();
-        $this->name = $plan->getName();
-        $this->priceCents = $plan->getPriceCents();
-        $this->maxForms = $plan->getMaxForms();
-        $this->maxSubmissionsPerMonth = $plan->getMaxSubmissionsPerMonth();
-        $this->maxStorageMb = $plan->getMaxStorageMb();
+        $this->id = $plan->getId() ?? '';
+        $this->name = $plan->getName() ?? '';
+        $this->priceCents = $plan->getPriceCents() ?? 0;
+        $this->maxForms = $plan->getMaxForms() ?? 0;
+        $this->maxSubmissionsPerMonth = $plan->getMaxSubmissionsPerMonth() ?? 0;
+        $this->maxStorageMb = $plan->getMaxStorageMb() ?? 0;
     }
 
+    /**
+     * @return array<string, string|int>
+     */
     public function toArray(): array
     {
         return [

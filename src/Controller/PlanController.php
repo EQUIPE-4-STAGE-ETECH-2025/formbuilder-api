@@ -5,7 +5,7 @@ namespace App\Controller;
 use App\Service\PlanService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route; 
+use Symfony\Component\Routing\Attribute\Route;
 
 class PlanController extends AbstractController
 {
@@ -21,7 +21,7 @@ class PlanController extends AbstractController
     {
         $plans = $this->planService->getAllPlans();
 
-        $data = array_map(fn($planDto) => $planDto->toArray(), $plans);
+        $data = array_map(fn ($planDto) => $planDto->toArray(), $plans);
 
         return $this->json($data);
     }

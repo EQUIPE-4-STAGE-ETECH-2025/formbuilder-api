@@ -69,6 +69,7 @@ class JwtAuthenticator extends AbstractAuthenticator
         if (false === $content) {
             $content = '{"error": "Erreur de sérialisation JSON"}';
         }
+
         return new Response($content, Response::HTTP_UNAUTHORIZED, [
             'Content-Type' => 'application/json',
         ]);

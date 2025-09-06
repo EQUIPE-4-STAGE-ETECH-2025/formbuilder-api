@@ -17,16 +17,19 @@ class SubscriptionResponseDto
 
     public function __construct(Subscription $subscription)
     {
-        $this->id = $subscription->getId();
-        $this->userId = $subscription->getUser()->getId();
-        $this->planName = $subscription->getPlan()->getName();
-        $this->stripeSubscriptionId = $subscription->getStripeSubscriptionId();
-        $this->startDate = $subscription->getStartDate()->format('Y-m-d');
-        $this->endDate = $subscription->getEndDate()->format('Y-m-d');
+        $this->id = $subscription->getId() ?? '';
+        $this->userId = $subscription->getUser()?->getId() ?? '';
+        $this->planName = $subscription->getPlan()?->getName() ?? '';
+        $this->stripeSubscriptionId = $subscription->getStripeSubscriptionId() ?? '';
+        $this->startDate = $subscription->getStartDate()?->format('Y-m-d') ?? '';
+        $this->endDate = $subscription->getEndDate()?->format('Y-m-d') ?? '';
         $this->status = $subscription->getStatus();
         $this->isActive = $subscription->isActive();
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     public function toArray(): array
     {
         return [

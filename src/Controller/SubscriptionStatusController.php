@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Service\SubscriptionStatusService;
 use App\Repository\SubscriptionRepository;
+use App\Service\SubscriptionStatusService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,13 +15,14 @@ class SubscriptionStatusController extends AbstractController
     public function __construct(
         private SubscriptionStatusService $statusService,
         private SubscriptionRepository $subscriptionRepository
-    ) {}
+    ) {
+    }
 
     #[Route('/api/subscriptions/{id}/status', name: 'get_subscription_status', methods: ['GET'])]
     public function getStatus(string $id): JsonResponse
     {
         $subscription = $this->subscriptionRepository->find($id);
-        if (!$subscription) {
+        if (! $subscription) {
             return $this->json(['error' => 'Abonnement introuvable'], Response::HTTP_NOT_FOUND);
         }
 
@@ -35,13 +36,13 @@ class SubscriptionStatusController extends AbstractController
     public function updateStatus(string $id, Request $request): JsonResponse
     {
         $subscription = $this->subscriptionRepository->find($id);
-        if (!$subscription) {
+        if (! $subscription) {
             return $this->json(['error' => 'Abonnement introuvable'], Response::HTTP_NOT_FOUND);
         }
 
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['status'])) {
+        if (! isset($data['status'])) {
             return $this->json(['error' => 'Le champ status est obligatoire'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -51,7 +52,7 @@ class SubscriptionStatusController extends AbstractController
             'CANCELLED',
         ];
 
-        if (!in_array($data['status'], $allowedStatuses, true)) {
+        if (! in_array($data['status'], $allowedStatuses, true)) {
             return $this->json(['error' => 'Statut invalide'], Response::HTTP_BAD_REQUEST);
         }
 

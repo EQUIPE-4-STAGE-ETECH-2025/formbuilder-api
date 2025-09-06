@@ -12,7 +12,6 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
 
 -   [x] **AUTH-001** (Dépendances -> AUTH-007, AUTH-010) : Créer `AuthController` avec endpoint de connexion
 
-
     -   Endpoint : `POST /api/auth/login`
     -   Validation des credentials avec Argon2
     -   Génération et retour du token JWT
@@ -120,7 +119,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Validation des données personnelles
 
 ---
- 
+
 ## 📊 Priorité 2 - Gestion des Formulaires
 
 ### 2.1 Controllers de formulaires

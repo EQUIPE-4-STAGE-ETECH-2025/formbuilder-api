@@ -10,7 +10,7 @@ class PlanFeatureControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-    
+
         $planId = '550e8400-e29b-41d4-a716-446655440202';
 
         $client->request('GET', "/api/plans/$planId/features");

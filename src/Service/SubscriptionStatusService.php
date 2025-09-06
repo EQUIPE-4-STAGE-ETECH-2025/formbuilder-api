@@ -10,7 +10,8 @@ class SubscriptionStatusService
 {
     public function __construct(
         private SubscriptionRepository $subscriptionRepository
-    ) {}
+    ) {
+    }
 
     /**
      * Récupère le statut d'un abonnement (ACTIVE, SUSPENDED, CANCELLED)
@@ -30,10 +31,10 @@ class SubscriptionStatusService
         $subscription = $this->findSubscriptionOrFail($subscriptionId);
 
         // Valide le statut
-        if (!in_array($status, [
+        if (! in_array($status, [
             Subscription::STATUS_ACTIVE,
             Subscription::STATUS_SUSPENDED,
-            Subscription::STATUS_CANCELLED
+            Subscription::STATUS_CANCELLED,
         ])) {
             throw new \InvalidArgumentException("Statut invalide: $status");
         }
@@ -53,7 +54,7 @@ class SubscriptionStatusService
     {
         $subscription = $this->subscriptionRepository->find($subscriptionId);
 
-        if (!$subscription) {
+        if (! $subscription) {
             throw new NotFoundHttpException("Abonnement introuvable.");
         }
 
