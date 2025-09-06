@@ -198,7 +198,6 @@ class AuthController extends AbstractController
         }
     }
 
-
     /**
      * @throws TransportExceptionInterface
      */

@@ -16,7 +16,6 @@ class UserResponseDto
     public function toArray(): array
     {
         $createdAt = $this->user->getCreatedAt();
-
         return [
             'id' => $this->user->getId(),
             'firstName' => $this->user->getFirstName(),

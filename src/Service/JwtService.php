@@ -41,7 +41,6 @@ class JwtService
             $expire = $issuedAt->modify("+{$this->tokenTtl} seconds");
             $payload['exp'] = $expire->getTimestamp();
         }
-
         $tokenPayload = array_merge($payload, [
             'iat' => $issuedAt->getTimestamp(),
             'type' => $payload['type'] ?? 'access', // Utiliser le type fourni ou 'access' par défaut
@@ -49,8 +48,6 @@ class JwtService
 
         return JWT::encode($tokenPayload, $this->secretKey, $this->algorithm);
     }
-
-
 
     // Génère un refresh token avec une durée de vie plus longue
     /**
@@ -142,6 +139,7 @@ class JwtService
         }
 
         $payload = (array) $decoded;
+
         unset($payload['iat'], $payload['exp'], $payload['type']);
 
         return $this->generateToken($payload);
@@ -157,7 +155,6 @@ class JwtService
         $this->blacklistService->blacklist($token);
     }
 
-    // Révoque un refresh token
     public function blacklistRefreshToken(string $refreshToken): void
     {
         $decoded = $this->validateRefreshToken($refreshToken);

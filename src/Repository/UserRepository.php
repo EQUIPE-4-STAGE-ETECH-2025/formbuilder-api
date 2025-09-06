@@ -29,7 +29,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function save(User $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
@@ -38,19 +37,15 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function remove(User $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
-    /**
-     * Used to upgrade (rehash) the user's password automatically over time.
-     */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
         if (! $user instanceof User) {
-            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', get_class($user)));
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
         }
 
         $user->setPassword($newHashedPassword);
@@ -96,7 +91,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ";
 
         $conn = $this->getEntityManager()->getConnection();
-
         return $conn->executeQuery($sql, ['admin' => 'ADMIN'])->fetchAllAssociative();
     }
 
@@ -122,7 +116,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
     /**
      * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
-     * pour éviter le problème N+1
+     * pour éviter le problème N+1 et les doublons
      *
      * @return array<int, array<string, mixed>>
      */
@@ -136,11 +130,20 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
                 u.email,
                 u.role,
                 u.created_at,
-                COALESCE(p.name, 'Free') as plan_name,
-                COUNT(DISTINCT f.id) as forms_count,
-                COUNT(DISTINCT s.id) as submissions_count
+                COALESCE(p.name, 'Free') AS plan_name,
+                COUNT(DISTINCT f.id) AS forms_count,
+                COUNT(DISTINCT s.id) AS submissions_count
             FROM users u
-            LEFT JOIN subscription sub ON u.id = sub.user_id AND sub.status = 'ACTIVE'
+            LEFT JOIN (
+                SELECT sub1.*
+                FROM subscription sub1
+                INNER JOIN (
+                    SELECT user_id, MAX(created_at) AS max_created
+                    FROM subscription
+                    WHERE status = 'ACTIVE'
+                    GROUP BY user_id
+                ) sub2 ON sub1.user_id = sub2.user_id AND sub1.created_at = sub2.max_created
+            ) sub ON u.id = sub.user_id
             LEFT JOIN plan p ON sub.plan_id = p.id
             LEFT JOIN form f ON u.id = f.user_id
             LEFT JOIN submission s ON f.id = s.form_id
@@ -150,7 +153,6 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         ";
 
         $conn = $this->getEntityManager()->getConnection();
-
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
 }
