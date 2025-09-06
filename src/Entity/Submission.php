@@ -12,7 +12,7 @@ class Submission
     #[ORM\Column(type: 'uuid', unique: true)]
     private ?Uuid $id = null;
 
-    #[ORM\ManyToOne(targetEntity: Form::class)]
+    #[ORM\ManyToOne(targetEntity: Form::class, inversedBy: 'submissions')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Form $form = null;
 

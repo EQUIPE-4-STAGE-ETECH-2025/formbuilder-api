@@ -134,8 +134,12 @@ class SubscriptionService
         $subscription->setUser($user);
         $subscription->setPlan($plan);
         $subscription->setStripeSubscriptionId($stripeSubscription->id);
-        $subscription->setStartDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_start));
-        $subscription->setEndDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_end));
+
+        $startDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_start ?? time()));
+        $endDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_end ?? time()));
+
+        $subscription->setStartDate($startDate ?: new \DateTime());
+        $subscription->setEndDate($endDate ?: new \DateTime());
         $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
 
         $this->subscriptionRepository->save($subscription, true);
@@ -156,8 +160,11 @@ class SubscriptionService
             $subscription->setPlan($plan);
         }
 
-        $subscription->setStartDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_start));
-        $subscription->setEndDate(\DateTime::createFromFormat('U', $stripeSubscription->current_period_end));
+        $startDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_start ?? time()));
+        $endDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_end ?? time()));
+
+        $subscription->setStartDate($startDate ?: new \DateTime());
+        $subscription->setEndDate($endDate ?: new \DateTime());
         $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
         $subscription->setUpdatedAt(new \DateTimeImmutable());
 

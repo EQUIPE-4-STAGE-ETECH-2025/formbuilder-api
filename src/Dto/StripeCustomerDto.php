@@ -6,6 +6,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 readonly class StripeCustomerDto
 {
+    /**
+     * @param array<string, string> $address
+     * @param array<string, string> $metadata
+     */
     public function __construct(
         #[Assert\NotBlank(message: 'L\'email est obligatoire')]
         #[Assert\Email(message: 'L\'email doit être valide')]

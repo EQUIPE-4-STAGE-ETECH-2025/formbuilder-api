@@ -5,7 +5,6 @@ namespace App\Service;
 use App\Entity\Subscription;
 use App\Entity\User;
 use App\Repository\SubscriptionRepository;
-use App\Repository\UserRepository;
 use Psr\Log\LoggerInterface;
 use Stripe\Exception\ApiErrorException;
 use Stripe\Invoice;
@@ -17,13 +16,11 @@ class StripePaymentFailureService
 {
     private const MAX_RETRY_ATTEMPTS = 3;
     private const GRACE_PERIOD_DAYS = 7;
-    private const SUSPENSION_DELAY_DAYS = 14;
 
     public function __construct(
         #[Autowire('%env(STRIPE_SECRET_KEY)%')]
         private readonly string $stripeSecretKey,
         private readonly SubscriptionRepository $subscriptionRepository,
-        private readonly UserRepository $userRepository,
         private readonly EmailService $emailService,
         private readonly LoggerInterface $logger
     ) {
@@ -32,25 +29,31 @@ class StripePaymentFailureService
 
     /**
      * Gère l'échec de paiement d'une facture
+     * @return array<string, mixed>
      */
     public function handlePaymentFailure(string $invoiceId, string $failureCode = null): array
     {
         try {
             $invoice = Invoice::retrieve($invoiceId);
 
-            if (! $invoice->subscription) {
+            $subscriptionId = $invoice->subscription ?? null;
+            if (! $subscriptionId) {
                 throw new \RuntimeException('Facture sans abonnement associé');
             }
 
             $subscription = $this->subscriptionRepository->findOneBy([
-                'stripeSubscriptionId' => $invoice->subscription,
+                'stripeSubscriptionId' => $subscriptionId,
             ]);
 
             if (! $subscription) {
-                throw new \RuntimeException("Abonnement local introuvable: {$invoice->subscription}");
+                throw new \RuntimeException("Abonnement local introuvable: {$subscriptionId}");
             }
 
             $user = $subscription->getUser();
+            if (! $user) {
+                throw new \RuntimeException("Utilisateur introuvable pour l'abonnement: {$subscription->getId()}");
+            }
+
             $attemptCount = $this->getRetryAttemptCount($invoice);
 
             $this->logger->info('Traitement d\'échec de paiement', [
@@ -83,6 +86,7 @@ class StripePaymentFailureService
 
     /**
      * Premier échec de paiement - notification simple
+     * @return array<string, mixed>
      */
     private function handleFirstFailure(User $user, Invoice $invoice, Subscription $subscription): array
     {
@@ -107,6 +111,7 @@ class StripePaymentFailureService
 
     /**
      * Deuxième échec de paiement - notification plus urgente
+     * @return array<string, mixed>
      */
     private function handleSecondFailure(User $user, Invoice $invoice, Subscription $subscription): array
     {
@@ -131,6 +136,7 @@ class StripePaymentFailureService
 
     /**
      * Troisième échec de paiement - avertissement de suspension
+     * @return array<string, mixed>
      */
     private function handleThirdFailure(User $user, Invoice $invoice, Subscription $subscription): array
     {
@@ -155,6 +161,7 @@ class StripePaymentFailureService
 
     /**
      * Limite de tentatives atteinte - suspension
+     * @return array<string, mixed>
      */
     private function handleMaxAttemptsReached(User $user, Invoice $invoice, Subscription $subscription): array
     {
@@ -182,6 +189,7 @@ class StripePaymentFailureService
 
     /**
      * Échecs supplémentaires après suspension
+     * @return array<string, mixed>
      */
     private function handleSubsequentFailures(User $user, Invoice $invoice, Subscription $subscription, int $attemptCount): array
     {
@@ -200,6 +208,7 @@ class StripePaymentFailureService
 
     /**
      * Relance manuelle du paiement d'une facture
+     * @return array<string, mixed>
      */
     public function retryPayment(string $invoiceId): array
     {
@@ -247,22 +256,25 @@ class StripePaymentFailureService
         $this->subscriptionRepository->save($subscription, true);
 
         // Suspendre également l'abonnement côté Stripe
-        try {
-            \Stripe\Subscription::update($subscription->getStripeSubscriptionId(), [
-                'pause_collection' => [
-                    'behavior' => 'keep_as_draft',
-                ],
-                'metadata' => [
-                    'suspended_reason' => 'payment_failure',
-                    'suspended_at' => time(),
-                ],
-            ]);
-        } catch (ApiErrorException $e) {
-            $this->logger->error('Erreur lors de la suspension côté Stripe', [
-                'subscription_id' => $subscription->getId(),
-                'stripe_subscription_id' => $subscription->getStripeSubscriptionId(),
-                'error' => $e->getMessage(),
-            ]);
+        $stripeSubscriptionId = $subscription->getStripeSubscriptionId();
+        if ($stripeSubscriptionId) {
+            try {
+                \Stripe\Subscription::update($stripeSubscriptionId, [
+                    'pause_collection' => [
+                        'behavior' => 'keep_as_draft',
+                    ],
+                    'metadata' => [
+                        'suspended_reason' => 'payment_failure',
+                        'suspended_at' => (string) time(),
+                    ],
+                ]);
+            } catch (ApiErrorException $e) {
+                $this->logger->error('Erreur lors de la suspension côté Stripe', [
+                    'subscription_id' => $subscription->getId(),
+                    'stripe_subscription_id' => $stripeSubscriptionId,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
     }
 
@@ -272,15 +284,20 @@ class StripePaymentFailureService
     private function scheduleRetryAttempt(Invoice $invoice, int $days): void
     {
         try {
+            $invoiceId = $invoice->id;
+            if (! $invoiceId) {
+                throw new \RuntimeException('ID de facture manquant');
+            }
+
             // Mettre à jour la facture avec une nouvelle date d'échéance
-            Invoice::update($invoice->id, [
+            Invoice::update($invoiceId, [
                 'days_until_due' => $days,
                 'metadata' => array_merge(
-                    $invoice->metadata->toArray() ?? [],
+                    $invoice->metadata?->toArray() ?? [],
                     [
                         'retry_scheduled' => 'true',
-                        'retry_scheduled_at' => time(),
-                        'retry_days' => $days,
+                        'retry_scheduled_at' => (string) time(),
+                        'retry_days' => (string) $days,
                     ]
                 ),
             ]);
@@ -321,14 +338,15 @@ class StripePaymentFailureService
     {
         try {
             // Récupérer les tentatives de paiement via les PaymentIntents
-            if ($invoice->payment_intent) {
-                $paymentIntent = PaymentIntent::retrieve($invoice->payment_intent);
+            $paymentIntentId = $invoice->payment_intent ?? null;
+            if ($paymentIntentId) {
+                $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
 
-                return count($paymentIntent->charges->data);
+                return count($paymentIntent->charges?->data ?? []);
             }
 
             // Fallback: regarder dans les metadata de la facture
-            $metadata = $invoice->metadata->toArray() ?? [];
+            $metadata = $invoice->metadata?->toArray() ?? [];
 
             return (int) ($metadata['attempt_count'] ?? 1);
         } catch (\Exception $e) {
@@ -343,6 +361,7 @@ class StripePaymentFailureService
 
     /**
      * Réactive un abonnement suspendu après paiement réussi
+     * @return array<string, mixed>
      */
     public function reactivateSubscription(string $subscriptionId): array
     {
@@ -371,13 +390,16 @@ class StripePaymentFailureService
             \Stripe\Subscription::update($subscriptionId, [
                 'pause_collection' => null,
                 'metadata' => [
-                    'reactivated_at' => time(),
+                    'reactivated_at' => (string) time(),
                     'reactivated_reason' => 'payment_successful',
                 ],
             ]);
 
             // Envoyer une notification de réactivation
-            $this->emailService->sendSubscriptionReactivatedNotification($subscription->getUser());
+            $user = $subscription->getUser();
+            if ($user) {
+                $this->emailService->sendSubscriptionReactivatedNotification($user);
+            }
 
             $this->logger->info('Abonnement réactivé avec succès', [
                 'subscription_id' => $subscription->getId(),

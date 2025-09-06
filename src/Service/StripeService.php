@@ -46,11 +46,16 @@ class StripeService
         }
 
         // Créer un nouveau customer Stripe
+        $userEmail = $user->getEmail();
+        if (! $userEmail) {
+            throw new \RuntimeException('L\'utilisateur doit avoir un email pour créer un customer Stripe');
+        }
+
         $customerData = [
-            'email' => $customerDto?->email ?? $user->getEmail(),
+            'email' => $customerDto?->email ?? $userEmail,
             'name' => $customerDto?->name ?? $user->getFirstName() . ' ' . $user->getLastName(),
             'metadata' => array_merge(
-                ['user_id' => $user->getId()],
+                ['user_id' => $user->getId() ?? ''],
                 $customerDto?->metadata ?? []
             ),
         ];
@@ -221,6 +226,7 @@ class StripeService
 
     /**
      * Récupère tous les prix d'un produit
+     * @return array<mixed>
      */
     public function getProductPrices(string $productId): array
     {
@@ -243,6 +249,7 @@ class StripeService
 
     /**
      * Récupère tous les produits actifs
+     * @return array<mixed>
      */
     public function getActiveProducts(): array
     {
@@ -264,6 +271,7 @@ class StripeService
 
     /**
      * Récupère les factures d'un customer
+     * @return array<mixed>
      */
     public function getCustomerInvoices(string $customerId, int $limit = 10): array
     {

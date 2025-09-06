@@ -37,8 +37,8 @@ class StripeCheckoutService
                 'success_url' => $checkoutDto->successUrl . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => $checkoutDto->cancelUrl,
                 'metadata' => array_merge(
-                    ['user_id' => $user->getId()],
-                    $checkoutDto->metadata
+                    ['user_id' => (string) $user->getId()],
+                    array_filter($checkoutDto->metadata, fn ($value) => $value !== null)
                 ),
             ];
 
@@ -55,7 +55,7 @@ class StripeCheckoutService
                 if ($checkoutDto->trialPeriodDays !== null) {
                     $sessionData['subscription_data'] = [
                         'trial_period_days' => $checkoutDto->trialPeriodDays,
-                        'metadata' => $checkoutDto->metadata,
+                        'metadata' => array_filter($checkoutDto->metadata, fn ($value) => $value !== null),
                     ];
                 }
             } else {
@@ -76,8 +76,7 @@ class StripeCheckoutService
             // Configuration de la facturation automatique
             $sessionData['automatic_tax'] = ['enabled' => true];
 
-            // Configuration des méthodes de paiement
-            $sessionData['payment_method_configuration'] = null; // Utilise la configuration par défaut
+            // Configuration des méthodes de paiement (supprimé car null n'est pas accepté)
 
             $session = Session::create($sessionData);
 
@@ -166,16 +165,16 @@ class StripeCheckoutService
                     ],
                 ],
                 'subscription_data' => [
-                    'metadata' => array_merge(
+                    'metadata' => array_filter(array_merge(
                         [
-                            'user_id' => $user->getId(),
+                            'user_id' => (string) $user->getId(),
                             'upgrade_from_subscription' => $currentSubscriptionId,
                         ],
                         $checkoutDto->metadata
-                    ),
+                    ), fn ($value) => $value !== null),
                 ],
                 'metadata' => [
-                    'user_id' => $user->getId(),
+                    'user_id' => (string) $user->getId(),
                     'upgrade_from_subscription' => $currentSubscriptionId,
                 ],
             ];

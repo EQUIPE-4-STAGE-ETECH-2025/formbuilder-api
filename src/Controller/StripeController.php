@@ -15,7 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/stripe', name: 'api_stripe_')]
@@ -26,7 +25,6 @@ class StripeController extends AbstractController
         private readonly StripeService $stripeService,
         private readonly StripeCheckoutService $checkoutService,
         private readonly StripeCustomerPortalService $portalService,
-        private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly LoggerInterface $logger
     ) {
@@ -108,7 +106,7 @@ class StripeController extends AbstractController
                     'status' => $session->status,
                     'customer' => $session->customer,
                     'subscription' => $session->subscription,
-                    'metadata' => $session->metadata->toArray(),
+                    'metadata' => $session->metadata?->toArray() ?? [],
                 ],
             ]);
 
@@ -216,8 +214,8 @@ class StripeController extends AbstractController
                 'subscription' => [
                     'id' => $subscription->id,
                     'status' => $subscription->status,
-                    'current_period_start' => $subscription->current_period_start,
-                    'current_period_end' => $subscription->current_period_end,
+                    'current_period_start' => $subscription->current_period_start ?? null,
+                    'current_period_end' => $subscription->current_period_end ?? null,
                     'trial_end' => $subscription->trial_end,
                 ],
                 'status' => 'success',
@@ -270,8 +268,8 @@ class StripeController extends AbstractController
                 'subscription' => [
                     'id' => $subscription->id,
                     'status' => $subscription->status,
-                    'current_period_start' => $subscription->current_period_start,
-                    'current_period_end' => $subscription->current_period_end,
+                    'current_period_start' => $subscription->current_period_start ?? null,
+                    'current_period_end' => $subscription->current_period_end ?? null,
                 ],
                 'status' => 'success',
             ]);
@@ -358,7 +356,7 @@ class StripeController extends AbstractController
                         'currency' => $product->default_price->currency,
                         'recurring' => $product->default_price->recurring,
                     ] : null,
-                    'metadata' => $product->metadata->toArray(),
+                    'metadata' => $product->metadata?->toArray() ?? [],
                 ];
             }, $products);
 

@@ -267,7 +267,7 @@ Ce backlog détaille toutes les tâches nécessaires pour développer l'API Symf
     -   Tri par prix croissant
     -   Informations détaillées des plans
 
--   [ ] **SUBSCRIPTIONS-002** `(Dépendances -> STRIPE-001, SUBSCRIPTIONS-004, AUTH-012)` : Créer `SubscriptionController`
+-   [x] **SUBSCRIPTIONS-002** `(Dépendances -> STRIPE-001, SUBSCRIPTIONS-004, AUTH-012)` : Créer `SubscriptionController`
     -   Endpoint : `GET /api/users/{id}/subscriptions`
     -   Endpoint : `POST /api/subscriptions`
     -   Endpoint : `PUT /api/subscriptions/{id}`

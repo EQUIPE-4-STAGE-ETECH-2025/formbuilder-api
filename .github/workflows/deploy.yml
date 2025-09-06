@@ -13,13 +13,16 @@ env:
     PHP_EXTENSIONS: "mbstring, pdo_pgsql, intl, zip"
     APP_SECRET: "ci_secret_key_for_testing"
     APP_URL: "http://localhost:8000"
-    JWT_SECRET: "A4Ta0gRNcjld+ywP8d91ZIHkeZlA0HyPXBiojPEpT78="
+    JWT_SECRET: "fake_jwt_secret_key_for_ci_testing_only"
     MAILER_DSN: "null://null"
     FRONTEND_URL: "http://localhost:3000"
     DATABASE_HOST: "localhost"
     DATABASE_PORT: "5432"
     DATABASE_USER: "postgres"
     DATABASE_PASSWORD: "postgres"
+    STRIPE_SECRET_KEY: "sk_test_fake_key_for_testing"
+    STRIPE_PUBLISHABLE_KEY: "pk_test_fake_key_for_testing"
+    STRIPE_WEBHOOK_SECRET: "whsec_fake_webhook_secret_for_testing"
 
 jobs:
     # Job 1: Vérifications de qualité de code
@@ -64,6 +67,9 @@ jobs:
                   JWT_SECRET=${{ env.JWT_SECRET }}
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
+                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
+                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
 
             # Vérification de la syntaxe PHP
@@ -148,6 +154,9 @@ jobs:
                   JWT_SECRET=${{ env.JWT_SECRET }}
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
+                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
+                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
 
                   # Créer le fichier .env.test.local pour les variables spécifiques aux tests
@@ -162,6 +171,9 @@ jobs:
                   JWT_SECRET=${{ env.JWT_SECRET }}
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
+                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
+                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
             # Création du schéma de base de données pour les tests
             - name: Create database schema
@@ -241,6 +253,9 @@ jobs:
                   JWT_SECRET=${{ env.JWT_SECRET }}
                   MAILER_DSN=${{ env.MAILER_DSN }}
                   FRONTEND_URL=${{ env.FRONTEND_URL }}
+                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
+                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
+                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
 
             # Vérification des vulnérabilités de sécurité dans les dépendances

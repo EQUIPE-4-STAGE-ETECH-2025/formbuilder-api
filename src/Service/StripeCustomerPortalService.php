@@ -35,10 +35,10 @@ class StripeCustomerPortalService
                 'return_url' => $portalDto->returnUrl,
             ];
 
-            // Configuration personnalisée si fournie
-            if (! empty($portalDto->configuration)) {
-                $sessionData['configuration'] = $portalDto->configuration;
-            }
+            // Configuration personnalisée si fournie (désactivé car l'API attend un string, pas un array)
+            // if (! empty($portalDto->configuration)) {
+            //     $sessionData['configuration'] = $portalDto->configuration;
+            // }
 
             $session = Session::create($sessionData);
 
@@ -105,6 +105,7 @@ class StripeCustomerPortalService
                     'type' => 'subscription_update_confirm',
                     'subscription_update_confirm' => [
                         'subscription' => $subscriptionId,
+                        'items' => [], // Requis par l'API Stripe
                     ],
                 ],
             ];
@@ -131,6 +132,7 @@ class StripeCustomerPortalService
 
     /**
      * Configuration par défaut du portail client
+     * @return array<string, mixed>
      */
     private function getDefaultPortalConfiguration(): array
     {

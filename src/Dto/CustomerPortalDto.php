@@ -6,6 +6,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 readonly class CustomerPortalDto
 {
+    /**
+     * @param array<string, mixed> $configuration
+     */
     public function __construct(
         #[Assert\NotBlank(message: 'L\'ID du customer Stripe est obligatoire')]
         #[Assert\Regex(

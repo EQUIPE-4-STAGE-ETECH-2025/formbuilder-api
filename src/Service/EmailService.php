@@ -129,11 +129,14 @@ class EmailService
                 $user->getFirstName(),
                 $stripeSubscription->id,
                 ucfirst($stripeSubscription->status),
-                date('d/m/Y', $stripeSubscription->current_period_start),
-                date('d/m/Y', $stripeSubscription->current_period_end)
+                date('d/m/Y', $stripeSubscription->current_period_start ?? time()),
+                date('d/m/Y', $stripeSubscription->current_period_end ?? time())
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email confirmation abonnement', [
                 'user_id' => $user->getId(),
@@ -185,7 +188,10 @@ class EmailService
                 $invoice->hosted_invoice_url ?? '#'
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent, $attemptNumber > 1);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent, $attemptNumber > 1);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email échec paiement', [
                 'user_id' => $user->getId(),
@@ -226,7 +232,10 @@ class EmailService
                 $invoice->hosted_invoice_url ?? '#'
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent, true);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent, true);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email avertissement suspension', [
                 'user_id' => $user->getId(),
@@ -263,7 +272,10 @@ class EmailService
                 $user->getFirstName()
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent, true);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent, true);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email suspension', [
                 'user_id' => $user->getId(),
@@ -298,7 +310,10 @@ class EmailService
                 $user->getFirstName()
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email réactivation', [
                 'user_id' => $user->getId(),
@@ -332,7 +347,10 @@ class EmailService
                 $user->getFirstName()
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email annulation abonnement', [
                 'user_id' => $user->getId(),
@@ -368,7 +386,10 @@ class EmailService
                 $trialEndDate
             );
 
-            $this->sendEmail($user->getEmail(), $subject, $htmlContent);
+            $email = $user->getEmail();
+            if ($email) {
+                $this->sendEmail($email, $subject, $htmlContent);
+            }
         } catch (Exception $e) {
             $this->logger->error('Erreur envoi email fin d\'essai', [
                 'user_id' => $user->getId(),

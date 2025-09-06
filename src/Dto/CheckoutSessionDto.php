@@ -6,6 +6,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 readonly class CheckoutSessionDto
 {
+    /**
+     * @param array<string, string> $metadata
+     */
     public function __construct(
         #[Assert\NotBlank(message: 'L\'ID du prix Stripe est obligatoire')]
         #[Assert\Regex(

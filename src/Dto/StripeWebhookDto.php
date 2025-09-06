@@ -6,6 +6,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 readonly class StripeWebhookDto
 {
+    /**
+     * @param array<string, mixed> $data
+     */
     public function __construct(
         #[Assert\NotBlank(message: 'L\'ID de l\'événement est obligatoire')]
         public string $id,

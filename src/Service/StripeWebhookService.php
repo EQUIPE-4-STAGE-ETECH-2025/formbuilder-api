@@ -27,6 +27,7 @@ class StripeWebhookService
 
     /**
      * Vérifie et traite un webhook Stripe
+     * @return array<string, mixed>
      */
     public function handleWebhook(string $payload, string $signature): array
     {
@@ -70,6 +71,7 @@ class StripeWebhookService
 
     /**
      * Traite un événement Stripe selon son type
+     * @return array<string, mixed>
      */
     private function processEvent(Event $event): array
     {
@@ -129,6 +131,7 @@ class StripeWebhookService
     /**
      * Gère l'événement checkout.session.completed
      */
+    /** @return array<string, mixed> */
     private function handleCheckoutSessionCompleted(Event $event): array
     {
         $session = $event->data->object;
@@ -145,7 +148,7 @@ class StripeWebhookService
         }
 
         // Si c'est un abonnement, créer l'abonnement local
-        if ($session->mode === 'subscription' && $session->subscription) {
+        if (isset($session->mode) && $session->mode === 'subscription' && isset($session->subscription)) {
             $stripeSubscription = \Stripe\Subscription::retrieve($session->subscription);
 
             // Créer l'abonnement local
@@ -166,13 +169,15 @@ class StripeWebhookService
     /**
      * Gère l'événement customer.subscription.created
      */
+    /** @return array<string, mixed> */
     private function handleSubscriptionCreated(Event $event): array
     {
         $stripeSubscription = $event->data->object;
 
-        $user = $this->getUserByStripeCustomerId($stripeSubscription->customer);
+        $customerId = $stripeSubscription->customer ?? '';
+        $user = $this->getUserByStripeCustomerId($customerId);
         if (! $user) {
-            throw new \RuntimeException("Utilisateur introuvable pour customer: {$stripeSubscription->customer}");
+            throw new \RuntimeException("Utilisateur introuvable pour customer: {$customerId}");
         }
 
         // Créer l'abonnement local s'il n'existe pas déjà
@@ -180,7 +185,7 @@ class StripeWebhookService
             'stripeSubscriptionId' => $stripeSubscription->id,
         ]);
 
-        if (! $existingSubscription) {
+        if (! $existingSubscription && $stripeSubscription instanceof \Stripe\Subscription) {
             $this->subscriptionService->createFromStripeSubscription($user, $stripeSubscription);
         }
 
@@ -193,6 +198,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.subscription.updated
+     * @return array<string, mixed>
      */
     private function handleSubscriptionUpdated(Event $event): array
     {
@@ -202,7 +208,7 @@ class StripeWebhookService
             'stripeSubscriptionId' => $stripeSubscription->id,
         ]);
 
-        if ($subscription) {
+        if ($subscription && $stripeSubscription instanceof \Stripe\Subscription) {
             $this->subscriptionService->updateFromStripeSubscription($subscription, $stripeSubscription);
         }
 
@@ -215,6 +221,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.subscription.deleted
+     * @return array<string, mixed>
      */
     private function handleSubscriptionDeleted(Event $event): array
     {
@@ -230,7 +237,10 @@ class StripeWebhookService
             $this->subscriptionRepository->save($subscription, true);
 
             // Envoyer un email de confirmation d'annulation
-            $this->emailService->sendSubscriptionCancellation($subscription->getUser());
+            $user = $subscription->getUser();
+            if ($user) {
+                $this->emailService->sendSubscriptionCancellation($user);
+            }
         }
 
         return [
@@ -242,13 +252,19 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.subscription.trial_will_end
+     * @return array<string, mixed>
      */
     private function handleTrialWillEnd(Event $event): array
     {
         $stripeSubscription = $event->data->object;
 
-        $user = $this->getUserByStripeCustomerId($stripeSubscription->customer);
-        if ($user) {
+        $customerId = $stripeSubscription->customer ?? null;
+        if (! $customerId) {
+            throw new \RuntimeException('Customer ID manquant dans l\'abonnement');
+        }
+
+        $user = $this->getUserByStripeCustomerId($customerId);
+        if ($user && $stripeSubscription instanceof \Stripe\Subscription) {
             // Envoyer un email de rappel de fin d'essai
             $this->emailService->sendTrialEndingNotification($user, $stripeSubscription);
         }
@@ -262,15 +278,17 @@ class StripeWebhookService
 
     /**
      * Gère l'événement invoice.paid
+     * @return array<string, mixed>
      */
     private function handleInvoicePaid(Event $event): array
     {
         $invoice = $event->data->object;
 
         // Réactiver l'abonnement si nécessaire
-        if ($invoice->subscription) {
+        $subscriptionId = $invoice->subscription ?? null;
+        if ($subscriptionId) {
             $subscription = $this->subscriptionRepository->findOneBy([
-                'stripeSubscriptionId' => $invoice->subscription,
+                'stripeSubscriptionId' => $subscriptionId,
             ]);
 
             if ($subscription && $subscription->getStatus() === Subscription::STATUS_SUSPENDED) {
@@ -289,19 +307,27 @@ class StripeWebhookService
 
     /**
      * Gère l'événement invoice.payment_failed
+     * @return array<string, mixed>
      */
     private function handleInvoicePaymentFailed(Event $event): array
     {
         $invoice = $event->data->object;
 
-        $user = $this->getUserByStripeCustomerId($invoice->customer);
-        if ($user && $invoice->subscription) {
+        $customerId = $invoice->customer ?? null;
+        $subscriptionId = $invoice->subscription ?? null;
+
+        if (! $customerId) {
+            throw new \RuntimeException('Customer ID manquant dans la facture');
+        }
+
+        $user = $this->getUserByStripeCustomerId($customerId);
+        if ($user && $subscriptionId) {
             // Suspendre l'abonnement après plusieurs échecs
             $subscription = $this->subscriptionRepository->findOneBy([
-                'stripeSubscriptionId' => $invoice->subscription,
+                'stripeSubscriptionId' => $subscriptionId,
             ]);
 
-            if ($subscription) {
+            if ($subscription && $invoice instanceof \Stripe\Invoice) {
                 // Logique de suspension après plusieurs échecs (à implémenter selon vos besoins)
                 $this->emailService->sendPaymentFailedNotification($user, $invoice);
             }
@@ -316,6 +342,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement invoice.payment_succeeded
+     * @return array<string, mixed>
      */
     private function handleInvoicePaymentSucceeded(Event $event): array
     {
@@ -324,6 +351,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement invoice.created
+     * @return array<string, mixed>
      */
     private function handleInvoiceCreated(Event $event): array
     {
@@ -337,6 +365,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement payment_method.attached
+     * @return array<string, mixed>
      */
     private function handlePaymentMethodAttached(Event $event): array
     {
@@ -349,6 +378,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement payment_method.detached
+     * @return array<string, mixed>
      */
     private function handlePaymentMethodDetached(Event $event): array
     {
@@ -361,6 +391,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.created
+     * @return array<string, mixed>
      */
     private function handleCustomerCreated(Event $event): array
     {
@@ -373,6 +404,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.updated
+     * @return array<string, mixed>
      */
     private function handleCustomerUpdated(Event $event): array
     {
@@ -385,6 +417,7 @@ class StripeWebhookService
 
     /**
      * Gère l'événement customer.deleted
+     * @return array<string, mixed>
      */
     private function handleCustomerDeleted(Event $event): array
     {
