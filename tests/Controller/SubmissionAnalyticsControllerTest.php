@@ -112,7 +112,7 @@ class SubmissionAnalyticsControllerTest extends WebTestCase
             ->expects($this->once())
             ->method('getFormAnalytics')
             ->with($formId)
-            ->willThrowException(new \InvalidArgumentException('Formulaire non trouvé'));
+            ->willThrowException(new \InvalidArgumentException('Formulaire introuvable.'));
 
         $this->client->request(
             'GET',
@@ -124,7 +124,7 @@ class SubmissionAnalyticsControllerTest extends WebTestCase
 
         $this->assertResponseStatusCodeSame(404);
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
-        $this->assertEquals('Formulaire non trouvé', $responseData['error']);
+        $this->assertEquals('Formulaire introuvable.', $responseData['error']);
     }
 
     public function testGetAnalyticsInternalError(): void

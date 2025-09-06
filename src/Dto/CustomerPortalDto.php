@@ -17,7 +17,7 @@ readonly class CustomerPortalDto
         )]
         public string $customerId,
         #[Assert\NotBlank(message: 'L\'URL de retour est obligatoire')]
-        #[Assert\Url(message: 'L\'URL de retour doit être une URL valide')]
+        #[Assert\Url(message: 'L\'URL de retour doit être une URL valide', requireTld: true)]
         public string $returnUrl,
         #[Assert\Type(type: 'array', message: 'La configuration doit être un tableau')]
         public array $configuration = []

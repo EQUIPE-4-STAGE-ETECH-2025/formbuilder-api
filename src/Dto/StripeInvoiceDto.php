@@ -35,7 +35,7 @@ readonly class StripeInvoiceDto
         public int $created,
         #[Assert\Type(type: 'integer', message: 'due_date doit être un timestamp')]
         public ?int $dueDate = null,
-        #[Assert\Url(message: 'hosted_invoice_url doit être une URL valide')]
+        #[Assert\Url(message: 'hosted_invoice_url doit être une URL valide', requireTld: true)]
         public ?string $hostedInvoiceUrl = null
     ) {
     }

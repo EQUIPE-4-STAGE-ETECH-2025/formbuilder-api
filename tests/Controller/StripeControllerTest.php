@@ -38,10 +38,33 @@ class StripeControllerTest extends WebTestCase
         $this->checkoutService = $this->createMock(StripeCheckoutService::class);
         $this->portalService = $this->createMock(StripeCustomerPortalService::class);
 
+        // Configurer les mocks par défaut pour éviter les appels API
+        $this->setupDefaultMocks();
+
         // Remplacer les services dans le container
         static::getContainer()->set(StripeService::class, $this->stripeService);
         static::getContainer()->set(StripeCheckoutService::class, $this->checkoutService);
         static::getContainer()->set(StripeCustomerPortalService::class, $this->portalService);
+    }
+
+    private function setupDefaultMocks(): void
+    {
+        // Configuration par défaut pour éviter les appels API réels
+        $this->stripeService
+            ->method('getActiveProducts')
+            ->willReturn([]);
+
+        $this->checkoutService
+            ->method('createCheckoutSession')
+            ->willReturn($this->createMock(Session::class));
+
+        $this->checkoutService
+            ->method('getCheckoutSession')
+            ->willReturn($this->createMock(Session::class));
+
+        $this->portalService
+            ->method('createDefaultPortalSession')
+            ->willReturn($this->createMock(\Stripe\BillingPortal\Session::class));
     }
 
     public function testCreateCheckoutSessionRequiresAuthentication(): void
@@ -167,7 +190,7 @@ class StripeControllerTest extends WebTestCase
         $user = $this->createTestUser();
         $token = $this->loginUser($user);
 
-        $mockSession = new \stdClass();
+        $mockSession = $this->createMock(\Stripe\BillingPortal\Session::class);
         $mockSession->id = 'bps_test_123';
         $mockSession->url = 'https://billing.stripe.com/test';
 

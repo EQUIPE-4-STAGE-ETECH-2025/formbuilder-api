@@ -73,7 +73,10 @@ class SubscriptionControllerTest extends WebTestCase
     public function testCreateSubscription(): void
     {
         $user = $this->userRepository->findOneBy(['email' => 'anna@example.com']);
-        $plan = self::getContainer()->get('App\Repository\PlanRepository')->findAll()[0];
+        // Utiliser le plan gratuit pour éviter la redirection Stripe
+        $planRepository = self::getContainer()->get('App\Repository\PlanRepository');
+        $plan = $planRepository->findOneBy(['name' => 'Free']);
+        $this->assertNotNull($plan, 'Le plan Free doit exister dans les fixtures');
         $authHeader = $this->createAuthHeader($user->getEmail());
 
         $payload = [

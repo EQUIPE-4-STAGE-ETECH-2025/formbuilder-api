@@ -17,10 +17,10 @@ readonly class CheckoutSessionDto
         )]
         public string $priceId,
         #[Assert\NotBlank(message: 'L\'URL de succès est obligatoire')]
-        #[Assert\Url(message: 'L\'URL de succès doit être une URL valide')]
+        #[Assert\Url(message: 'L\'URL de succès doit être une URL valide', requireTld: true)]
         public string $successUrl,
         #[Assert\NotBlank(message: 'L\'URL d\'annulation est obligatoire')]
-        #[Assert\Url(message: 'L\'URL d\'annulation doit être une URL valide')]
+        #[Assert\Url(message: 'L\'URL d\'annulation doit être une URL valide', requireTld: true)]
         public string $cancelUrl,
         #[Assert\Type(type: 'integer', message: 'La quantité doit être un nombre entier')]
         #[Assert\GreaterThan(value: 0, message: 'La quantité doit être supérieure à 0')]
