@@ -15,8 +15,8 @@ class PlanFixtures extends Fixture
                 'id' => '550e8400-e29b-41d4-a716-446655440201',
                 'name' => 'Free',
                 'priceCents' => 0,
-                'stripeProductId' => 'prod_free',
-                'stripePriceId' => 'price_free',
+                'stripeProductId' => '', // Plan gratuit = pas de produit Stripe
+                'stripePriceId' => null, // Plan gratuit = pas de prix Stripe
                 'maxForms' => 3,
                 'maxSubmissionsPerMonth' => 500,
                 'maxStorageMb' => 10,
@@ -25,8 +25,8 @@ class PlanFixtures extends Fixture
                 'id' => '550e8400-e29b-41d4-a716-446655440202',
                 'name' => 'Premium',
                 'priceCents' => 2900,
-                'stripeProductId' => 'prod_premium',
-                'stripePriceId' => 'price_premium',
+                'stripeProductId' => 'prod_SzyMBnO3IGhEvd',
+                'stripePriceId' => 'price_1S3yPyKDTlasvqJZfydeU1XE',
                 'maxForms' => 20,
                 'maxSubmissionsPerMonth' => 10000,
                 'maxStorageMb' => 100,
@@ -35,8 +35,8 @@ class PlanFixtures extends Fixture
                 'id' => '550e8400-e29b-41d4-a716-446655440203',
                 'name' => 'Pro',
                 'priceCents' => 9900,
-                'stripeProductId' => 'prod_pro',
-                'stripePriceId' => 'price_pro',
+                'stripeProductId' => 'prod_SzyN1h7WmOE0iO',
+                'stripePriceId' => 'price_1S3yQSKDTlasvqJZPFhWL4Xd',
                 'maxForms' => -1, // Illimité
                 'maxSubmissionsPerMonth' => 100000,
                 'maxStorageMb' => 500,
@@ -49,7 +49,9 @@ class PlanFixtures extends Fixture
             $plan->setName($planData['name']);
             $plan->setPriceCents($planData['priceCents']);
             $plan->setStripeProductId($planData['stripeProductId']);
-            $plan->setStripePriceId($planData['stripePriceId']);
+            if ($planData['stripePriceId'] !== null) {
+                $plan->setStripePriceId($planData['stripePriceId']);
+            }
             $plan->setMaxForms($planData['maxForms']);
             $plan->setMaxSubmissionsPerMonth($planData['maxSubmissionsPerMonth']);
             $plan->setMaxStorageMb($planData['maxStorageMb']);

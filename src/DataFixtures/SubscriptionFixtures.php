@@ -17,8 +17,8 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             [
                 'id' => '550e8400-e29b-41d4-a716-446655440501',
                 'user' => '550e8400-e29b-41d4-a716-446655440002',
-                'plan' => '550e8400-e29b-41d4-a716-446655440202',
-                'stripeSubscriptionId' => 'sub_premium_123',
+                'plan' => '550e8400-e29b-41d4-a716-446655440201',
+                'stripeSubscriptionId' => 'sub_free_123',
                 'startDate' => '2024-01-15',
                 'endDate' => '2025-01-15',
                 'status' => Subscription::STATUS_ACTIVE,
@@ -39,8 +39,8 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             [
                 'id' => '550e8400-e29b-41d4-a716-446655440503',
                 'user' => '550e8400-e29b-41d4-a716-446655440004',
-                'plan' => '550e8400-e29b-41d4-a716-446655440203',
-                'stripeSubscriptionId' => 'sub_pro_789',
+                'plan' => '550e8400-e29b-41d4-a716-446655440201',
+                'stripeSubscriptionId' => 'sub_free_789',
                 'startDate' => '2024-02-10',
                 'endDate' => '2025-02-10',
                 'status' => Subscription::STATUS_CANCELLED,
