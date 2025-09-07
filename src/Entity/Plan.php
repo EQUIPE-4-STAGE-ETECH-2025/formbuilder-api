@@ -26,8 +26,7 @@ class Plan
     #[Assert\Range(min: 0, max: 999999, minMessage: 'Le prix doit être au moins {{ limit }}', maxMessage: 'Le prix ne peut pas dépasser {{ limit }}')]
     private ?int $priceCents = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank(message: 'L\'ID produit Stripe est obligatoire')]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255, maxMessage: 'L\'ID produit Stripe ne peut pas dépasser {{ limit }} caractères')]
     private ?string $stripeProductId = null;
 

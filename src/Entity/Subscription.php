@@ -55,6 +55,7 @@ class Subscription
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
+
     public function __construct()
     {
         $this->id = Uuid::v4();
@@ -188,4 +189,5 @@ class Subscription
 
         return $this;
     }
+
 }

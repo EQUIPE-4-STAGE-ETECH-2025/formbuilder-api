@@ -47,6 +47,9 @@ class SubscriptionService
      */
     public function createSubscription(User $user, Plan $plan): Subscription
     {
+        // Annuler tous les autres abonnements actifs avant de créer le nouveau
+        $this->cancelActiveSubscriptions($user);
+
         $subscription = new Subscription();
         $subscription->setUser($user);
         $subscription->setPlan($plan);
@@ -73,16 +76,6 @@ class SubscriptionService
         return $subscription !== null;
     }
 
-    /**
-     * Récupère la subscription active d'un utilisateur
-     */
-    public function getActiveSubscription(User $user): ?Subscription
-    {
-        return $this->subscriptionRepository->findOneBy([
-            'user' => $user,
-            'status' => Subscription::STATUS_ACTIVE,
-        ]);
-    }
 
     /**
      * Annule toutes les subscriptions actives d'un utilisateur
@@ -122,6 +115,15 @@ class SubscriptionService
      */
     public function createFromStripeSubscription(User $user, StripeSubscription $stripeSubscription): Subscription
     {
+        // Vérifier si l'abonnement existe déjà
+        $existingSubscription = $this->subscriptionRepository->findOneBy([
+            'stripeSubscriptionId' => $stripeSubscription->id,
+        ]);
+
+        if ($existingSubscription) {
+            return $existingSubscription;
+        }
+
         // Récupérer le plan correspondant au price_id Stripe
         $priceId = $stripeSubscription->items->data[0]->price->id;
         $plan = $this->planRepository->findOneBy(['stripePriceId' => $priceId]);
@@ -129,6 +131,9 @@ class SubscriptionService
         if (! $plan) {
             throw new RuntimeException("Plan introuvable pour le price_id Stripe: {$priceId}");
         }
+
+        // Annuler tous les autres abonnements actifs avant de créer le nouveau
+        $this->cancelActiveSubscriptions($user);
 
         $subscription = new Subscription();
         $subscription->setUser($user);

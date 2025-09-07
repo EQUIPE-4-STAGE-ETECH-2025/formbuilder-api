@@ -25,9 +25,28 @@ class PlanControllerTest extends WebTestCase
         $this->assertEquals('Premium', $responseData[1]['name']);
         $this->assertEquals('Pro', $responseData[2]['name']);
 
-        // Vérifie les champs du premier plan
-        $this->assertEquals(0, $responseData[0]['priceCents']);
-        $this->assertEquals(3, $responseData[0]['maxForms']);
-        $this->assertEquals(500, $responseData[0]['maxSubmissionsPerMonth']);
+        // Vérifie les champs du premier plan (Free)
+        $freePlan = $responseData[0];
+        $this->assertEquals(0, $freePlan['priceCents']);
+        $this->assertEquals(3, $freePlan['maxForms']);
+        $this->assertEquals(500, $freePlan['maxSubmissionsPerMonth']);
+        $this->assertEquals(10, $freePlan['maxStorageMb']);
+
+        // Vérifie les nouveaux champs
+        $this->assertArrayHasKey('stripeProductId', $freePlan);
+        $this->assertArrayHasKey('stripePriceId', $freePlan);
+        $this->assertArrayHasKey('features', $freePlan);
+
+        // Vérifie les valeurs spécifiques pour le plan Free
+        $this->assertIsArray($freePlan['features']);
+
+        // Vérifie les champs du plan Premium
+        $premiumPlan = $responseData[1];
+        $this->assertEquals(2900, $premiumPlan['priceCents']);
+
+        // Vérifie les champs du plan Pro
+        $proPlan = $responseData[2];
+        $this->assertEquals(9900, $proPlan['priceCents']);
+        $this->assertEquals(-1, $proPlan['maxForms']); // Illimité
     }
 }
