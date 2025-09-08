@@ -137,8 +137,9 @@ class FormEmbedService
         }
 
         $style = sprintf(
-            'width: %s; border: %s; border-radius: %s; box-shadow: %s;',
+            'width: %s; height: %s; border: %s; border-radius: %s; box-shadow: %s;',
             $width,
+            $height,
             $border,
             $borderRadius,
             $boxShadow
