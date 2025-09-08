@@ -56,7 +56,12 @@ class SubscriptionFixtures extends Fixture implements DependentFixtureInterface
             $subscription->setPlan($this->getReference($subscriptionData['plan'], Plan::class));
             $subscription->setStripeSubscriptionId($subscriptionData['stripeSubscriptionId']);
             $subscription->setStartDate(new \DateTime($subscriptionData['startDate']));
-            $subscription->setEndDate(new \DateTime($subscriptionData['endDate']));
+
+            // Les abonnements Free n'ont pas de date de fin
+            $plan = $subscription->getPlan();
+            if ($plan && ! $plan->isFree()) {
+                $subscription->setEndDate(new \DateTime($subscriptionData['endDate']));
+            }
             $subscription->setStatus($subscriptionData['status']);
             $subscription->setCreatedAt(new \DateTimeImmutable($subscriptionData['createdAt']));
             $subscription->setUpdatedAt(new \DateTimeImmutable($subscriptionData['updatedAt']));

@@ -57,7 +57,12 @@ class SubscriptionService
         $subscription->setPlan($plan);
         $subscription->setStripeSubscriptionId('sub_free_' . uniqid());
         $subscription->setStartDate(new \DateTime());
-        $subscription->setEndDate(new \DateTime('+1 year'));
+
+        // Les plans gratuits n'ont pas de date d'expiration
+        if (! $plan->isFree()) {
+            $subscription->setEndDate(new \DateTime('+1 month'));
+        }
+
         $subscription->setStatus(Subscription::STATUS_ACTIVE);
 
         $this->subscriptionRepository->save($subscription, true);

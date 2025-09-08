@@ -219,4 +219,12 @@ class Plan
 
         return $this;
     }
+
+    /**
+     * Vérifie si le plan est gratuit (prix = 0)
+     */
+    public function isFree(): bool
+    {
+        return $this->priceCents === 0;
+    }
 }

@@ -37,8 +37,7 @@ class Subscription
     #[Assert\NotNull(message: 'La date de début est obligatoire')]
     private ?\DateTimeInterface $startDate = null;
 
-    #[ORM\Column(type: 'date')]
-    #[Assert\NotNull(message: 'La date de fin est obligatoire')]
+    #[ORM\Column(type: 'date', nullable: true)]
     #[Assert\GreaterThan(propertyPath: 'startDate', message: 'La date de fin doit être postérieure à la date de début')]
     private ?\DateTimeInterface $endDate = null;
 
@@ -129,7 +128,7 @@ class Subscription
         return $this->endDate;
     }
 
-    public function setEndDate(\DateTimeInterface $endDate): static
+    public function setEndDate(?\DateTimeInterface $endDate): static
     {
         $this->endDate = $endDate;
 
@@ -164,6 +163,20 @@ class Subscription
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;
+    }
+
+    /**
+     * Vérifie si l'abonnement est expiré
+     * Les abonnements gratuits (sans date de fin) ne sont jamais expirés
+     */
+    public function isExpired(): bool
+    {
+        // Si pas de date de fin (abonnement gratuit), jamais expiré
+        if ($this->endDate === null) {
+            return false;
+        }
+
+        return $this->endDate < new \DateTime();
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable

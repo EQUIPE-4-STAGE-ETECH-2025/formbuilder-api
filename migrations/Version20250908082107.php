@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250905123140 extends AbstractMigration
+final class Version20250908082107 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -55,7 +55,7 @@ final class Version20250905123140 extends AbstractMigration
         $this->addSql('COMMENT ON COLUMN form_version.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN form_version.form_id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN form_version.created_at IS \'(DC2Type:datetime_immutable)\'');
-        $this->addSql('CREATE TABLE plan (id UUID NOT NULL, name VARCHAR(255) NOT NULL, price_cents INT NOT NULL, stripe_product_id VARCHAR(255) NOT NULL, stripe_price_id VARCHAR(255) DEFAULT NULL, max_forms INT NOT NULL, max_submissions_per_month INT NOT NULL, max_storage_mb INT NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE plan (id UUID NOT NULL, name VARCHAR(255) NOT NULL, price_cents INT NOT NULL, stripe_product_id VARCHAR(255) DEFAULT NULL, stripe_price_id VARCHAR(255) DEFAULT NULL, max_forms INT NOT NULL, max_submissions_per_month INT NOT NULL, max_storage_mb INT NOT NULL, PRIMARY KEY(id))');
         $this->addSql('COMMENT ON COLUMN plan.id IS \'(DC2Type:uuid)\'');
         $this->addSql('CREATE TABLE plan_feature (id UUID NOT NULL, plan_id UUID NOT NULL, feature_id UUID NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_A1683D6EE899029B ON plan_feature (plan_id)');
@@ -72,7 +72,7 @@ final class Version20250905123140 extends AbstractMigration
         $this->addSql('COMMENT ON COLUMN submission.id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN submission.form_id IS \'(DC2Type:uuid)\'');
         $this->addSql('COMMENT ON COLUMN submission.submitted_at IS \'(DC2Type:datetime_immutable)\'');
-        $this->addSql('CREATE TABLE subscription (id UUID NOT NULL, user_id UUID NOT NULL, plan_id UUID NOT NULL, stripe_subscription_id VARCHAR(255) NOT NULL, start_date DATE NOT NULL, end_date DATE NOT NULL, status VARCHAR(20) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
+        $this->addSql('CREATE TABLE subscription (id UUID NOT NULL, user_id UUID NOT NULL, plan_id UUID NOT NULL, stripe_subscription_id VARCHAR(255) NOT NULL, start_date DATE NOT NULL, end_date DATE DEFAULT NULL, status VARCHAR(20) NOT NULL, created_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, updated_at TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE INDEX IDX_A3C664D3A76ED395 ON subscription (user_id)');
         $this->addSql('CREATE INDEX IDX_A3C664D3E899029B ON subscription (plan_id)');
         $this->addSql('COMMENT ON COLUMN subscription.id IS \'(DC2Type:uuid)\'');
@@ -102,15 +102,7 @@ final class Version20250905123140 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA realtime');
-        $this->addSql('CREATE SCHEMA pgbouncer');
         $this->addSql('CREATE SCHEMA public');
-        $this->addSql('CREATE SCHEMA extensions');
-        $this->addSql('CREATE SCHEMA vault');
-        $this->addSql('CREATE SCHEMA graphql_public');
-        $this->addSql('CREATE SCHEMA graphql');
-        $this->addSql('CREATE SCHEMA auth');
-        $this->addSql('CREATE SCHEMA storage');
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F5642B8210');
         $this->addSql('ALTER TABLE audit_log DROP CONSTRAINT FK_F6E1C0F56C066AFE');
         $this->addSql('ALTER TABLE form DROP CONSTRAINT FK_5288FD4FA76ED395');
