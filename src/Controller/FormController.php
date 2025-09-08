@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Dto\CreateFormDto;
 use App\Dto\UpdateFormDto;
 use App\Entity\User;
+use App\Exception\QuotaExceededException;
 use App\Service\FormService;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -158,6 +159,19 @@ class FormController extends AbstractController
                 'data' => $form,
                 'message' => 'Formulaire créé avec succès',
             ], Response::HTTP_CREATED);
+        } catch (QuotaExceededException $e) {
+            $this->logger->warning('Quota dépassé lors de la création du formulaire', [
+                'user_id' => $user->getId(),
+                'action_type' => $e->getActionType(),
+                'current_usage' => $e->getCurrentUsage(),
+                'max_limit' => $e->getMaxLimit(),
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'error' => 'Quota dépassé',
+                'data' => $e->toArray(),
+            ], $e->getHttpStatusCode());
         } catch (\Exception $e) {
             $this->logger->error('Erreur lors de la création du formulaire', [
                 'error' => $e->getMessage(),

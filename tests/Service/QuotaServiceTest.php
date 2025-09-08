@@ -5,6 +5,7 @@ namespace App\Tests\Service;
 use App\Entity\Plan;
 use App\Entity\Subscription;
 use App\Entity\User;
+use App\Exception\QuotaExceededException;
 use App\Repository\FormRepository;
 use App\Repository\SubmissionRepository;
 use App\Repository\SubscriptionRepository;
@@ -177,8 +178,8 @@ class QuotaServiceTest extends TestCase
 
         $this->setupMocksForQuotaCalculation($user, $subscription, 10, 250);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Limite de formulaires atteinte (10/10)');
+        $this->expectException(QuotaExceededException::class);
+        $this->expectExceptionMessage('Limite de formulaires atteinte. Mettez à jour votre plan pour créer plus de formulaires.');
 
         $this->quotaService->enforceQuotaLimit($user, 'create_form');
     }
@@ -191,8 +192,8 @@ class QuotaServiceTest extends TestCase
 
         $this->setupMocksForQuotaCalculation($user, $subscription, 5, 1000);
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Limite de soumissions atteinte (1000/1000)');
+        $this->expectException(QuotaExceededException::class);
+        $this->expectExceptionMessage('Limite de soumissions atteinte pour ce mois. Mettez à jour votre plan pour accepter plus de soumissions.');
 
         $this->quotaService->enforceQuotaLimit($user, 'submit_form');
     }
