@@ -7,6 +7,7 @@ use App\Entity\Subscription;
 use App\Entity\User;
 use App\Repository\PlanRepository;
 use App\Repository\SubscriptionRepository;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Stripe\Subscription as StripeSubscription;
 
@@ -14,7 +15,8 @@ class SubscriptionService
 {
     public function __construct(
         private readonly PlanRepository $planRepository,
-        private readonly SubscriptionRepository $subscriptionRepository
+        private readonly SubscriptionRepository $subscriptionRepository,
+        private readonly LoggerInterface $logger
     ) {
     }
 
@@ -115,6 +117,7 @@ class SubscriptionService
      */
     public function createFromStripeSubscription(User $user, StripeSubscription $stripeSubscription): Subscription
     {
+
         // Vérifier si l'abonnement existe déjà
         $existingSubscription = $this->subscriptionRepository->findOneBy([
             'stripeSubscriptionId' => $stripeSubscription->id,
@@ -124,8 +127,23 @@ class SubscriptionService
             return $existingSubscription;
         }
 
+
+        // Récupérer l'abonnement complet depuis Stripe si nécessaire
+        try {
+            $stripeSubscription = $this->ensureCompleteStripeSubscription($stripeSubscription);
+        } catch (\Exception $e) {
+            $this->logger->error("Erreur lors de la récupération des données Stripe: " . $e->getMessage());
+            // Ne pas lancer l'exception, continuer avec les données disponibles
+        }
+
         // Récupérer le plan correspondant au price_id Stripe
-        $priceId = $stripeSubscription->items->data[0]->price->id;
+        $priceId = null;
+        if (isset($stripeSubscription->items) && isset($stripeSubscription->items->data[0]->price->id)) {
+            $priceId = $stripeSubscription->items->data[0]->price->id;
+        } else {
+            throw new RuntimeException("Impossible de récupérer le price_id depuis l'abonnement Stripe: {$stripeSubscription->id}");
+        }
+
         $plan = $this->planRepository->findOneBy(['stripePriceId' => $priceId]);
 
         if (! $plan) {
@@ -140,11 +158,43 @@ class SubscriptionService
         $subscription->setPlan($plan);
         $subscription->setStripeSubscriptionId($stripeSubscription->id);
 
-        $startDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_start ?? time()));
-        $endDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_end ?? time()));
+        // Conversion correcte des timestamps Stripe
 
-        $subscription->setStartDate($startDate ?: new \DateTime());
-        $subscription->setEndDate($endDate ?: new \DateTime());
+        $startDate = null;
+        $endDate = null;
+
+        // Essayer d'abord current_period_start/end
+        if (isset($stripeSubscription['current_period_start'])) {
+            $startDate = \DateTime::createFromFormat('U', (string) $stripeSubscription['current_period_start']);
+        }
+        if (isset($stripeSubscription['current_period_end'])) {
+            $endDate = \DateTime::createFromFormat('U', (string) $stripeSubscription['current_period_end']);
+        }
+
+        // Si les dates de période ne sont pas disponibles, utiliser billing_cycle_anchor
+        if (! $startDate && $stripeSubscription->billing_cycle_anchor) {
+            $startDate = \DateTime::createFromFormat('U', (string) $stripeSubscription->billing_cycle_anchor);
+        }
+
+        // Si endDate n'est pas disponible, calculer basé sur l'intervalle
+        if (! $endDate && $startDate) {
+            $interval = $this->getBillingInterval($stripeSubscription);
+            $endDate = clone $startDate;
+            $endDate->modify($interval);
+        }
+
+
+        // Validation des dates avec fallback final
+        if (! $startDate) {
+            $startDate = new \DateTime();
+        }
+
+        if (! $endDate) {
+            $endDate = new \DateTime('+1 month');
+        }
+
+        $subscription->setStartDate($startDate);
+        $subscription->setEndDate($endDate);
         $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
 
         $this->subscriptionRepository->save($subscription, true);
@@ -157,6 +207,9 @@ class SubscriptionService
      */
     public function updateFromStripeSubscription(Subscription $subscription, StripeSubscription $stripeSubscription): Subscription
     {
+        // Récupérer l'abonnement complet depuis Stripe si nécessaire
+        $stripeSubscription = $this->ensureCompleteStripeSubscription($stripeSubscription);
+
         // Mettre à jour le plan si nécessaire
         $priceId = $stripeSubscription->items->data[0]->price->id;
         $plan = $this->planRepository->findOneBy(['stripePriceId' => $priceId]);
@@ -165,11 +218,17 @@ class SubscriptionService
             $subscription->setPlan($plan);
         }
 
-        $startDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_start ?? time()));
-        $endDate = \DateTime::createFromFormat('U', (string) ($stripeSubscription->current_period_end ?? time()));
+        // Conversion correcte des timestamps Stripe
+        $startDate = \DateTime::createFromFormat('U', (string) $stripeSubscription['current_period_start']);
+        $endDate = \DateTime::createFromFormat('U', (string) $stripeSubscription['current_period_end']);
 
-        $subscription->setStartDate($startDate ?: new \DateTime());
-        $subscription->setEndDate($endDate ?: new \DateTime());
+        // Validation des dates
+        if (! $startDate || ! $endDate) {
+            throw new RuntimeException("Impossible de parser les dates de l'abonnement Stripe: {$stripeSubscription->id}");
+        }
+
+        $subscription->setStartDate($startDate);
+        $subscription->setEndDate($endDate);
         $subscription->setStatus($this->mapStripeStatusToLocal($stripeSubscription->status));
         $subscription->setUpdatedAt(new \DateTimeImmutable());
 
@@ -189,5 +248,54 @@ class SubscriptionService
             'canceled', 'incomplete_expired' => Subscription::STATUS_CANCELLED,
             default => Subscription::STATUS_SUSPENDED,
         };
+    }
+
+    /**
+     * Récupère l'intervalle de facturation depuis l'abonnement Stripe
+     */
+    private function getBillingInterval(StripeSubscription $stripeSubscription): string
+    {
+        if (isset($stripeSubscription->items) &&
+            isset($stripeSubscription->items->data[0]->price->recurring->interval)) {
+
+            $interval = $stripeSubscription->items->data[0]->price->recurring->interval;
+            $intervalCount = $stripeSubscription->items->data[0]->price->recurring->interval_count ?? 1;
+
+            return match ($interval) {
+                'day' => "+{$intervalCount} day",
+                'week' => "+{$intervalCount} week",
+                'month' => "+{$intervalCount} month",
+                'year' => "+{$intervalCount} year",
+                default => "+1 month",
+            };
+        }
+
+        return "+1 month";
+    }
+
+    /**
+     * Récupère un abonnement complet depuis Stripe si nécessaire
+     */
+    private function ensureCompleteStripeSubscription(StripeSubscription $stripeSubscription): StripeSubscription
+    {
+
+        // Vérifier si les champs essentiels sont présents
+        if (! isset($stripeSubscription['current_period_end']) ||
+            ! isset($stripeSubscription['current_period_start']) ||
+            ! isset($stripeSubscription->items) ||
+            ! isset($stripeSubscription->items->data[0]->price->id)) {
+
+            try {
+                $completeSubscription = \Stripe\Subscription::retrieve($stripeSubscription->id);
+
+                return $completeSubscription;
+            } catch (\Exception $e) {
+                $this->logger->error("Erreur lors de la récupération depuis Stripe: " . $e->getMessage());
+
+                throw $e;
+            }
+        }
+
+        return $stripeSubscription;
     }
 }
