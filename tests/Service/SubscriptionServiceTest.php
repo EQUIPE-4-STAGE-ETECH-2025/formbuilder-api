@@ -9,21 +9,25 @@ use App\Repository\PlanRepository;
 use App\Repository\SubscriptionRepository;
 use App\Service\SubscriptionService;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class SubscriptionServiceTest extends TestCase
 {
     private SubscriptionRepository $subscriptionRepository;
     private PlanRepository $planRepository;
+    private LoggerInterface $logger;
     private SubscriptionService $subscriptionService;
 
     protected function setUp(): void
     {
         $this->subscriptionRepository = $this->createMock(SubscriptionRepository::class);
         $this->planRepository = $this->createMock(PlanRepository::class);
+        $this->logger = $this->createMock(LoggerInterface::class);
 
         $this->subscriptionService = new SubscriptionService(
             $this->planRepository,
-            $this->subscriptionRepository
+            $this->subscriptionRepository,
+            $this->logger
         );
     }
 

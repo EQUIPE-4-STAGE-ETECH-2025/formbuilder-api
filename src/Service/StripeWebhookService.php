@@ -9,6 +9,7 @@ use App\Repository\UserRepository;
 use Psr\Log\LoggerInterface;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\Stripe;
 use Stripe\Webhook;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -17,12 +18,15 @@ class StripeWebhookService
     public function __construct(
         #[Autowire('%env(STRIPE_WEBHOOK_SECRET)%')]
         private readonly string $webhookSecret,
+        #[Autowire('%env(STRIPE_SECRET_KEY)%')]
+        private readonly string $stripeSecretKey,
         private readonly UserRepository $userRepository,
         private readonly SubscriptionRepository $subscriptionRepository,
         private readonly SubscriptionService $subscriptionService,
         private readonly EmailService $emailService,
         private readonly LoggerInterface $logger
     ) {
+        Stripe::setApiKey($this->stripeSecretKey);
     }
 
     /**
