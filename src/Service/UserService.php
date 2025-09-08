@@ -120,6 +120,14 @@ class UserService
 
         $this->authorizationService->requirePermissionOnObject('USER_DELETE', $user);
 
+        foreach ($user->getAuditLogsAsTarget() as $log) {
+            $this->userRepository->getEntityManager()->remove($log);
+        }
+
+        foreach ($user->getAuditLogsAsAdmin() as $log) {
+            $this->userRepository->getEntityManager()->remove($log);
+        }
+
         $this->userRepository->remove($user, true);
     }
 }
