@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Dto\SubmitFormDto;
+use App\Exception\QuotaExceededException;
 use App\Service\AuthorizationService;
 use App\Service\SubmissionExportService;
 use App\Service\SubmissionService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,37 +22,63 @@ class SubmissionController extends AbstractController
         private readonly SubmissionService $submissionService,
         private readonly SubmissionExportService $submissionExportService,
         private readonly AuthorizationService $authorizationService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
     #[Route('/{id}/submit', name: 'submit_form', methods: ['POST'])]
     public function submitForm(Request $request, string $id): JsonResponse
     {
-        $form = $this->submissionService->getFormById($id);
-        if (! $form) {
-            throw new NotFoundHttpException('Formulaire introuvable.');
+        try {
+            $form = $this->submissionService->getFormById($id);
+            if (! $form) {
+                throw new NotFoundHttpException('Formulaire introuvable.');
+            }
+
+            $data = json_decode($request->getContent(), true);
+            if (! is_array($data)) {
+                return $this->json(['error' => 'Données invalides'], 400);
+            }
+
+            $dto = new SubmitFormDto($data);
+
+            $submission = $this->submissionService->submitForm(
+                $form,
+                $dto->getData(),
+                $request->getClientIp()
+            );
+
+            return $this->json([
+                'id' => $submission->getId(),
+                'formId' => $submission->getForm()?->getId(),
+                'data' => $submission->getData(),
+                'submittedAt' => $submission->getSubmittedAt()?->format('c'),
+                'ipAddress' => $submission->getIpAddress(),
+            ]);
+        } catch (QuotaExceededException $e) {
+            $this->logger->warning('Quota dépassé lors de la soumission du formulaire', [
+                'form_id' => $id,
+                'action_type' => $e->getActionType(),
+                'current_usage' => $e->getCurrentUsage(),
+                'max_limit' => $e->getMaxLimit(),
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'error' => 'Quota dépassé',
+                'data' => $e->toArray(),
+            ], $e->getHttpStatusCode());
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la soumission du formulaire', [
+                'form_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->json([
+                'success' => false,
+                'error' => 'Erreur lors de la soumission du formulaire',
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $data = json_decode($request->getContent(), true);
-        if (! is_array($data)) {
-            return $this->json(['error' => 'Données invalides'], 400);
-        }
-
-        $dto = new SubmitFormDto($data);
-
-        $submission = $this->submissionService->submitForm(
-            $form,
-            $dto->getData(),
-            $request->getClientIp()
-        );
-
-        return $this->json([
-            'id' => $submission->getId(),
-            'formId' => $submission->getForm()?->getId(),
-            'data' => $submission->getData(),
-            'submittedAt' => $submission->getSubmittedAt()?->format('c'),
-            'ipAddress' => $submission->getIpAddress(),
-        ]);
     }
 
     #[Route('/{id}/submissions', name: 'list_submissions', methods: ['GET'])]

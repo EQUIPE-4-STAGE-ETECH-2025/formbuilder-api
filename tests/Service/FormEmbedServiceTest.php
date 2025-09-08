@@ -55,6 +55,7 @@ class FormEmbedServiceTest extends TestCase
         $this->assertEquals($form->getId(), $result->formId);
         $this->assertEquals('test-jwt-token', $result->token);
         $this->assertStringContainsString('<iframe', $result->embedCode);
+        $this->assertStringContainsString('height="600"', $result->embedCode);
         $this->assertStringContainsString('http://localhost:3000/embed/', $result->embedUrl);
         $this->assertStringContainsString($form->getId(), $result->embedUrl);
         $this->assertStringContainsString('token=test-jwt-token', $result->embedUrl);
@@ -103,7 +104,7 @@ class FormEmbedServiceTest extends TestCase
 
         $this->assertEquals($customization, $result->customization);
         $this->assertStringContainsString('width: 800px', $result->embedCode);
-        $this->assertStringContainsString('height: 400px', $result->embedCode);
+        $this->assertStringContainsString('height="400"', $result->embedCode);
         $this->assertStringContainsString('border: 1px solid #ccc', $result->embedCode);
         $this->assertStringContainsString('border-radius: 12px', $result->embedCode);
     }

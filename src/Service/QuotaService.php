@@ -103,25 +103,28 @@ class QuotaService
 
             switch ($actionType) {
                 case 'create_form':
-                    throw new \RuntimeException(sprintf(
-                        'Limite de formulaires atteinte (%d/%d). Mettez à jour votre plan pour créer plus de formulaires.',
+                    throw new \App\Exception\QuotaExceededException(
+                        $actionType,
+                        'Limite de formulaires atteinte. Mettez à jour votre plan pour créer plus de formulaires.',
                         $quotas['usage']['form_count'],
                         $quotas['limits']['max_forms']
-                    ));
+                    );
 
                 case 'submit_form':
-                    throw new \RuntimeException(sprintf(
-                        'Limite de soumissions atteinte (%d/%d) pour ce mois. Mettez à jour votre plan pour accepter plus de soumissions.',
+                    throw new \App\Exception\QuotaExceededException(
+                        $actionType,
+                        'Limite de soumissions atteinte pour ce mois. Mettez à jour votre plan pour accepter plus de soumissions.',
                         $quotas['usage']['submission_count'],
                         $quotas['limits']['max_submissions_per_month']
-                    ));
+                    );
 
                 case 'upload_file':
-                    throw new \RuntimeException(sprintf(
-                        'Limite de stockage atteinte (%d/%d MB). Mettez à jour votre plan pour plus d\'espace de stockage.',
+                    throw new \App\Exception\QuotaExceededException(
+                        $actionType,
+                        'Limite de stockage atteinte. Mettez à jour votre plan pour plus d\'espace de stockage.',
                         $quotas['usage']['storage_used_mb'],
                         $quotas['limits']['max_storage_mb']
-                    ));
+                    );
             }
         }
     }

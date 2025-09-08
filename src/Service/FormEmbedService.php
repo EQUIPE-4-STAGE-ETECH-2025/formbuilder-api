@@ -130,19 +130,25 @@ class FormEmbedService
         $borderRadius = $customization['borderRadius'] ?? '8px';
         $boxShadow = $customization['boxShadow'] ?? '0 4px 6px rgba(0, 0, 0, 0.1)';
 
+        // Extraire la valeur numérique de height pour l'attribut HTML
+        $heightValue = preg_replace('/[^0-9]/', '', $height);
+        if (empty($heightValue)) {
+            $heightValue = '600';
+        }
+
         $style = sprintf(
-            'width: %s; height: %s; border: %s; border-radius: %s; box-shadow: %s;',
+            'width: %s; border: %s; border-radius: %s; box-shadow: %s;',
             $width,
-            $height,
             $border,
             $borderRadius,
             $boxShadow
         );
 
         return sprintf(
-            '<iframe src="%s" style="%s" frameborder="0" scrolling="auto" allowtransparency="true"></iframe>',
+            '<iframe src="%s" style="%s" frameborder="0" scrolling="auto" allowtransparency="true" height="%s"></iframe>',
             htmlspecialchars($embedUrl, ENT_QUOTES, 'UTF-8'),
-            htmlspecialchars($style, ENT_QUOTES, 'UTF-8')
+            htmlspecialchars($style, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($heightValue, ENT_QUOTES, 'UTF-8')
         );
     }
 

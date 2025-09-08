@@ -164,10 +164,15 @@ class SubmissionControllerTest extends WebTestCase
 
         $response = $this->client->getResponse();
         $status = $response->getStatusCode();
-        $this->assertContains($status, [200, 400], "HTTP status should be 200 (if quota not exceeded) or 400 (if exceeded)");
+        $this->assertContains($status, [200, 429], "HTTP status should be 200 (if quota not exceeded) or 429 (if exceeded)");
 
-        if ($status === 400) {
-            $this->assertStringContainsString('Limite de soumissions atteinte', $response->getContent());
+        if ($status === 429) {
+            $json = json_decode($response->getContent(), true);
+            $this->assertArrayHasKey('error', $json);
+            $this->assertEquals('Quota dépassé', $json['error']);
+            $this->assertArrayHasKey('data', $json);
+            $this->assertArrayHasKey('error_code', $json['data']);
+            $this->assertEquals('QUOTA_SUBMISSIONS_EXCEEDED', $json['data']['error_code']);
         }
     }
 }
