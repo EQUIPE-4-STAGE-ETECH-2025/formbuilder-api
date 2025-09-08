@@ -157,4 +157,22 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 
         return $conn->executeQuery($sql)->fetchAllAssociative();
     }
+
+    /**
+     * Supprime tous les logs d'audit liés à un utilisateur
+     */
+    public function removeUserAuditLogs(User $user): void
+    {
+        $em = $this->getEntityManager();
+
+        // Supprimer les logs où l'utilisateur est la cible
+        foreach ($user->getAuditLogsAsTarget() as $log) {
+            $em->remove($log);
+        }
+
+        // Supprimer les logs où l'utilisateur est l'admin
+        foreach ($user->getAuditLogsAsAdmin() as $log) {
+            $em->remove($log);
+        }
+    }
 }
