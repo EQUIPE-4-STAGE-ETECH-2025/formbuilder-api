@@ -120,6 +120,31 @@ class SubmissionService
     }
 
     /**
+     * Récupère les soumissions avec le total en une seule opération
+     * @return array{submissions: Submission[], total: int}
+     */
+    public function getFormSubmissionsWithTotal(Form $form, int $page = 1, int $limit = 10): array
+    {
+        $offset = ($page - 1) * $limit;
+
+        // Récupérer les soumissions paginées
+        $submissions = $this->submissionRepository->findBy(
+            ['form' => $form],
+            ['submittedAt' => 'DESC'],
+            $limit,
+            $offset
+        );
+
+        // Récupérer le total
+        $total = $this->submissionRepository->count(['form' => $form]);
+
+        return [
+            'submissions' => $submissions,
+            'total' => $total,
+        ];
+    }
+
+    /**
      * Compte le nombre total de soumissions pour un formulaire
      */
     public function countFormSubmissions(Form $form): int

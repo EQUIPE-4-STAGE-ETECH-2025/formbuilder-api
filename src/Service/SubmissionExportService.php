@@ -5,12 +5,14 @@ namespace App\Service;
 use App\Dto\SubmissionExportDto;
 use App\Entity\Form;
 use App\Entity\User;
+use App\Repository\FormVersionRepository;
 use App\Repository\SubmissionRepository;
 
 class SubmissionExportService
 {
     public function __construct(
-        private SubmissionRepository $submissionRepository
+        private SubmissionRepository $submissionRepository,
+        private FormVersionRepository $formVersionRepository
     ) {
     }
 
@@ -32,6 +34,9 @@ class SubmissionExportService
             $offset
         );
 
+        // Récupère les champs du formulaire avec leurs labels
+        $fieldLabelsMap = $this->getFieldLabelsMap($form);
+
         // Détermine l'ordre des champs dynamiques
         $fieldOrder = [];
         if (! empty($submissions)) {
@@ -39,8 +44,14 @@ class SubmissionExportService
             $fieldOrder = array_keys($firstData);
         }
 
-        // En-têtes CSV : champs fixes + dynamiques
-        $headers = ['ID', 'Form ID', 'Submitted At', 'IP Address', ...$fieldOrder];
+        // Convertit les IDs des champs en labels pour les en-têtes
+        $fieldLabels = array_map(
+            fn ($fieldId) => $fieldLabelsMap[$fieldId] ?? $fieldId,
+            $fieldOrder
+        );
+
+        // En-têtes CSV : champs fixes + dynamiques avec labels
+        $headers = ['ID', 'Form ID', 'Submitted At', 'IP Address', ...$fieldLabels];
 
         $rows = [];
         $rows[] = $headers; // <-- la première ligne = en-têtes, pas de ligne vide avant
@@ -66,5 +77,31 @@ class SubmissionExportService
         return str_contains($escaped, ';') || str_contains($escaped, '"') || str_contains($escaped, "\n")
             ? "\"$escaped\""
             : $escaped;
+    }
+
+    /**
+     * Crée un mapping entre les IDs des champs et leurs labels
+     *
+     * @return array<string, string>
+     */
+    private function getFieldLabelsMap(Form $form): array
+    {
+        $formVersion = $this->formVersionRepository->findLatestVersionWithFields($form);
+
+        if ($formVersion === null) {
+            return [];
+        }
+
+        $fieldLabelsMap = [];
+        foreach ($formVersion->getFormFields() as $formField) {
+            $fieldId = $formField->getId();
+            $fieldLabel = $formField->getLabel();
+
+            if ($fieldId !== null && $fieldLabel !== null) {
+                $fieldLabelsMap[$fieldId] = $fieldLabel;
+            }
+        }
+
+        return $fieldLabelsMap;
     }
 }

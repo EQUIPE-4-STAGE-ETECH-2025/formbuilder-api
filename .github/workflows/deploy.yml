@@ -7,32 +7,33 @@ on:
     pull_request:
         branches: [main, dev]
 
-# Variables d'environnement globales pour éviter les répétitions
+# Variables d'environnement globales pour tous les jobs
 env:
     PHP_VERSION: "8.2.12"
     PHP_EXTENSIONS: "mbstring, pdo_pgsql, intl, zip"
     APP_SECRET: "ci_secret_key_for_testing"
     APP_URL: "http://localhost:8000"
-    JWT_SECRET: "fake_jwt_secret_key_for_ci_testing_only"
+    JWT_SECRET: "jwt_secret_for_testing"
     MAILER_DSN: "null://null"
     FRONTEND_URL: "http://localhost:3000"
     DATABASE_HOST: "localhost"
     DATABASE_PORT: "5432"
     DATABASE_USER: "postgres"
     DATABASE_PASSWORD: "postgres"
+    DATABASE_NAME: "formbuilder"
     STRIPE_SECRET_KEY: "sk_test_fake_key_for_testing"
     STRIPE_PUBLISHABLE_KEY: "pk_test_fake_key_for_testing"
     STRIPE_WEBHOOK_SECRET: "whsec_fake_webhook_secret_for_testing"
 
 jobs:
-    # Job 1: Vérifications de qualité de code
+    # Job 1: Vérification de la qualité du code
     quality:
         runs-on: ubuntu-latest
         steps:
-            # Récupération du code source
+            # Récupération du code source depuis le repository
             - uses: actions/checkout@v4
 
-            # Configuration de PHP avec les extensions nécessaires
+            # Configuration de PHP avec les extensions nécessaires et xdebug pour la couverture
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
@@ -40,6 +41,7 @@ jobs:
                   extensions: ${{ env.PHP_EXTENSIONS }}
                   coverage: xdebug
 
+            # Mise en cache des dépendances Composer pour accélérer les builds
             - name: Cache dependencies
               uses: actions/cache@v3
               with:
@@ -51,17 +53,16 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
-            # Création du fichier .env pour l'environnement CI
+            # Création du fichier .env pour les tests de qualité
             - name: Create .env file
               run: |
                   cat << EOF > .env
                   APP_ENV=dev
                   APP_SECRET=${{ env.APP_SECRET }}
                   APP_URL=${{ env.APP_URL }}
-                  DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db
                   DATABASE_HOST=${{ env.DATABASE_HOST }}
                   DATABASE_PORT=${{ env.DATABASE_PORT }}
-                  DATABASE_NAME=formbuilder
+                  DATABASE_NAME=${{ env.DATABASE_NAME }}
                   DATABASE_USER=${{ env.DATABASE_USER }}
                   DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
                   JWT_SECRET=${{ env.JWT_SECRET }}
@@ -72,24 +73,17 @@ jobs:
                   STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
 
-            # Vérification de la syntaxe PHP
+            # Vérification de la syntaxe PHP sur tous les fichiers source et de test
             - name: PHP Lint
               run: find src tests -name "*.php" -exec php -l {} \;
 
-            # Vérification du style de code avec PHP CS Fixer
+            # Vérification du formatage du code avec PHP CS Fixer
             - name: PHP CS Fixer
               run: ./vendor/bin/php-cs-fixer fix --dry-run --diff --config=.php-cs-fixer.dist.php
 
-            # Création du cache Symfony pour PHPStan
-            - name: Create Symfony cache
-              run: php bin/console cache:warmup --env=dev
-
-            # Configuration de l'environnement pour PHPStan
-            - name: Setup environment for PHPStan
+            # Préparation du cache Symfony pour les tests
+            - name: Prepare Symfony cache
               run: |
-                  # Créer le répertoire var/cache s'il n'existe pas
-                  mkdir -p var/cache/dev
-                  # S'assurer que le container XML existe
                   php bin/console cache:clear --env=dev
                   php bin/console cache:warmup --env=dev
 
@@ -97,11 +91,11 @@ jobs:
             - name: PHPStan
               run: ./vendor/bin/phpstan analyse
 
-    # Job 2: Tests unitaires avec base de données PostgreSQL locale
+    # Job 2: Exécution des tests unitaires et d'intégration avec couverture de code
     test:
         runs-on: ubuntu-latest
         needs: quality
-        # Service PostgreSQL temporaire pour les tests (base de données locale)
+        # Configuration du service PostgreSQL pour les tests d'intégration
         services:
             postgres:
                 image: postgres:15
@@ -115,11 +109,12 @@ jobs:
                     --health-retries 5
                 ports:
                     - 5432:5432
+
         steps:
-            # Récupération du code source
+            # Récupération du code source depuis le repository
             - uses: actions/checkout@v4
 
-            # Configuration de PHP avec les extensions nécessaires
+            # Configuration de PHP avec les extensions nécessaires et xdebug pour la couverture
             - name: Setup PHP
               uses: shivammathur/setup-php@v2
               with:
@@ -127,6 +122,7 @@ jobs:
                   extensions: ${{ env.PHP_EXTENSIONS }}
                   coverage: xdebug
 
+            # Mise en cache des dépendances Composer pour accélérer les builds
             - name: Cache dependencies
               uses: actions/cache@v3
               with:
@@ -138,17 +134,17 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
-            # Configuration de l'environnement de test avec base de données locale
+            # Configuration de l'environnement de test avec les variables d'environnement
             - name: Setup test environment
               run: |
-                  # Créer le fichier .env principal pour les tests
+                  # Création du fichier .env avec la même configuration que le job quality
                   cat << EOF > .env
                   APP_ENV=test
                   APP_SECRET=${{ env.APP_SECRET }}
                   APP_URL=${{ env.APP_URL }}
                   DATABASE_HOST=${{ env.DATABASE_HOST }}
                   DATABASE_PORT=${{ env.DATABASE_PORT }}
-                  DATABASE_NAME=formbuilder
+                  DATABASE_NAME=${{ env.DATABASE_NAME }}
                   DATABASE_USER=${{ env.DATABASE_USER }}
                   DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
                   JWT_SECRET=${{ env.JWT_SECRET }}
@@ -159,46 +155,17 @@ jobs:
                   STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
                   EOF
 
-                  # Créer le fichier .env.test.local pour les variables spécifiques aux tests
-                  cat << EOF > .env.test.local
-                  APP_ENV=test
-                  APP_URL=${{ env.APP_URL }}
-                  DATABASE_HOST=${{ env.DATABASE_HOST }}
-                  DATABASE_PORT=${{ env.DATABASE_PORT }}
-                  DATABASE_NAME=formbuilder
-                  DATABASE_USER=${{ env.DATABASE_USER }}
-                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
-                  JWT_SECRET=${{ env.JWT_SECRET }}
-                  MAILER_DSN=${{ env.MAILER_DSN }}
-                  FRONTEND_URL=${{ env.FRONTEND_URL }}
-                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
-                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
-                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
-                  EOF
-            # Création du schéma de base de données pour les tests
-            - name: Create database schema
-              run: php bin/console doctrine:schema:create --env=test
+            # Initialisation de la base de données de test avec le schéma et les fixtures
+            - name: Setup database
+              run: |
+                  php bin/console doctrine:schema:create --env=test
+                  php bin/console doctrine:fixtures:load --env=test --no-interaction
 
-            # Chargement des fixtures de test
-            - name: Load test fixtures
-              run: php bin/console doctrine:fixtures:load --env=test --no-interaction
-
-            # Exécution des tests unitaires avec génération de rapport de couverture
+            # Exécution des tests PHPUnit avec génération du rapport de couverture
             - name: Run tests with coverage
               run: ./vendor/bin/phpunit --coverage-clover=coverage.xml --coverage-text --coverage-filter=src
 
-            # Vérification du seuil de couverture de code (minimum 80%) - DÉSACTIVÉ TEMPORAIREMENT
-            # - name: Check code coverage threshold
-            #   run: |
-            #       COVERAGE=$(./vendor/bin/phpunit --coverage-text --coverage-filter=src | grep -E "Lines:" | awk '{print $2}' | sed 's/%//')
-            #       if (( $(echo "$COVERAGE < 80" | bc -l) )); then
-            #           echo "Code coverage is $COVERAGE%, minimum required is 80%"
-            #           exit 1
-            #       else
-            #           echo "Code coverage is $COVERAGE%, meets minimum requirement of 80%"
-            #       fi
-
-            # Envoi du rapport de couverture vers Codecov
+            # Upload du rapport de couverture vers Codecov pour le suivi
             - name: Upload coverage to Codecov
               uses: codecov/codecov-action@v3
               with:
@@ -206,8 +173,8 @@ jobs:
                   flags: unittests
                   name: codecov-umbrella
 
-            # Nettoyage de la base de données de test
-            - name: Cleanup test database
+            # Nettoyage de la base de données de test après les tests
+            - name: Cleanup
               run: php bin/console doctrine:schema:drop --env=test --force
 
     # Job 3: Vérification de sécurité des dépendances
@@ -237,39 +204,9 @@ jobs:
             - name: Install dependencies
               run: composer install --prefer-dist --no-progress
 
-            # Création du fichier .env file
-            - name: Create .env file
-              run: |
-                  cat << EOF > .env
-                  APP_ENV=dev
-                  APP_SECRET=${{ env.APP_SECRET }}
-                  APP_URL=${{ env.APP_URL }}
-                  DATABASE_URL=sqlite:///%kernel.project_dir%/var/test.db
-                  DATABASE_HOST=${{ env.DATABASE_HOST }}
-                  DATABASE_PORT=${{ env.DATABASE_PORT }}
-                  DATABASE_NAME=formbuilder
-                  DATABASE_USER=${{ env.DATABASE_USER }}
-                  DATABASE_PASSWORD=${{ env.DATABASE_PASSWORD }}
-                  JWT_SECRET=${{ env.JWT_SECRET }}
-                  MAILER_DSN=${{ env.MAILER_DSN }}
-                  FRONTEND_URL=${{ env.FRONTEND_URL }}
-                  STRIPE_SECRET_KEY=${{ env.STRIPE_SECRET_KEY }}
-                  STRIPE_PUBLISHABLE_KEY=${{ env.STRIPE_PUBLISHABLE_KEY }}
-                  STRIPE_WEBHOOK_SECRET=${{ env.STRIPE_WEBHOOK_SECRET }}
-                  EOF
-
             # Vérification des vulnérabilités de sécurité dans les dépendances
-            - name: Security check
+            - name: Security audit
               run: composer audit --format=json --no-interaction
-
-            # Vérification de sécurité supplémentaire avec Symfony Security Checker
-            - name: Symfony Security Checker
-              run: |
-                  if command -v security-checker &> /dev/null; then
-                      security-checker security:check composer.lock
-                  else
-                      echo "Symfony Security Checker not available, skipping..."
-                  fi
 
     # Job 4: Déploiement vers Fly.io (production)
     deploy:

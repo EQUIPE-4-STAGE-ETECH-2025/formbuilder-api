@@ -53,17 +53,24 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * Récupère le nom du plan actif pour un utilisateur
+     * Récupère le nom du plan actif pour un utilisateur avec une requête optimisée
      */
     public function getPlanNameForUser(User $user): string
     {
-        $activeSubscription = $user->getSubscriptions()
-            ->filter(fn (Subscription $s): bool => $s->getStatus() === Subscription::STATUS_ACTIVE)
-            ->last();
+        $result = $this->createQueryBuilder('u')
+            ->select('p.name as planName')
+            ->leftJoin('u.subscriptions', 's')
+            ->leftJoin('s.plan', 'p')
+            ->where('u = :user')
+            ->andWhere('s.status = :activeStatus')
+            ->setParameter('user', $user)
+            ->setParameter('activeStatus', Subscription::STATUS_ACTIVE)
+            ->orderBy('s.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
 
-        return $activeSubscription && $activeSubscription->getPlan()
-            ? $activeSubscription->getPlan()->getName() ?? 'Free'
-            : 'Free';
+        return $result ? $result['planName'] : 'Free';
     }
 
     public function countNonAdminUsers(): int
@@ -116,46 +123,58 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
-     * Récupère tous les utilisateurs avec leurs statistiques en une seule requête
-     * pour éviter le problème N+1 et les doublons
+     * Récupère tous les utilisateurs avec leurs statistiques avec DQL optimisé
      *
      * @return array<int, array<string, mixed>>
      */
     public function findAllWithStats(): array
     {
-        $sql = "
-            SELECT 
-                u.id,
-                u.first_name,
-                u.last_name,
-                u.email,
-                u.role,
-                u.created_at,
-                COALESCE(p.name, 'Free') AS plan_name,
-                COUNT(DISTINCT f.id) AS forms_count,
-                COUNT(DISTINCT s.id) AS submissions_count
-            FROM users u
-            LEFT JOIN (
-                SELECT sub1.*
-                FROM subscription sub1
-                INNER JOIN (
-                    SELECT user_id, MAX(created_at) AS max_created
-                    FROM subscription
-                    WHERE status = 'ACTIVE'
-                    GROUP BY user_id
-                ) sub2 ON sub1.user_id = sub2.user_id AND sub1.created_at = sub2.max_created
-            ) sub ON u.id = sub.user_id
-            LEFT JOIN plan p ON sub.plan_id = p.id
-            LEFT JOIN form f ON u.id = f.user_id
-            LEFT JOIN submission s ON f.id = s.form_id
-            WHERE u.role != 'ADMIN'
-            GROUP BY u.id, u.first_name, u.last_name, u.email, u.role, u.created_at, p.name
-            ORDER BY u.created_at DESC
-        ";
+        // Utiliser DQL pour une meilleure compatibilité et maintenabilité
+        $qb = $this->createQueryBuilder('u')
+            ->select([
+                'u.id',
+                'u.firstName',
+                'u.lastName',
+                'u.email',
+                'u.role',
+                'u.createdAt',
+                'COALESCE(p.name, \'Free\') as planName',
+                'COUNT(DISTINCT f.id) as formsCount',
+                'COUNT(DISTINCT s.id) as submissionsCount',
+            ])
+            ->leftJoin('u.subscriptions', 'sub', 'WITH', 'sub.status = :activeStatus')
+            ->leftJoin('sub.plan', 'p')
+            ->leftJoin('u.forms', 'f')
+            ->leftJoin('f.submissions', 's')
+            ->where('u.role != :adminRole')
+            ->groupBy('u.id', 'u.firstName', 'u.lastName', 'u.email', 'u.role', 'u.createdAt', 'p.name')
+            ->orderBy('u.createdAt', 'DESC')
+            ->setParameter('activeStatus', Subscription::STATUS_ACTIVE)
+            ->setParameter('adminRole', 'ADMIN');
 
-        $conn = $this->getEntityManager()->getConnection();
+        return $qb->getQuery()->getArrayResult();
+    }
 
-        return $conn->executeQuery($sql)->fetchAllAssociative();
+    /**
+     * Récupère tous les utilisateurs (objets User) avec leurs statistiques en une seule requête optimisée
+     *
+     * @return array<int, User>
+     */
+    public function findAllUsersWithStats(): array
+    {
+        // Récupérer tous les utilisateurs avec leurs relations en une seule requête
+        $qb = $this->createQueryBuilder('u')
+            ->leftJoin('u.subscriptions', 'sub', 'WITH', 'sub.status = :activeStatus')
+            ->leftJoin('sub.plan', 'p')
+            ->leftJoin('u.forms', 'f')
+            ->leftJoin('f.submissions', 's')
+            ->addSelect('sub', 'p', 'f', 's')
+            ->where('u.role != :adminRole')
+            ->orderBy('u.createdAt', 'DESC')
+            ->setParameter('activeStatus', Subscription::STATUS_ACTIVE)
+            ->setParameter('adminRole', 'ADMIN');
+
+        return $qb->getQuery()->getResult();
     }
 
     /**

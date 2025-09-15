@@ -34,9 +34,9 @@ class FormController extends AbstractController
         $user = $this->getUser();
 
         try {
-            // Paramètres de pagination
+            // Paramètres de pagination optimisés
             $page = max(1, (int) $request->query->get('page', 1));
-            $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+            $limit = min(25, max(5, (int) $request->query->get('limit', 10))); // Limites plus restreintes pour de meilleures performances
 
             // Filtres
             $filters = [];
@@ -47,11 +47,15 @@ class FormController extends AbstractController
                 $filters['search'] = $request->query->get('search');
             }
 
-            $forms = $this->formService->getAllForms($user, $filters, $page, $limit);
+            // Récupérer les données paginées avec le total en une seule requête
+            $result = $this->formService->getAllFormsWithTotal($user, $filters, $page, $limit);
+            $forms = $result['forms'];
+            $total = $result['total'];
 
             $this->logger->info('Liste des formulaires récupérée', [
                 'user_id' => $user->getId(),
                 'count' => count($forms),
+                'total' => $total,
                 'page' => $page,
                 'filters' => $filters,
             ]);
@@ -62,7 +66,8 @@ class FormController extends AbstractController
                 'meta' => [
                     'page' => $page,
                     'limit' => $limit,
-                    'total' => count($forms),
+                    'total' => $total,
+                    'totalPages' => ceil($total / $limit),
                 ],
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
