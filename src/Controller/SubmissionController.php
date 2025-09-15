@@ -94,12 +94,14 @@ class SubmissionController extends AbstractController
             return $this->json(['error' => 'Accès refusé'], 403);
         }
 
-        // Paramètres de pagination
+        // Paramètres de pagination avec validation améliorée
         $page = max(1, (int) $request->query->get('page', 1));
-        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $limit = min(50, max(5, (int) $request->query->get('limit', 10))); // Réduire la limite max pour de meilleures performances
 
-        $submissions = $this->submissionService->getFormSubmissions($form, $page, $limit);
-        $totalSubmissions = $this->submissionService->countFormSubmissions($form);
+        // Utiliser une seule requête pour récupérer les données paginées et le total
+        $result = $this->submissionService->getFormSubmissionsWithTotal($form, $page, $limit);
+        $submissions = $result['submissions'];
+        $totalSubmissions = $result['total'];
 
         $result = array_map(fn ($s) => [
             'id' => $s->getId(),

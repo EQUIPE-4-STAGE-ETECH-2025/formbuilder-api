@@ -80,29 +80,91 @@ class FormService
      */
     public function getAllForms(User $user, array $filters = [], int $page = 1, int $limit = 20): array
     {
-        $queryBuilder = $this->formRepository->createQueryBuilder('f')
-            ->where('f.user = :user')
-            ->setParameter('user', $user)
-            ->orderBy('f.updatedAt', 'DESC')
-            ->setFirstResult(($page - 1) * $limit)
-            ->setMaxResults($limit);
+        // Utiliser une requête SQL optimisée avec comptage direct des submissions
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('f', 'COUNT(s.id) as submissionsCount')
+           ->from(Form::class, 'f')
+           ->leftJoin('f.submissions', 's')
+           ->where('f.user = :user')
+           ->setParameter('user', $user)
+           ->groupBy('f.id')
+           ->orderBy('f.updatedAt', 'DESC')
+           ->setFirstResult(($page - 1) * $limit)
+           ->setMaxResults($limit);
 
         // Appliquer les filtres
         if (isset($filters['status'])) {
-            $queryBuilder
-                ->andWhere('f.status = :status')
-                ->setParameter('status', $filters['status']);
+            $qb->andWhere('f.status = :status')
+               ->setParameter('status', $filters['status']);
         }
 
         if (isset($filters['search'])) {
-            $queryBuilder
-                ->andWhere('f.title LIKE :search OR f.description LIKE :search')
-                ->setParameter('search', '%' . $filters['search'] . '%');
+            $qb->andWhere('f.title LIKE :search OR f.description LIKE :search')
+               ->setParameter('search', '%' . $filters['search'] . '%');
         }
 
-        $forms = $queryBuilder->getQuery()->getResult();
+        $results = $qb->getQuery()->getResult();
 
-        return array_map(fn (Form $form) => $this->mapToDto($form), $forms);
+        $forms = [];
+        foreach ($results as $result) {
+            $form = $result[0]; // L'entité Form
+            $submissionsCount = (int) $result['submissionsCount'];
+            // Créer le DTO avec le comptage déjà récupéré
+            $forms[] = $this->mapToDtoWithCount($form, $submissionsCount);
+        }
+
+        return $forms;
+    }
+
+    /**
+     * Récupère les formulaires avec le total en une seule opération
+     * @param array<string, mixed> $filters
+     * @return array{forms: FormResponseDto[], total: int}
+     */
+    public function getAllFormsWithTotal(User $user, array $filters = [], int $page = 1, int $limit = 10): array
+    {
+        // Construire la requête de base
+        $qb = $this->entityManager->createQueryBuilder();
+        $qb->select('f', 'COUNT(s.id) as submissionsCount')
+           ->from(Form::class, 'f')
+           ->leftJoin('f.submissions', 's')
+           ->where('f.user = :user')
+           ->setParameter('user', $user)
+           ->groupBy('f.id');
+
+        // Appliquer les filtres
+        if (isset($filters['status'])) {
+            $qb->andWhere('f.status = :status')
+               ->setParameter('status', $filters['status']);
+        }
+
+        if (isset($filters['search'])) {
+            $qb->andWhere('f.title LIKE :search OR f.description LIKE :search')
+               ->setParameter('search', '%' . $filters['search'] . '%');
+        }
+
+        // Requête pour le total (sans pagination)
+        $totalQb = clone $qb;
+        $total = count($totalQb->select('f.id')->getQuery()->getResult());
+
+        // Appliquer la pagination et le tri
+        $qb->orderBy('f.updatedAt', 'DESC')
+           ->setFirstResult(($page - 1) * $limit)
+           ->setMaxResults($limit);
+
+        $results = $qb->getQuery()->getResult();
+
+        $forms = [];
+        foreach ($results as $result) {
+            $form = $result[0]; // L'entité Form
+            $submissionsCount = (int) $result['submissionsCount'];
+            $forms[] = $this->mapToDtoWithCount($form, $submissionsCount);
+        }
+
+        return [
+            'forms' => $forms,
+            'total' => $total,
+        ];
     }
 
     public function getFormById(string $id, User $user): FormResponseDto
@@ -293,16 +355,24 @@ class FormService
 
     private function mapToDto(Form $form, bool $includeVersions = false): FormResponseDto
     {
-        $submissionsCount = $form->getSubmissions()->count();
+        // Utiliser une requête directe au lieu de lazy loading
+        $submissionsCount = $this->entityManager->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM submission WHERE form_id = ?', [$form->getId()]);
 
         $versions = [];
         $currentVersion = null;
 
         if ($includeVersions) {
-            $formVersions = $this->formVersionRepository->findBy(
-                ['form' => $form],
-                ['versionNumber' => 'DESC']
-            );
+            // Utiliser une requête avec JOIN pour éviter les requêtes multiples
+            $formVersions = $this->formVersionRepository
+                ->createQueryBuilder('fv')
+                ->leftJoin('fv.formFields', 'ff')
+                ->addSelect('ff')
+                ->where('fv.form = :form')
+                ->setParameter('form', $form)
+                ->orderBy('fv.versionNumber', 'DESC')
+                ->getQuery()
+                ->getResult();
 
             $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
             $currentVersion = ! empty($versions) ? $versions[0] : null;
@@ -379,6 +449,58 @@ class FormService
             schema: $version->getSchema(),
             createdAt: $versionCreatedAt,
             fields: $fields
+        );
+    }
+
+    /**
+     * Méthode optimisée qui utilise le comptage pré-calculé
+     */
+    private function mapToDtoWithCount(Form $form, int $submissionsCount, bool $includeVersions = false): FormResponseDto
+    {
+        $versions = [];
+        $currentVersion = null;
+
+        if ($includeVersions) {
+            // Utiliser une requête avec JOIN pour éviter les requêtes multiples
+            $formVersions = $this->formVersionRepository
+                ->createQueryBuilder('fv')
+                ->leftJoin('fv.formFields', 'ff')
+                ->addSelect('ff')
+                ->where('fv.form = :form')
+                ->setParameter('form', $form)
+                ->orderBy('fv.versionNumber', 'DESC')
+                ->getQuery()
+                ->getResult();
+
+            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
+            $currentVersion = ! empty($versions) ? $versions[0] : null;
+        }
+
+        // Validation des propriétés requises
+        $formId = $form->getId();
+        $formTitle = $form->getTitle();
+        $formDescription = $form->getDescription();
+        $formStatus = $form->getStatus();
+        $formCreatedAt = $form->getCreatedAt();
+        $formUpdatedAt = $form->getUpdatedAt();
+
+        if ($formId === null || $formTitle === null || $formDescription === null ||
+            $formStatus === null || $formCreatedAt === null || $formUpdatedAt === null) {
+            throw new \InvalidArgumentException('Le formulaire a des propriétés manquantes');
+        }
+
+        return new FormResponseDto(
+            id: $formId,
+            title: $formTitle,
+            description: $formDescription,
+            status: $formStatus,
+            publishedAt: $form->getPublishedAt(),
+            createdAt: $formCreatedAt,
+            updatedAt: $formUpdatedAt,
+            schema: $currentVersion?->schema ?? [],
+            submissionsCount: $submissionsCount, // Utiliser le comptage pré-calculé
+            currentVersion: $currentVersion,
+            versions: $versions
         );
     }
 }

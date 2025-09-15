@@ -38,4 +38,20 @@ class FormVersionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * Récupère la version la plus récente d'un formulaire avec ses champs
+     */
+    public function findLatestVersionWithFields(\App\Entity\Form $form): ?FormVersion
+    {
+        return $this->createQueryBuilder('fv')
+            ->leftJoin('fv.formFields', 'ff')
+            ->addSelect('ff')
+            ->where('fv.form = :form')
+            ->setParameter('form', $form)
+            ->orderBy('fv.versionNumber', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

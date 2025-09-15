@@ -100,6 +100,7 @@ class UserService
     }
 
     /**
+     * Liste optimisée des utilisateurs avec leurs statistiques
      * @return array<int, User>
      */
     public function listUsers(): array
@@ -108,7 +109,7 @@ class UserService
             throw new AccessDeniedHttpException('Accès refusé.');
         }
 
-        return $this->userRepository->findAll();
+        return $this->userRepository->findAllUsersWithStats();
     }
 
     public function deleteUser(string $id): void

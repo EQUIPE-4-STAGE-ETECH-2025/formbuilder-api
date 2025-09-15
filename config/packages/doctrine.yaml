@@ -10,12 +10,13 @@ doctrine:
         charset: utf8
         profiling_collect_backtrace: "%kernel.debug%"
         use_savepoints: true
+
         # Filter to ignore Supabase schemas
         schema_filter: ~^(?!auth|storage|realtime|graphql|information_schema|pg_|supabase)~
+
         # Use only public schema
         default_table_options:
             schema: public
-
         types:
             uuid: Symfony\Bridge\Doctrine\Types\UuidType
 
