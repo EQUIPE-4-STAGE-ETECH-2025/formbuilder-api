@@ -374,7 +374,7 @@ class FormService
                 ->getQuery()
                 ->getResult();
 
-            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
+            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions ?? []);
             $currentVersion = ! empty($versions) ? $versions[0] : null;
         }
 
@@ -472,7 +472,7 @@ class FormService
                 ->getQuery()
                 ->getResult();
 
-            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions);
+            $versions = array_map(fn (FormVersion $version) => $this->mapVersionToDto($version), $formVersions ?? []);
             $currentVersion = ! empty($versions) ? $versions[0] : null;
         }
 
