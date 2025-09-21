@@ -3,14 +3,12 @@
 namespace App\Tests\Service;
 
 use App\Entity\Form;
-use App\Entity\FormField;
 use App\Entity\FormVersion;
 use App\Entity\Submission;
 use App\Entity\User;
 use App\Repository\FormVersionRepository;
 use App\Repository\SubmissionRepository;
 use App\Service\SubmissionExportService;
-use Doctrine\Common\Collections\ArrayCollection;
 use PHPUnit\Framework\TestCase;
 
 class SubmissionExportServiceTest extends TestCase
@@ -34,23 +32,32 @@ class SubmissionExportServiceTest extends TestCase
         $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
         $form = $this->createConfiguredMock(Form::class, ['getUser' => $user, 'getId' => 'form-1']);
 
-        // Créer les champs de formulaire avec leurs labels
-        $formField1 = $this->createConfiguredMock(FormField::class, [
-            'getId' => 'name',
-            'getLabel' => 'Nom complet',
-        ]);
-        $formField2 = $this->createConfiguredMock(FormField::class, [
-            'getId' => 'email',
-            'getLabel' => 'Adresse email',
-        ]);
-        $formField3 = $this->createConfiguredMock(FormField::class, [
-            'getId' => 'message',
-            'getLabel' => 'Message',
-        ]);
+        // Créer le schéma JSON avec les champs et leurs labels
+        $schema = [
+            'fields' => [
+                [
+                    'id' => 'name',
+                    'label' => 'Nom complet',
+                    'type' => 'text',
+                    'required' => true,
+                ],
+                [
+                    'id' => 'email',
+                    'label' => 'Adresse email',
+                    'type' => 'email',
+                    'required' => true,
+                ],
+                [
+                    'id' => 'message',
+                    'label' => 'Message',
+                    'type' => 'textarea',
+                    'required' => false,
+                ],
+            ],
+        ];
 
-        $formFields = new ArrayCollection([$formField1, $formField2, $formField3]);
         $formVersion = $this->createConfiguredMock(FormVersion::class, [
-            'getFormFields' => $formFields,
+            'getSchema' => $schema,
         ]);
 
         $this->formVersionRepository
@@ -119,19 +126,21 @@ class SubmissionExportServiceTest extends TestCase
         $user = $this->createConfiguredMock(User::class, ['getId' => 'user-1']);
         $form = $this->createConfiguredMock(Form::class, ['getUser' => $user, 'getId' => 'form-1']);
 
-        // Créer un champ sans label (fallback sur l'ID)
-        $formField1 = $this->createConfiguredMock(FormField::class, [
-            'getId' => 'field1',
-            'getLabel' => 'Nom',
-        ]);
-        $formField2 = $this->createConfiguredMock(FormField::class, [
-            'getId' => 'unknown_field',
-            'getLabel' => null, // Pas de label
-        ]);
+        // Créer le schéma JSON avec un champ qui a un label et un autre sans label
+        $schema = [
+            'fields' => [
+                [
+                    'id' => 'field1',
+                    'label' => 'Nom',
+                    'type' => 'text',
+                    'required' => true,
+                ],
+                // Note: 'other_field' n'est pas dans le schéma, donc il utilisera son ID comme fallback
+            ],
+        ];
 
-        $formFields = new ArrayCollection([$formField1, $formField2]);
         $formVersion = $this->createConfiguredMock(FormVersion::class, [
-            'getFormFields' => $formFields,
+            'getSchema' => $schema,
         ]);
 
         $this->formVersionRepository

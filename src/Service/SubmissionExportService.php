@@ -92,13 +92,15 @@ class SubmissionExportService
             return [];
         }
 
+        $schema = $formVersion->getSchema();
         $fieldLabelsMap = [];
-        foreach ($formVersion->getFormFields() as $formField) {
-            $fieldId = $formField->getId();
-            $fieldLabel = $formField->getLabel();
 
-            if ($fieldId !== null && $fieldLabel !== null) {
-                $fieldLabelsMap[$fieldId] = $fieldLabel;
+        // Utilise le schéma JSON au lieu des entités FormField
+        if (isset($schema['fields']) && is_array($schema['fields'])) {
+            foreach ($schema['fields'] as $field) {
+                if (is_array($field) && isset($field['id']) && isset($field['label'])) {
+                    $fieldLabelsMap[$field['id']] = $field['label'];
+                }
             }
         }
 
