@@ -36,7 +36,7 @@ class EmailServiceTest extends TestCase
         // Twig doit rendre le template et retourner la chaîne HTML
         $this->twig->expects($this->once())
             ->method('render')
-            ->with('verify_email.html.twig', ['username' => $username, 'verificationUrl' => $verificationUrl])
+            ->with('emails/verify_email.html.twig', ['username' => $username, 'verificationUrl' => $verificationUrl])
             ->willReturn($renderedHtml);
 
         // On attend que le mailer envoie un Email dont le contenu html est $renderedHtml
@@ -83,7 +83,7 @@ class EmailServiceTest extends TestCase
 
         $this->twig->expects($this->once())
             ->method('render')
-            ->with('reset_password.html.twig', ['username' => $username, 'resetUrl' => $resetUrl])
+            ->with('emails/reset_password.html.twig', ['username' => $username, 'resetUrl' => $resetUrl])
             ->willReturn($renderedHtml);
 
         $this->mailer->expects($this->once())

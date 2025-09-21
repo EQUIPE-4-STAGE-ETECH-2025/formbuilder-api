@@ -94,12 +94,8 @@ class QuotaNotificationServiceTest extends TestCase
 
         $this->emailService
             ->expects($this->once())
-            ->method('sendEmail')
-            ->with(
-                $user->getEmail(),
-                'Alerte quota - 80% atteint - FormBuilder',
-                $this->stringContains('Vous avez atteint 80%')
-            );
+            ->method('sendQuotaAlert')
+            ->with($user, 80, $quotaData);
 
         $this->quotaStatusService
             ->expects($this->once())
@@ -133,12 +129,8 @@ class QuotaNotificationServiceTest extends TestCase
 
         $this->emailService
             ->expects($this->once())
-            ->method('sendEmail')
-            ->with(
-                $user->getEmail(),
-                'Alerte quota - 100% atteint - FormBuilder',
-                $this->stringContains('Vous avez atteint 100%')
-            );
+            ->method('sendQuotaAlert')
+            ->with($user, 100, $quotaData);
 
         $this->quotaStatusService
             ->expects($this->once())
@@ -203,7 +195,7 @@ class QuotaNotificationServiceTest extends TestCase
 
         $this->emailService
             ->expects($this->once())
-            ->method('sendEmail')
+            ->method('sendQuotaAlert')
             ->willThrowException(new \Exception('SMTP error'));
 
         $this->logger

@@ -1,0 +1,23 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Abonnement confirmé - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bienvenue {{ user.firstName }} !</h2>
+    
+    <p>Votre abonnement FormBuilder a été confirmé avec succès.</p>
+    
+    <h3>Détails de votre abonnement :</h3>
+    <ul>
+        <li>ID d'abonnement : {{ stripeSubscription.id }}</li>
+        <li>Statut : {{ stripeSubscription.status|title }}</li>
+        <li>Période de facturation : du {{ stripeSubscription.current_period_start|date('d/m/Y') }} au {{ stripeSubscription.current_period_end|date('d/m/Y') }}</li>
+    </ul>
+    
+    <p>Vous pouvez maintenant profiter pleinement de toutes les fonctionnalités de votre plan.</p>
+    
+    <p>Merci de votre confiance !</p>
+    <p>L'équipe FormBuilder</p>
+{% endblock %}

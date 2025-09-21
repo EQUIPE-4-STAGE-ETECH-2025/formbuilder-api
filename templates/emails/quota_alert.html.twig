@@ -1,0 +1,18 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Alerte quota - {{ percentage }}% atteint - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ user.firstName }} !</h2>
+    
+    <p>Vous avez atteint <strong>{{ percentage }}%</strong> de votre quota mensuel.</p>
+    
+    <h3>Détails de votre utilisation</h3>
+    <ul>
+        <li>Formulaires créés : {{ quotaData.forms_created ?? 0 }} / {{ quotaData.forms_limit ?? 'Illimité' }}</li>
+        <li>Soumissions reçues : {{ quotaData.submissions_received ?? 0 }} / {{ quotaData.submissions_limit ?? 'Illimité' }}</li>
+        <li>Stockage utilisé : {{ quotaData.storage_used ?? 0 }} / {{ quotaData.storage_limit ?? 'Illimité' }}</li>
+    </ul>
+{% endblock %}

@@ -49,8 +49,7 @@ class StripeController extends AbstractController
                 quantity: $data['quantity'] ?? 1,
                 mode: $data['mode'] ?? 'subscription',
                 metadata: $data['metadata'] ?? [],
-                allowPromotionCodes: $data['allow_promotion_codes'] ?? true,
-                trialPeriodDays: $data['trial_period_days'] ?? null
+                allowPromotionCodes: $data['allow_promotion_codes'] ?? true
             );
 
             $errors = $this->validator->validate($checkoutDto);
@@ -189,7 +188,6 @@ class StripeController extends AbstractController
                 customerId: $customer->id,
                 priceId: $data['price_id'] ?? '',
                 quantity: $data['quantity'] ?? 1,
-                trialPeriodDays: $data['trial_period_days'] ?? null,
                 metadata: array_merge(['user_id' => $user->getId()], $data['metadata'] ?? []),
                 defaultPaymentMethod: $data['default_payment_method'] ?? null
             );
@@ -216,7 +214,6 @@ class StripeController extends AbstractController
                     'status' => $subscription->status,
                     'current_period_start' => $subscription->current_period_start ?? null,
                     'current_period_end' => $subscription->current_period_end ?? null,
-                    'trial_end' => $subscription->trial_end,
                 ],
                 'status' => 'success',
             ], Response::HTTP_CREATED);

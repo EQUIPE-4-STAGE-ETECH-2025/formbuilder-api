@@ -92,8 +92,6 @@ class StripeWebhookService
             case 'customer.subscription.deleted':
                 return $this->handleSubscriptionDeleted($event);
 
-            case 'customer.subscription.trial_will_end':
-                return $this->handleTrialWillEnd($event);
 
             case 'invoice.created':
                 return $this->handleInvoiceCreated($event);
@@ -254,31 +252,6 @@ class StripeWebhookService
         ];
     }
 
-    /**
-     * Gère l'événement customer.subscription.trial_will_end
-     * @return array<string, mixed>
-     */
-    private function handleTrialWillEnd(Event $event): array
-    {
-        $stripeSubscription = $event->data->object;
-
-        $customerId = $stripeSubscription->customer ?? null;
-        if (! $customerId) {
-            throw new \RuntimeException('Customer ID manquant dans l\'abonnement');
-        }
-
-        $user = $this->getUserByStripeCustomerId($customerId);
-        if ($user && $stripeSubscription instanceof \Stripe\Subscription) {
-            // Envoyer un email de rappel de fin d'essai
-            $this->emailService->sendTrialEndingNotification($user, $stripeSubscription);
-        }
-
-        return [
-            'status' => 'success',
-            'message' => 'Notification de fin d\'essai envoyée',
-            'subscription_id' => $stripeSubscription->id,
-        ];
-    }
 
     /**
      * Gère l'événement invoice.paid

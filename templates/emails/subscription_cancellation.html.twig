@@ -1,0 +1,23 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Abonnement annulé - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ user.firstName }} !</h2>
+    
+    <p>Nous confirmons que votre abonnement FormBuilder a été annulé.</p>
+    
+    <h3>Que se passe-t-il maintenant ?</h3>
+    <ul>
+        <li>Votre abonnement reste actif jusqu'à la fin de votre période de facturation</li>
+        <li>Aucun nouveau paiement ne sera prélevé</li>
+        <li>Vous pouvez continuer à utiliser toutes les fonctionnalités jusqu'à l'expiration</li>
+        <li>Après expiration, votre compte passera automatiquement au plan gratuit</li>
+    </ul>
+    
+    <p>Nous sommes désolés de vous voir partir. Si vous changez d'avis, vous pouvez réactiver votre abonnement à tout moment.</p>
+    
+    <p>L'équipe FormBuilder</p>
+{% endblock %}

@@ -25,9 +25,6 @@ readonly class StripeSubscriptionDto
         #[Assert\Type(type: 'integer', message: 'La quantité doit être un nombre entier')]
         #[Assert\GreaterThan(value: 0, message: 'La quantité doit être supérieure à 0')]
         public int $quantity = 1,
-        #[Assert\Type(type: 'integer', message: 'trial_period_days doit être un nombre entier')]
-        #[Assert\GreaterThanOrEqual(value: 0, message: 'trial_period_days doit être positif ou nul')]
-        public ?int $trialPeriodDays = null,
         #[Assert\Type(type: 'array', message: 'Les métadonnées doivent être un tableau')]
         public array $metadata = [],
         #[Assert\Choice(

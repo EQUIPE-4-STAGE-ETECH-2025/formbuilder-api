@@ -1,0 +1,19 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Vérification de votre email - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ username }} !</h2>
+    
+    <p>Merci de vous être inscrit. Veuillez vérifier votre adresse email en cliquant sur le lien suivant :</p>
+    
+    <div style="text-align: center; margin: 32px 0;">
+        <a href="{{ verificationUrl }}" class="button-primary">
+            Vérifier mon email
+        </a>
+    </div>
+    
+    <p>Si vous n'avez pas créé de compte, ignorez cet email.</p>
+{% endblock %}

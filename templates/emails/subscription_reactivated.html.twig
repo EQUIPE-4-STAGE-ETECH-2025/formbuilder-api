@@ -1,0 +1,23 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Compte réactivé - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Excellente nouvelle {{ user.firstName }} !</h2>
+    
+    <p>Votre compte FormBuilder a été réactivé avec succès !</p>
+    
+    <h3>Vous pouvez maintenant :</h3>
+    <ul>
+        <li>Accéder à tous vos formulaires</li>
+        <li>Créer de nouveaux formulaires</li>
+        <li>Recevoir de nouvelles soumissions</li>
+        <li>Profiter de toutes les fonctionnalités de votre plan</li>
+    </ul>
+    
+    <p>Merci d'avoir régularisé votre situation !</p>
+    
+    <p>L'équipe FormBuilder</p>
+{% endblock %}

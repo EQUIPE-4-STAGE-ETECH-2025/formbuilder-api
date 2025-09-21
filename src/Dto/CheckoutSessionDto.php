@@ -34,9 +34,6 @@ readonly class CheckoutSessionDto
         public array $metadata = [],
         #[Assert\Type(type: 'boolean', message: 'allow_promotion_codes doit être un booléen')]
         public bool $allowPromotionCodes = true,
-        #[Assert\Type(type: 'integer', message: 'trial_period_days doit être un nombre entier')]
-        #[Assert\GreaterThanOrEqual(value: 0, message: 'trial_period_days doit être positif ou nul')]
-        public ?int $trialPeriodDays = null
     ) {
     }
 }
