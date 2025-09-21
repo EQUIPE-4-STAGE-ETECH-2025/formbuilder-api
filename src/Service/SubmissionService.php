@@ -87,15 +87,14 @@ class SubmissionService
 
         // Notification email au propriétaire du formulaire
         if ($form->getUser()?->getEmail()) {
-            $subject = sprintf("Nouvelle soumission pour votre formulaire '%s'", $form->getTitle());
-            $content = sprintf(
-                "Bonjour %s, <br><br>Une nouvelle soumission a été effectuée sur votre formulaire <strong>%s</strong>.",
-                $form->getUser()->getFirstName(),
-                $form->getTitle()
-            );
-
             try {
-                $this->emailService->sendEmail($form->getUser()->getEmail(), $subject, $content);
+                $totalSubmissions = $this->countFormSubmissions($form);
+                $this->emailService->sendNewSubmissionNotification(
+                    $form->getUser(),
+                    $form,
+                    $submission,
+                    $totalSubmissions
+                );
             } catch (\Exception) {
                 // Log uniquement, on ne bloque pas la soumission
             }

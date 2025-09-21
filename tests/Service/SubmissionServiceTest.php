@@ -82,10 +82,11 @@ class SubmissionServiceTest extends TestCase
         $this->entityManager->expects($this->once())->method('persist');
         $this->entityManager->expects($this->once())->method('flush');
         $this->quotaService->expects($this->once())->method('calculateCurrentQuotas')->with($user);
-        $this->emailService->expects($this->once())->method('sendEmail')->with(
-            'owner@example.com',
-            $this->stringContains('Nouvelle soumission'),
-            $this->stringContains('Test Form')
+        $this->emailService->expects($this->once())->method('sendNewSubmissionNotification')->with(
+            $user,
+            $this->isInstanceOf(Form::class),
+            $this->isInstanceOf(Submission::class),
+            $this->isType('int')
         );
 
         $submission = $this->submissionService->submitForm($form, $submissionData, '127.0.0.1');

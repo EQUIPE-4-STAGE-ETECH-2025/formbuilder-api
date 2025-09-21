@@ -108,9 +108,6 @@ class StripeService
             'expand' => ['latest_invoice.payment_intent'],
         ];
 
-        if ($subscriptionDto->trialPeriodDays !== null) {
-            $subscriptionData['trial_period_days'] = $subscriptionDto->trialPeriodDays;
-        }
 
         if ($subscriptionDto->defaultPaymentMethod !== null) {
             $subscriptionData['default_payment_method'] = $subscriptionDto->defaultPaymentMethod;

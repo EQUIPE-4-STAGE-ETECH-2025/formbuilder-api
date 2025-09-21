@@ -48,6 +48,10 @@ class FormService
             $form->setStatus($dto->status);
             $form->setUser($user);
 
+            if ($dto->status === 'PUBLISHED') {
+                $form->setPublishedAt(new \DateTimeImmutable());
+            }
+
             $this->entityManager->persist($form);
             $this->entityManager->flush();
 

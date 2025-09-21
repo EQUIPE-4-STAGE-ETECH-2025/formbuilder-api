@@ -1,0 +1,28 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Problème de paiement - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ user.firstName }} !</h2>
+    
+    {% if attemptNumber == 1 %}
+        <p>Nous avons rencontré un problème lors du traitement de votre paiement.</p>
+    {% elseif attemptNumber == 2 %}
+        <p>Votre paiement a échoué pour la deuxième fois.</p>
+    {% else %}
+        <p>C'est votre dernière chance avant la suspension de votre compte.</p>
+    {% endif %}
+    
+    <h3>Détails de la facture :</h3>
+    <ul>
+        <li>Montant : {{ (invoice.amount_due / 100)|number_format(2) }} {{ invoice.currency|upper }}</li>
+        <li>Facture : {{ invoice.id }}</li>
+        <li>Tentative : {{ attemptNumber }}</li>
+    </ul>
+    
+    <p>Veuillez mettre à jour votre méthode de paiement pour éviter toute interruption de service.</p>
+    
+    <p>L'équipe FormBuilder</p>
+{% endblock %}

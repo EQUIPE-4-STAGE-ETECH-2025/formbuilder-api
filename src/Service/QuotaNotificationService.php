@@ -67,14 +67,12 @@ class QuotaNotificationService
     private function sendNotification(User $user, int $percentage, array $quotaData): bool
     {
         try {
-            $subject = sprintf('Alerte quota - %d%% atteint - FormBuilder', $percentage);
-            $message = $this->buildMessage($user, $percentage, $quotaData);
-
             $email = $user->getEmail();
             if ($email === null) {
                 throw new \RuntimeException('Utilisateur sans adresse email');
             }
-            $this->emailService->sendEmail($email, $subject, $message);
+
+            $this->emailService->sendQuotaAlert($user, $percentage, $quotaData);
 
             $this->logger->info('Notification quota envoyée', [
                 'user_id' => $user->getId(),
@@ -94,40 +92,4 @@ class QuotaNotificationService
         }
     }
 
-    /**
-     * @param array<string, mixed> $quotaData
-     */
-    private function buildMessage(User $user, int $percentage, array $quotaData): string
-    {
-        $firstName = $user->getFirstName() ?? 'Cher utilisateur';
-
-        $message = sprintf('<p>Bonjour %s,</p>', htmlspecialchars($firstName));
-        $message .= sprintf('<p>Vous avez atteint %d%% d\'utilisation de vos quotas.</p>', $percentage);
-
-        $message .= '<h3>Détails :</h3><ul>';
-        $message .= sprintf(
-            '<li>Formulaires : %d/%d</li>',
-            $quotaData['usage']['form_count'],
-            $quotaData['limits']['max_forms']
-        );
-        $message .= sprintf(
-            '<li>Soumissions : %d/%d</li>',
-            $quotaData['usage']['submission_count'],
-            $quotaData['limits']['max_submissions_per_month']
-        );
-        $message .= sprintf(
-            '<li>Stockage : %d/%d MB</li>',
-            $quotaData['usage']['storage_used_mb'],
-            $quotaData['limits']['max_storage_mb']
-        );
-        $message .= '</ul>';
-
-        if ($percentage >= 100) {
-            $message .= '<p><strong>Certaines fonctionnalités peuvent être limitées.</strong></p>';
-        }
-
-        $message .= '<p>Cordialement,<br>L\'équipe FormBuilder</p>';
-
-        return $message;
-    }
 }

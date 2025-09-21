@@ -1,0 +1,25 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Compte suspendu - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ user.firstName }} !</h2>
+    
+    <p>Votre compte FormBuilder a été suspendu en raison de paiements en souffrance.</p>
+    
+    <h3>Que signifie cette suspension ?</h3>
+    <ul>
+        <li>Vos formulaires ne sont plus accessibles au public</li>
+        <li>Vous ne pouvez plus créer de nouveaux formulaires</li>
+        <li>Les soumissions existantes sont préservées</li>
+    </ul>
+    
+    <h3>Comment réactiver votre compte ?</h3>
+    <p>Réglez simplement vos factures en souffrance pour réactiver immédiatement votre compte.</p>
+    
+    <p><strong>Période de grâce :</strong> Vous avez 7 jours pour régler vos factures avant que votre compte ne soit rétrogradé vers le plan gratuit.</p>
+    
+    <p>L'équipe FormBuilder</p>
+{% endblock %}

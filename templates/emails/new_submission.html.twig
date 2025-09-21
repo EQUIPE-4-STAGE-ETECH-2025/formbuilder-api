@@ -1,0 +1,11 @@
+{% extends 'emails/base.html.twig' %}
+
+{% block title %}Nouvelle soumission - {{ form.title }} - FormBuilder{% endblock %}
+
+{% block header_title %}FormBuilder{% endblock %}
+
+{% block content %}
+    <h2>Bonjour {{ user.firstName }} !</h2>
+    
+    <p>Une nouvelle soumission a été effectuée sur votre formulaire <strong>"{{ form.title }}"</strong>.</p>
+{% endblock %}

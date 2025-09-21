@@ -51,13 +51,6 @@ class StripeCheckoutService
                     ],
                 ];
 
-                // Ajouter une période d'essai si spécifiée
-                if ($checkoutDto->trialPeriodDays !== null) {
-                    $sessionData['subscription_data'] = [
-                        'trial_period_days' => $checkoutDto->trialPeriodDays,
-                        'metadata' => array_filter($checkoutDto->metadata, fn ($value) => $value !== null),
-                    ];
-                }
             } else {
                 // Mode paiement unique
                 $sessionData['line_items'] = [
