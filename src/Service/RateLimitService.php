@@ -32,7 +32,7 @@ class RateLimitService
         if (! $hourlyLimit->isAccepted()) {
             $this->logger->warning('Rate limit horaire dépassé', [
                 'ip' => $ip,
-                'retry_after' => $hourlyLimit->getRetryAfter()?->getTimestamp(),
+                'retry_after' => $hourlyLimit->getRetryAfter()->getTimestamp(),
             ]);
 
             return false;
@@ -45,7 +45,7 @@ class RateLimitService
         if (! $dailyLimit->isAccepted()) {
             $this->logger->error('Rate limit journalier dépassé - Possible attaque', [
                 'ip' => $ip,
-                'retry_after' => $dailyLimit->getRetryAfter()?->getTimestamp(),
+                'retry_after' => $dailyLimit->getRetryAfter()->getTimestamp(),
             ]);
 
             return false;
@@ -72,12 +72,12 @@ class RateLimitService
             'hourly' => [
                 'limit' => $hourlyLimit->getLimit(),
                 'remaining' => $hourlyLimit->getRemainingTokens(),
-                'retry_after' => $hourlyLimit->getRetryAfter()?->getTimestamp(),
+                'retry_after' => $hourlyLimit->getRetryAfter()->getTimestamp(),
             ],
             'daily' => [
                 'limit' => $dailyLimit->getLimit(),
                 'remaining' => $dailyLimit->getRemainingTokens(),
-                'retry_after' => $dailyLimit->getRetryAfter()?->getTimestamp(),
+                'retry_after' => $dailyLimit->getRetryAfter()->getTimestamp(),
             ],
         ];
     }

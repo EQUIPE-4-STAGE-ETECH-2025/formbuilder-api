@@ -103,12 +103,7 @@ class HoneypotService
 
         $elapsedTime = $serverTime - $clientTime;
 
-        // Si le timestamp est dans le futur ou très récent (moins de 2 secondes),
-        // c'est probablement une soumission légitime
-        if ($elapsedTime < 2) {
-            return false;
-        }
-
+        // Si le temps écoulé est inférieur au minimum requis, c'est suspect
         return $elapsedTime < self::MIN_SUBMISSION_TIME;
     }
 
