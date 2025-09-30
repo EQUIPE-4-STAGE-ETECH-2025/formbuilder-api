@@ -94,8 +94,8 @@ class HoneypotServiceTest extends TestCase
 
     public function testIsBotReturnsTrueWithTooFastSubmission(): void
     {
-        // Timestamp très récent (moins de 2 secondes)
-        $recentTime = time() - 1;
+        // Timestamp très récent (moins de 1 seconde)
+        $recentTime = time() - 0;
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$recentTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0',
