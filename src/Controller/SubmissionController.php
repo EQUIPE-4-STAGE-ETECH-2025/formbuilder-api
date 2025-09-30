@@ -79,12 +79,10 @@ class SubmissionController extends AbstractController
                     'form_id' => $id,
                 ]);
 
-                // Ne pas révéler que c'est détecté - renvoyer une réponse "normale"
-                // pour tromper les bots
                 return $this->json([
-                    'success' => true,
-                    'message' => 'Formulaire soumis avec succès',
-                ], Response::HTTP_OK);
+                    'success' => false,
+                    'error' => 'Soumission suspecte détectée',
+                ], Response::HTTP_BAD_REQUEST);
             }
 
             $data = json_decode($request->getContent(), true);

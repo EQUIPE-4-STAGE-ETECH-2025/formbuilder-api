@@ -402,7 +402,7 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(429);
         $json = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('error', $json);
-        $this->assertEquals('Trop de requêtes', $json['error']);
+        $this->assertEquals('Trop de soumissions. Veuillez réessayer plus tard.', $json['error']);
     }
 
     public function testSubmitFormFailsWithUnpublishedForm(): void
@@ -440,7 +440,7 @@ class SubmissionControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(403);
         $json = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertArrayHasKey('error', $json);
-        $this->assertEquals('Ce formulaire n\'est pas disponible publiquement', $json['error']);
+        $this->assertEquals('Ce formulaire n\'est pas disponible pour les soumissions', $json['error']);
 
         // Nettoyer
         $this->entityManager->remove($unpublishedForm);
