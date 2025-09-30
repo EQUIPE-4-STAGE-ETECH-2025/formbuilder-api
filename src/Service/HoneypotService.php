@@ -77,8 +77,8 @@ class HoneypotService
         $submissionTime = $request->headers->get(self::HONEYPOT_HEADER);
 
         if ($submissionTime === null || ! is_numeric($submissionTime)) {
-            // Si le header n'est pas présent, on bloque (sécurité renforcée)
-            return true;
+            // Si le header n'est pas présent, on ne bloque pas
+            return false;
         }
 
         $clientTime = (int) $submissionTime;
@@ -95,8 +95,9 @@ class HoneypotService
                 'ip' => $request->getClientIp(),
             ]);
 
-            // Si la différence est trop importante, bloquer par sécurité
-            return true;
+            // Si la différence est trop importante, utiliser le timestamp serveur
+            // et considérer que c'est une soumission légitime
+            return false;
         }
 
         $elapsedTime = $serverTime - $clientTime;

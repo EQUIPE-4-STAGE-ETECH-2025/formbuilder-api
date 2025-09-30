@@ -43,7 +43,7 @@ class SubmissionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_X_Honeypot_Field' => (string)time(), // Header honeypot valide
+                'HTTP_X_Honeypot_Field' => (string)(time() - 10), // Header honeypot valide (10 secondes dans le passé)
             ],
             json_encode($data)
         );
@@ -165,7 +165,7 @@ class SubmissionControllerTest extends WebTestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
-                'HTTP_X_Honeypot_Field' => (string)time(),
+                'HTTP_X_Honeypot_Field' => (string)(time() - 10),
             ],
             json_encode($data)
         );
