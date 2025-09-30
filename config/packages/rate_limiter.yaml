@@ -1,0 +1,13 @@
+framework:
+    rate_limiter:
+        # Rate limiter pour les soumissions de formulaires publics par IP
+        form_submission:
+            policy: "sliding_window"
+            limit: 10
+            interval: "1 hour"
+
+        # Rate limiter strict pour détecter les abus
+        form_submission_strict:
+            policy: "fixed_window"
+            limit: 100
+            interval: "1 day"

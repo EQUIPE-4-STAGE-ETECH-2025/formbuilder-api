@@ -1,5 +1,6 @@
 nelmio_cors:
     defaults:
+        # Configuration par défaut - accès limité au frontend
         allow_origin: ["%env(FRONTEND_URL)%"]
         allow_methods: ["GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"]
         allow_headers:
@@ -7,6 +8,53 @@ nelmio_cors:
         expose_headers: ["Authorization"]
         max_age: 3600
     paths:
+        # Routes publiques spécifiques - accès universel
+        "^/api/public/forms/[^/]+/embed$":
+            allow_origin: ["*"]
+            allow_methods: ["GET", "OPTIONS"]
+            allow_headers:
+                [
+                    "Content-Type",
+                    "ngrok-skip-browser-warning",
+                    "Accept",
+                    "Accept-Language",
+                    "Cache-Control",
+                    "Pragma",
+                ]
+            max_age: 3600
+
+        # Autres routes publiques - accès universel
+        "^/api/public/":
+            allow_origin: ["*"]
+            allow_methods: ["GET", "OPTIONS"]
+            allow_headers:
+                [
+                    "Content-Type",
+                    "ngrok-skip-browser-warning",
+                    "Accept",
+                    "Accept-Language",
+                    "Cache-Control",
+                    "Pragma",
+                ]
+            max_age: 3600
+
+        # Endpoint de soumission publique - accès universel
+        "^/api/forms/[^/]+/submit$":
+            allow_origin: ["*"]
+            allow_methods: ["POST", "OPTIONS"]
+            allow_headers:
+                [
+                    "Content-Type",
+                    "X-Honeypot-Field",
+                    "ngrok-skip-browser-warning",
+                    "Accept",
+                    "Accept-Language",
+                    "Cache-Control",
+                    "Pragma",
+                ]
+            max_age: 3600
+
+        # Toutes les autres routes API - limitées au frontend (règle générale)
         "^/api/":
             allow_origin: ["%env(FRONTEND_URL)%"]
             allow_methods: ["GET", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"]

@@ -4,19 +4,12 @@ namespace App\Service;
 
 use App\Dto\FormEmbedDto;
 use App\Entity\Form;
-use App\Entity\FormToken;
-use App\Repository\FormTokenRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Uid\Uuid;
 
 class FormEmbedService
 {
     public function __construct(
-        private JwtService $jwtService,
-        private FormTokenRepository $formTokenRepository,
-        private EntityManagerInterface $entityManager,
         private ParameterBagInterface $parameterBag,
         private LoggerInterface $logger
     ) {
@@ -42,15 +35,12 @@ class FormEmbedService
                 'form_id' => $formId,
             ]);
 
-            // Générer ou récupérer un token pour ce formulaire
-            $token = $this->getOrCreateFormToken($form);
-
-            // URL de base pour l'iframe
+            // URL de base pour l'iframe (sans token - approche Google Forms)
             $baseUrl = $_ENV['FRONTEND_URL'] ?? $this->parameterBag->get('frontend_url');
             if (! is_string($baseUrl)) {
                 $baseUrl = 'http://localhost:3000';
             }
-            $embedUrl = $baseUrl . '/embed/' . $formId . '?token=' . $token;
+            $embedUrl = $baseUrl . '/embed/' . $formId;
 
             // Générer le code HTML d'intégration
             $embedCode = $this->generateHtmlEmbedCode($embedUrl, $customization);
@@ -62,7 +52,6 @@ class FormEmbedService
             return new FormEmbedDto(
                 embedCode: $embedCode,
                 formId: $formId,
-                token: $token,
                 embedUrl: $embedUrl,
                 customization: $customization
             );
@@ -76,59 +65,18 @@ class FormEmbedService
         }
     }
 
-    private function getOrCreateFormToken(Form $form): string
-    {
-        // Chercher un token existant et valide
-        $existingToken = $this->formTokenRepository->findOneBy([
-            'form' => $form,
-            'isActive' => true,
-        ]);
-
-        if ($existingToken && $existingToken->getExpiresAt() > new \DateTimeImmutable()) {
-            $token = $existingToken->getToken();
-            if ($token !== null) {
-                return $token;
-            }
-        }
-
-        $formId = $form->getId();
-        if ($formId === null) {
-            throw new \InvalidArgumentException('Le formulaire doit avoir un ID valide');
-        }
-
-        // Créer un nouveau token
-        $tokenData = [
-            'form_id' => $formId,
-            'type' => 'embed',
-            'exp' => (new \DateTimeImmutable('+1 year'))->getTimestamp(),
-        ];
-
-        $jwtToken = $this->jwtService->generateToken($tokenData);
-
-        $formToken = new FormToken();
-        $formToken->setId(Uuid::v4()->toRfc4122());
-        $formToken->setForm($form);
-        $formToken->setToken($jwtToken);
-        $formToken->setType('embed');
-        $formToken->setExpiresAt(new \DateTimeImmutable('+1 year'));
-        $formToken->setIsActive(true);
-
-        $this->entityManager->persist($formToken);
-        $this->entityManager->flush();
-
-        return $jwtToken;
-    }
 
     /**
      * @param array<string, mixed> $customization
      */
     private function generateHtmlEmbedCode(string $embedUrl, array $customization): string
     {
-        $width = $customization['width'] ?? '100%';
-        $height = $customization['height'] ?? '600px';
-        $border = $customization['border'] ?? 'none';
-        $borderRadius = $customization['borderRadius'] ?? '8px';
-        $boxShadow = $customization['boxShadow'] ?? '0 4px 6px rgba(0, 0, 0, 0.1)';
+        // Validation et sanitization stricte des paramètres
+        $width = $this->sanitizeWidth($customization['width'] ?? '100%');
+        $height = $this->sanitizeHeight($customization['height'] ?? '600px');
+        $border = $this->sanitizeBorder($customization['border'] ?? 'none');
+        $borderRadius = $this->sanitizeBorderRadius($customization['borderRadius'] ?? '8px');
+        $boxShadow = $this->sanitizeBoxShadow($customization['boxShadow'] ?? '0 4px 6px rgba(0, 0, 0, 0.1)');
 
         // Extraire la valeur numérique de height pour l'attribut HTML
         $heightValue = preg_replace('/[^0-9]/', '', $height);
@@ -153,65 +101,124 @@ class FormEmbedService
         );
     }
 
-    public function validateEmbedToken(string $token): ?string
+    /**
+     * Valide et sanitize la largeur (width)
+     */
+    private function sanitizeWidth(mixed $width): string
     {
-        try {
-            $payload = $this->jwtService->validateToken($token);
-
-            if (! isset($payload->form_id) || ! isset($payload->type) || $payload->type !== 'embed') {
-                return null;
-            }
-
-            // Vérifier que le token existe en base et est actif
-            $formToken = $this->formTokenRepository->findOneBy([
-                'token' => $token,
-                'isActive' => true,
-            ]);
-
-            if (! $formToken || $formToken->getExpiresAt() <= new \DateTimeImmutable()) {
-                return null;
-            }
-
-            return $payload->form_id;
-        } catch (\Exception $e) {
-            $this->logger->warning('Token d\'intégration invalide', [
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
+        if (! is_string($width)) {
+            return '100%';
         }
+
+        // Whitelist des unités autorisées
+        if (preg_match('/^(\d+)(px|%|em|rem|vw)$/', $width, $matches)) {
+            $value = (int) $matches[1];
+            $unit = $matches[2];
+
+            // Limites raisonnables
+            if ($unit === 'px' && $value > 2000) {
+                $value = 2000;
+            }
+            if ($unit === '%' && $value > 100) {
+                $value = 100;
+            }
+
+            return $value . $unit;
+        }
+
+        return '100%'; // Valeur par défaut sécurisée
     }
 
-    public function revokeFormTokens(Form $form): void
+    /**
+     * Valide et sanitize la hauteur (height)
+     */
+    private function sanitizeHeight(mixed $height): string
     {
-        try {
-            $this->logger->info('Révocation des tokens d\'intégration', [
-                'form_id' => $form->getId(),
-            ]);
+        if (! is_string($height)) {
+            return '600px';
+        }
 
-            $tokens = $this->formTokenRepository->findBy([
-                'form' => $form,
-                'type' => 'embed',
-                'isActive' => true,
-            ]);
+        if (preg_match('/^(\d+)(px|vh)$/', $height, $matches)) {
+            $value = (int) $matches[1];
+            $unit = $matches[2];
 
-            foreach ($tokens as $token) {
-                $token->setIsActive(false);
+            // Limites raisonnables
+            if ($unit === 'px' && ($value < 200 || $value > 2000)) {
+                $value = 600;
+            }
+            if ($unit === 'vh' && $value > 100) {
+                $value = 100;
             }
 
-            $this->entityManager->flush();
-
-            $this->logger->info('Tokens d\'intégration révoqués avec succès', [
-                'form_id' => $form->getId(),
-                'tokens_count' => count($tokens),
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Erreur lors de la révocation des tokens', [
-                'error' => $e->getMessage(),
-                'form_id' => $form->getId(),
-            ]);
-
-            throw $e;
+            return $value . $unit;
         }
+
+        return '600px';
     }
+
+    /**
+     * Valide et sanitize la bordure (border)
+     */
+    private function sanitizeBorder(mixed $border): string
+    {
+        if (! is_string($border)) {
+            return 'none';
+        }
+
+        if ($border === 'none') {
+            return 'none';
+        }
+
+        // Format: 1px solid #000000
+        if (preg_match('/^(\d{1,2})px\s+(solid|dashed|dotted)\s+(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})$/', $border)) {
+            return $border;
+        }
+
+        return 'none';
+    }
+
+    /**
+     * Valide et sanitize le border-radius
+     */
+    private function sanitizeBorderRadius(mixed $borderRadius): string
+    {
+        if (! is_string($borderRadius)) {
+            return '8px';
+        }
+
+        if (preg_match('/^(\d+)(px|%)$/', $borderRadius, $matches)) {
+            $value = (int) $matches[1];
+            $unit = $matches[2];
+
+            if ($value > 50) {
+                $value = 50;
+            }
+
+            return $value . $unit;
+        }
+
+        return '8px';
+    }
+
+    /**
+     * Valide et sanitize le box-shadow
+     */
+    private function sanitizeBoxShadow(mixed $boxShadow): string
+    {
+        if (! is_string($boxShadow)) {
+            return 'none';
+        }
+
+        if ($boxShadow === 'none') {
+            return 'none';
+        }
+
+        // Format simple: 0 4px 6px rgba(0, 0, 0, 0.1)
+        if (preg_match('/^(-?\d+px\s+){2,4}rgba?\([^)]+\)$/', $boxShadow)) {
+            return $boxShadow;
+        }
+
+        return 'none';
+    }
+
 }
