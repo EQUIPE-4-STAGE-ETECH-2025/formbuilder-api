@@ -76,7 +76,7 @@ class HoneypotServiceTest extends TestCase
         $this->assertFalse($result);
     }
 
-    public function testIsBotReturnsFalseWithMissingField(): void
+    public function testIsBotReturnsTrueWithMissingField(): void
     {
         $oldTime = time() - 10;
         $request = Request::create('/test', 'POST', [], [], [], [
@@ -85,9 +85,11 @@ class HoneypotServiceTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([]));
 
+        $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Champ honeypot rempli'));
+
         $result = $this->honeypotService->isBot($request);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     public function testIsBotReturnsTrueWithTooFastSubmission(): void
@@ -175,9 +177,11 @@ class HoneypotServiceTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ]);
 
+        $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Champ honeypot rempli'));
+
         $result = $this->honeypotService->isBot($request);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     public function testIsBotWithInvalidJson(): void
@@ -189,9 +193,11 @@ class HoneypotServiceTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], 'invalid json');
 
+        $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Champ honeypot rempli'));
+
         $result = $this->honeypotService->isBot($request);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     public function testIsBotWithNonArrayData(): void
@@ -203,9 +209,11 @@ class HoneypotServiceTest extends TestCase
             'CONTENT_TYPE' => 'application/json',
         ], json_encode('string'));
 
+        $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Champ honeypot rempli'));
+
         $result = $this->honeypotService->isBot($request);
 
-        $this->assertFalse($result);
+        $this->assertTrue($result);
     }
 
     public function testGetHoneypotFieldName(): void
