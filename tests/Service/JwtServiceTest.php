@@ -109,7 +109,6 @@ class JwtServiceTest extends TestCase
         $this->expectExceptionMessage('Token révoqué.');
 
         $jwtService->validateToken('blacklisted.token');
-        $this->jwtService->refreshToken($token, 300);
     }
 
     public function testGenerateRefreshToken(): void

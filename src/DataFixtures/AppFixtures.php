@@ -50,9 +50,6 @@ class AppFixtures extends Fixture implements DependentFixtureInterface
 
             // 11. Logs d'audit (dépend de Users)
             AuditLogFixtures::class,
-
-            // 12. Tokens de formulaires (dépend de Forms)
-            FormTokenFixtures::class,
         ];
     }
 }

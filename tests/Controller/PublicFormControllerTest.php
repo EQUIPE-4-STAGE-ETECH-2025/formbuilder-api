@@ -3,7 +3,6 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Form;
-use App\Entity\FormToken;
 use App\Entity\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -40,7 +39,6 @@ class PublicFormControllerTest extends WebTestCase
         $responseData = json_decode($this->client->getResponse()->getContent(), true);
         $this->assertTrue($responseData['success']);
         $this->assertArrayHasKey('embedCode', $responseData['data']);
-        $this->assertArrayHasKey('token', $responseData['data']);
         $this->assertArrayHasKey('embedUrl', $responseData['data']);
         $this->assertStringContainsString('<iframe', $responseData['data']['embedCode']);
     }
@@ -208,17 +206,8 @@ class PublicFormControllerTest extends WebTestCase
     {
         $existingUser = $this->em->getRepository(User::class)->findOneBy(['email' => $email]);
         if ($existingUser) {
-            // Supprimer d'abord tous les tokens des formulaires associés
+            // Supprimer tous les formulaires associés
             $forms = $this->em->getRepository(Form::class)->findBy(['user' => $existingUser]);
-            foreach ($forms as $form) {
-                $tokens = $this->em->getRepository(FormToken::class)->findBy(['form' => $form]);
-                foreach ($tokens as $token) {
-                    $this->em->remove($token);
-                }
-            }
-            $this->em->flush();
-
-            // Supprimer ensuite tous les formulaires associés
             foreach ($forms as $form) {
                 $this->em->remove($form);
             }
@@ -243,22 +232,7 @@ class PublicFormControllerTest extends WebTestCase
 
     private function cleanupCreatedEntities(): void
     {
-        // Supprimer les FormTokens d'abord (le plus dépendant)
-        if (isset($this->createdEntities['forms'])) {
-            foreach ($this->createdEntities['forms'] as $formId) {
-                $form = $this->em->getRepository(Form::class)->find($formId);
-                if ($form) {
-                    // Supprimer tous les tokens associés à ce formulaire
-                    $tokens = $this->em->getRepository(FormToken::class)->findBy(['form' => $form]);
-                    foreach ($tokens as $token) {
-                        $this->em->remove($token);
-                    }
-                }
-            }
-            $this->em->flush();
-        }
-
-        // Supprimer les formulaires ensuite
+        // Supprimer les formulaires
         if (isset($this->createdEntities['forms'])) {
             foreach ($this->createdEntities['forms'] as $formId) {
                 $form = $this->em->getRepository(Form::class)->find($formId);

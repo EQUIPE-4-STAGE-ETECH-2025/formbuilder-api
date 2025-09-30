@@ -52,15 +52,11 @@ class Form
     #[ORM\OneToMany(mappedBy: 'form', targetEntity: Submission::class, orphanRemoval: true)]
     private Collection $submissions;
 
-    /** @var Collection<int, FormToken> */
-    #[ORM\OneToMany(mappedBy: 'form', targetEntity: FormToken::class, orphanRemoval: true)]
-    private Collection $formTokens;
 
     public function __construct()
     {
         $this->formVersions = new ArrayCollection();
         $this->submissions = new ArrayCollection();
-        $this->formTokens = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = new \DateTimeImmutable();
     }
@@ -219,32 +215,4 @@ class Form
         return $this;
     }
 
-    /**
-     * @return Collection<int, FormToken>
-     */
-    public function getFormTokens(): Collection
-    {
-        return $this->formTokens;
-    }
-
-    public function addFormToken(FormToken $formToken): static
-    {
-        if (! $this->formTokens->contains($formToken)) {
-            $this->formTokens->add($formToken);
-            $formToken->setForm($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFormToken(FormToken $formToken): static
-    {
-        if ($this->formTokens->removeElement($formToken)) {
-            if ($formToken->getForm() === $this) {
-                $formToken->setForm(null);
-            }
-        }
-
-        return $this;
-    }
 }

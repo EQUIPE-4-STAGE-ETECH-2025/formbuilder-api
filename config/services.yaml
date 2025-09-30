@@ -38,5 +38,11 @@ services:
                   method: onKernelRequest,
                   priority: 10,
               }
+
+    App\Service\RateLimitService:
+        arguments:
+            $formSubmissionLimiter: "@limiter.form_submission"
+            $formSubmissionStrictLimiter: "@limiter.form_submission_strict"
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

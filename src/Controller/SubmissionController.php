@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Dto\SubmitFormDto;
 use App\Exception\QuotaExceededException;
 use App\Service\AuthorizationService;
+use App\Service\HoneypotService;
+use App\Service\RateLimitService;
 use App\Service\SubmissionExportService;
 use App\Service\SubmissionService;
 use Psr\Log\LoggerInterface;
@@ -22,6 +24,8 @@ class SubmissionController extends AbstractController
         private readonly SubmissionService $submissionService,
         private readonly SubmissionExportService $submissionExportService,
         private readonly AuthorizationService $authorizationService,
+        private readonly RateLimitService $rateLimitService,
+        private readonly HoneypotService $honeypotService,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -33,6 +37,53 @@ class SubmissionController extends AbstractController
             $form = $this->submissionService->getFormById($id);
             if (! $form) {
                 throw new NotFoundHttpException('Formulaire introuvable.');
+            }
+
+            // Vérifier que le formulaire est publié (sécurité)
+            if ($form->getStatus() !== 'PUBLISHED') {
+                $this->logger->warning('Tentative de soumission sur un formulaire non publié', [
+                    'form_id' => $id,
+                    'status' => $form->getStatus(),
+                    'ip' => $request->getClientIp(),
+                ]);
+
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Ce formulaire n\'est pas disponible pour les soumissions',
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            // Vérifier le rate limit par IP (protection anti-spam)
+            if (! $this->rateLimitService->canSubmitForm($request)) {
+                $rateLimitInfo = $this->rateLimitService->getRateLimitInfo($request);
+                
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Trop de soumissions. Veuillez réessayer plus tard.',
+                    'retry_after' => $rateLimitInfo['hourly']['retry_after'],
+                ], Response::HTTP_TOO_MANY_REQUESTS);
+            }
+
+            // Vérifier la protection honeypot (anti-bot)
+            $isBot = $this->honeypotService->isBot($request);
+            $this->logger->info('Honeypot check', [
+                'is_bot' => $isBot,
+                'ip' => $request->getClientIp(),
+                'user_agent' => $request->headers->get('User-Agent'),
+                'honeypot_header' => $request->headers->get('X-Honeypot-Field'),
+            ]);
+            
+            if ($isBot) {
+                $this->logger->warning('Soumission bloquée par honeypot', [
+                    'ip' => $request->getClientIp(),
+                    'form_id' => $id,
+                ]);
+                // Ne pas révéler que c'est détecté - renvoyer une réponse "normale"
+                // pour tromper les bots
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Formulaire soumis avec succès',
+                ], Response::HTTP_OK);
             }
 
             $data = json_decode($request->getContent(), true);
