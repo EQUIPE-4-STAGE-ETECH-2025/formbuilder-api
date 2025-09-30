@@ -35,14 +35,14 @@ class IframeSecurityHeadersListener
 
         // Pour les routes publiques, permettre l'intégration dans des iframes
         // IMPORTANT : Ceci est nécessaire pour Google Forms-like behavior
-        
+
         // Supprimer X-Frame-Options (incompatible avec CSP frame-ancestors)
         $response->headers->remove('X-Frame-Options');
-        
+
         // Permettre l'intégration dans n'importe quel site via CSP
         // Note : 'frame-ancestors *' permet l'embedding depuis n'importe quel domaine
         $currentCsp = $response->headers->get('Content-Security-Policy');
-        
+
         if ($currentCsp !== null) {
             // Si un CSP existe déjà, ajouter frame-ancestors
             if (! str_contains($currentCsp, 'frame-ancestors')) {

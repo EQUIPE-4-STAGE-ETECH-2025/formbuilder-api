@@ -4,8 +4,8 @@ namespace App\Tests\Service;
 
 use App\Service\HoneypotService;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpFoundation\Request;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 class HoneypotServiceTest extends TestCase
 {
@@ -25,7 +25,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $result = $this->honeypotService->isBot($request);
@@ -40,7 +40,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $result = $this->honeypotService->isBot($request);
@@ -54,7 +54,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => 'spam@example.com']));
 
         $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Champ honeypot rempli'));
@@ -68,7 +68,7 @@ class HoneypotServiceTest extends TestCase
     {
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $result = $this->honeypotService->isBot($request);
@@ -82,7 +82,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode([]));
 
         $result = $this->honeypotService->isBot($request);
@@ -97,7 +97,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$recentTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $this->logger->expects($this->once())->method('warning')->with($this->stringContains('Soumission trop rapide'));
@@ -114,7 +114,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$validTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $result = $this->honeypotService->isBot($request);
@@ -128,7 +128,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'bot/1.0',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $this->logger->expects($this->once())->method('warning')->with($this->stringContains('User-Agent suspect'));
@@ -144,7 +144,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => '', // User-Agent vide
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $this->logger->expects($this->once())->method('warning')->with($this->stringContains('User-Agent suspect'));
@@ -160,7 +160,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode(['_website_url' => '']));
 
         $result = $this->honeypotService->isBot($request);
@@ -172,7 +172,7 @@ class HoneypotServiceTest extends TestCase
     {
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ]);
 
         $result = $this->honeypotService->isBot($request);
@@ -186,7 +186,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], 'invalid json');
 
         $result = $this->honeypotService->isBot($request);
@@ -200,7 +200,7 @@ class HoneypotServiceTest extends TestCase
         $request = Request::create('/test', 'POST', [], [], [], [
             'HTTP_X_HONEYPOT_FIELD' => (string)$oldTime,
             'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'CONTENT_TYPE' => 'application/json'
+            'CONTENT_TYPE' => 'application/json',
         ], json_encode('string'));
 
         $result = $this->honeypotService->isBot($request);

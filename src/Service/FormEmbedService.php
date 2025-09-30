@@ -114,7 +114,7 @@ class FormEmbedService
         if (preg_match('/^(\d+)(px|%|em|rem|vw)$/', $width, $matches)) {
             $value = (int) $matches[1];
             $unit = $matches[2];
-            
+
             // Limites raisonnables
             if ($unit === 'px' && $value > 2000) {
                 $value = 2000;
@@ -122,7 +122,7 @@ class FormEmbedService
             if ($unit === '%' && $value > 100) {
                 $value = 100;
             }
-            
+
             return $value . $unit;
         }
 
@@ -141,7 +141,7 @@ class FormEmbedService
         if (preg_match('/^(\d+)(px|vh)$/', $height, $matches)) {
             $value = (int) $matches[1];
             $unit = $matches[2];
-            
+
             // Limites raisonnables
             if ($unit === 'px' && ($value < 200 || $value > 2000)) {
                 $value = 600;
@@ -149,7 +149,7 @@ class FormEmbedService
             if ($unit === 'vh' && $value > 100) {
                 $value = 100;
             }
-            
+
             return $value . $unit;
         }
 
@@ -189,11 +189,11 @@ class FormEmbedService
         if (preg_match('/^(\d+)(px|%)$/', $borderRadius, $matches)) {
             $value = (int) $matches[1];
             $unit = $matches[2];
-            
+
             if ($value > 50) {
                 $value = 50;
             }
-            
+
             return $value . $unit;
         }
 

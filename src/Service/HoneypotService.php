@@ -27,7 +27,7 @@ class HoneypotService
                 'ip' => $request->getClientIp(),
                 'user_agent' => $request->headers->get('User-Agent'),
             ]);
-            
+
             return true;
         }
 
@@ -37,7 +37,7 @@ class HoneypotService
                 'ip' => $request->getClientIp(),
                 'user_agent' => $request->headers->get('User-Agent'),
             ]);
-            
+
             return true;
         }
 
@@ -47,7 +47,7 @@ class HoneypotService
                 'ip' => $request->getClientIp(),
                 'user_agent' => $request->headers->get('User-Agent'),
             ]);
-            
+
             return true;
         }
 
@@ -60,7 +60,7 @@ class HoneypotService
     private function hasHoneypotFieldFilled(Request $request): bool
     {
         $data = json_decode($request->getContent(), true);
-        
+
         if (! is_array($data)) {
             return false;
         }
@@ -75,7 +75,7 @@ class HoneypotService
     private function isSubmissionTooFast(Request $request): bool
     {
         $submissionTime = $request->headers->get(self::HONEYPOT_HEADER);
-        
+
         if ($submissionTime === null || ! is_numeric($submissionTime)) {
             // Si le header n'est pas présent, on ne bloque pas
             // (pour compatibilité avec anciennes versions frontend)
@@ -84,7 +84,7 @@ class HoneypotService
 
         $clientTime = (int) $submissionTime;
         $serverTime = time();
-        
+
         // Tolérance de 30 secondes pour la désynchronisation d'horloge
         $timeDifference = abs($serverTime - $clientTime);
         if ($timeDifference > 30) {
@@ -95,19 +95,20 @@ class HoneypotService
                 'difference' => $timeDifference,
                 'ip' => $request->getClientIp(),
             ]);
+
             // Si la différence est trop importante, utiliser le timestamp serveur
             // et considérer que c'est une soumission légitime
             return false;
         }
-        
+
         $elapsedTime = $serverTime - $clientTime;
-        
+
         // Si le timestamp est dans le futur ou très récent (moins de 2 secondes),
         // c'est probablement une soumission légitime
         if ($elapsedTime < 2) {
             return false;
         }
-        
+
         return $elapsedTime < self::MIN_SUBMISSION_TIME;
     }
 
@@ -117,7 +118,7 @@ class HoneypotService
     private function hasSuspiciousUserAgent(Request $request): bool
     {
         $userAgent = $request->headers->get('User-Agent');
-        
+
         if ($userAgent === null || trim($userAgent) === '') {
             return true; // Pas de User-Agent = suspect
         }
@@ -139,7 +140,7 @@ class HoneypotService
         ];
 
         $userAgentLower = strtolower($userAgent);
-        
+
         foreach ($suspiciousPatterns as $pattern) {
             if (str_contains($userAgentLower, $pattern)) {
                 return true;

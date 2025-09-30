@@ -56,7 +56,7 @@ class SubmissionController extends AbstractController
             // Vérifier le rate limit par IP (protection anti-spam)
             if (! $this->rateLimitService->canSubmitForm($request)) {
                 $rateLimitInfo = $this->rateLimitService->getRateLimitInfo($request);
-                
+
                 return $this->json([
                     'success' => false,
                     'error' => 'Trop de soumissions. Veuillez réessayer plus tard.',
@@ -72,12 +72,13 @@ class SubmissionController extends AbstractController
                 'user_agent' => $request->headers->get('User-Agent'),
                 'honeypot_header' => $request->headers->get('X-Honeypot-Field'),
             ]);
-            
+
             if ($isBot) {
                 $this->logger->warning('Soumission bloquée par honeypot', [
                     'ip' => $request->getClientIp(),
                     'form_id' => $id,
                 ]);
+
                 // Ne pas révéler que c'est détecté - renvoyer une réponse "normale"
                 // pour tromper les bots
                 return $this->json([

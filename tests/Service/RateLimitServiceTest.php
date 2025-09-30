@@ -4,8 +4,8 @@ namespace App\Tests\Service;
 
 use App\Service\RateLimitService;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\RateLimiter\Storage\InMemoryStorage;
 
 class RateLimitServiceTest extends TestCase
 {
@@ -15,7 +15,7 @@ class RateLimitServiceTest extends TestCase
     protected function setUp(): void
     {
         $this->storage = new InMemoryStorage();
-        
+
         // Configuration pour le rate limiter horaire (10 requêtes par heure)
         $hourlyConfig = [
             'id' => 'form_submission_hourly',
@@ -27,7 +27,7 @@ class RateLimitServiceTest extends TestCase
             $hourlyConfig,
             $this->storage
         );
-        
+
         // Configuration pour le rate limiter journalier (100 requêtes par jour)
         $dailyConfig = [
             'id' => 'form_submission_daily',
@@ -39,7 +39,7 @@ class RateLimitServiceTest extends TestCase
             $dailyConfig,
             $this->storage
         );
-        
+
         $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
         $this->rateLimitService = new RateLimitService($hourlyLimiter, $dailyLimiter, $logger);
     }
@@ -95,7 +95,7 @@ class RateLimitServiceTest extends TestCase
             $dailyConfig,
             $this->storage
         );
-        
+
         $hourlyConfig = [
             'id' => 'form_submission_hourly_test',
             'policy' => 'sliding_window',
@@ -106,10 +106,10 @@ class RateLimitServiceTest extends TestCase
             $hourlyConfig,
             $this->storage
         );
-        
+
         $logger = $this->createMock(\Psr\Log\LoggerInterface::class);
         $rateLimitService = new RateLimitService($hourlyLimiter, $dailyLimiter, $logger);
-        
+
         $request = Request::create('/api/forms/123/submit', 'POST');
         $request->server->set('REMOTE_ADDR', '192.168.1.1');
 

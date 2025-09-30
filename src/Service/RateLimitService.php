@@ -24,33 +24,33 @@ class RateLimitService
     public function canSubmitForm(Request $request): bool
     {
         $ip = $this->getClientIp($request);
-        
+
         // Vérifier le rate limit horaire (10/heure)
         $hourlyLimiter = $this->formSubmissionLimiter->create($ip);
         $hourlyLimit = $hourlyLimiter->consume(1);
-        
+
         if (! $hourlyLimit->isAccepted()) {
             $this->logger->warning('Rate limit horaire dépassé', [
                 'ip' => $ip,
                 'retry_after' => $hourlyLimit->getRetryAfter()?->getTimestamp(),
             ]);
-            
+
             return false;
         }
-        
+
         // Vérifier le rate limit journalier (100/jour)
         $dailyLimiter = $this->formSubmissionStrictLimiter->create($ip);
         $dailyLimit = $dailyLimiter->consume(1);
-        
+
         if (! $dailyLimit->isAccepted()) {
             $this->logger->error('Rate limit journalier dépassé - Possible attaque', [
                 'ip' => $ip,
                 'retry_after' => $dailyLimit->getRetryAfter()?->getTimestamp(),
             ]);
-            
+
             return false;
         }
-        
+
         return true;
     }
 
@@ -61,13 +61,13 @@ class RateLimitService
     public function getRateLimitInfo(Request $request): array
     {
         $ip = $this->getClientIp($request);
-        
+
         $hourlyLimiter = $this->formSubmissionLimiter->create($ip);
         $hourlyLimit = $hourlyLimiter->consume(0); // 0 pour ne pas consommer
-        
+
         $dailyLimiter = $this->formSubmissionStrictLimiter->create($ip);
         $dailyLimit = $dailyLimiter->consume(0);
-        
+
         return [
             'hourly' => [
                 'limit' => $hourlyLimit->getLimit(),
@@ -88,13 +88,13 @@ class RateLimitService
     private function getClientIp(Request $request): string
     {
         $ip = $request->getClientIp();
-        
+
         if ($ip === null) {
             $this->logger->warning('Impossible de récupérer l\'IP du client');
-            
+
             return 'unknown';
         }
-        
+
         return $ip;
     }
 }
