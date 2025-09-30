@@ -9,7 +9,7 @@ class HoneypotService
 {
     private const HONEYPOT_FIELD_NAME = '_website_url';
     private const HONEYPOT_HEADER = 'X-Honeypot-Field';
-    private const MIN_SUBMISSION_TIME = 2; // secondes minimum pour remplir un formulaire
+    private const MIN_SUBMISSION_TIME = 1; // secondes minimum pour remplir un formulaire
 
     public function __construct(
         private LoggerInterface $logger
@@ -55,18 +55,23 @@ class HoneypotService
     }
 
     /**
-     * Vérifie si le champ honeypot a été rempli (signe de bot)
+     * Vérifie si le champ honeypot est présent et valide
      */
     private function hasHoneypotFieldFilled(Request $request): bool
     {
         $data = json_decode($request->getContent(), true);
 
         if (! is_array($data)) {
-            return false;
+            return true; // Données invalides = suspect
         }
 
-        // Le champ honeypot ne doit PAS être rempli
-        return isset($data[self::HONEYPOT_FIELD_NAME]) && ! empty($data[self::HONEYPOT_FIELD_NAME]);
+        // Le champ honeypot doit être présent mais vide
+        if (! isset($data[self::HONEYPOT_FIELD_NAME])) {
+            return true; // Champ absent = suspect
+        }
+
+        // Si le champ est rempli, c'est un bot
+        return ! empty($data[self::HONEYPOT_FIELD_NAME]);
     }
 
     /**

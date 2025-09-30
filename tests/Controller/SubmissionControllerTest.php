@@ -333,7 +333,7 @@ class SubmissionControllerTest extends WebTestCase
             '_website_url' => '',
         ];
 
-        $recentTimestamp = time() - 1; // 1 seconde dans le passé
+        $recentTimestamp = time() - 0; // Timestamp actuel (0 seconde d'écart)
 
         $this->client->request(
             'POST',
